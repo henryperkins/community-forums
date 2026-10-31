@@ -91,8 +91,9 @@ final class AuthGateStylesContractTest extends TestCase
     {
         $hover = self::rule(self::css(), '.btn:hover');
 
-        // --brand-hover is evergreen in both registers and untouched by branding.
-        self::assertMatchesRegularExpression('/background:\s*color-mix\(in srgb, var\(--accent\) 82%, #000\)/', $hover);
+        // Preserve the built-in shade while allowing the contrast-safe branded shade.
+        // Quiet --brand-hover must not replace the action colour in an unset theme.
+        self::assertMatchesRegularExpression('/background:\s*var\(--brand-primary-hover, color-mix\(in srgb, var\(--accent\) 82%, #000\)\)/', $hover);
         self::assertStringNotContainsString('--brand-hover', $hover);
     }
 

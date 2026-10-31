@@ -66,6 +66,11 @@ async function activate(page: Page, uid: string) {
   const row = themeRow(page, uid);
   const action = await row.locator('form[action$="/activate"]').getAttribute('action');
   await row.locator('[name="current_password"]').fill('password123');
+  // WebKit's no-JS actionability poll can stall if it starts during aaRise.
+  // Wait for the real entrance animation; keep motion and ordinary clicks.
+  await row.locator('form[action$="/activate"]').evaluate(async form => {
+    await Promise.all(form.getAnimations().map(animation => animation.finished));
+  });
   expect(await post(page, row.getByRole('button', { name: 'Activate', exact: true }), action!)).toBe(303);
   await expect(page.getByRole('status')).toContainText('Theme activated.');
 }
@@ -131,13 +136,16 @@ test('ending or disabling a package preview removes access to its private assets
   await login(page);
   await page.goto('/admin/themes');
   await themeRow(page, 'acme/theme-evidence').getByRole('button', { name: 'Preview', exact: true }).click();
+  await expect(page.locator('link[href*="/theme/preview.css"]')).toHaveCount(1);
   const css = await (await page.request.get('/theme/preview.css')).text();
   const assetPath = css.match(/\/theme\/asset\/[a-f0-9]{64}/)?.[0];
   expect(assetPath).toBeTruthy();
   expect((await page.request.get(assetPath!)).status()).toBe(200);
   await page.getByRole('button', { name: 'End preview', exact: true }).click();
+  await expect(page.locator('link[href*="/theme/preview.css"]')).toHaveCount(0);
   expect((await page.request.get(assetPath!)).status()).toBe(404);
   await themeRow(page, 'acme/theme-evidence').getByRole('button', { name: 'Preview', exact: true }).click();
+  await expect(page.locator('link[href*="/theme/preview.css"]')).toHaveCount(1);
   fixture('disable-preview-package');
   expect((await page.request.get(assetPath!)).status()).toBe(404);
   await page.goto('/admin/themes');
@@ -209,7 +217,9 @@ test('branding preview changes the candidate palette without changing the admin 
   await page.locator('[name="theme_preset"]').selectOption('retro');
   await expect.poll(() => page.locator('.brand-preview-body').evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe(classicDark);
   expect(await page.locator('body').evaluate(element => getComputedStyle(element).backgroundColor)).toBe(bodyBefore);
-  const candidate = await renderedContrast(page.locator('.brand-preview-body a'));
+  // Public discussion titles use content ink at rest and action ink on hover.
+  await page.locator('.brand-preview-body .thread-title').hover();
+  const candidate = await renderedContrast(page.locator('.brand-preview-body .thread-title'));
   expect(candidate.ratio).toBeGreaterThanOrEqual(4.5);
   await shot(page, info, 'retro-dark-live-preview');
   expect(await saveBranding(page)).toBe(303);
@@ -334,7 +344,8 @@ test.describe('without JavaScript', () => {
     expect(await saveBranding(page)).toBe(422);
     await expect(page.locator('[name="site_name"]')).toHaveValue('No-script branding draft');
     await expect(page.locator('[name="color_primary"]')).toHaveValue('broken');
-    expect(await post(page, page.getByRole('button', { name: 'Reset branding', exact: true }), '/admin/branding')).toBe(422);
+    await page.getByRole('button', { name: 'Reset branding', exact: true }).click();
+    expect(await page.locator('[name="reset_confirm"]').evaluate((input: HTMLInputElement) => input.validity.valid)).toBe(false);
     await expect(page.locator('[name="site_name"]')).toHaveValue('No-script branding draft');
     expect(fixture().site_name).toBe('RetroBoards');
     await page.locator('[name="color_primary"]').fill('#ffffff');

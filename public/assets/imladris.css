@@ -445,8 +445,9 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 /* Hover deepens the button's own fill (ADR 0039 #5): it follows --accent,
    operator branding included, where --brand-hover turned a gold twilight
    button green. */
-.btn:hover { text-decoration: none; background: color-mix(in srgb, var(--accent) 82%, #000); }
+.btn:hover { text-decoration: none; background: var(--brand-primary-hover, color-mix(in srgb, var(--accent) 82%, #000)); }
 .btn:active { transform: translateY(0.5px) scale(.995); }
+.btn:where(:not(.btn-secondary, .btn-ghost, .btn-accent, .btn-danger, .danger)):active { background: var(--brand-primary-press, color-mix(in srgb, var(--accent) 82%, #000)); }
 .btn-small { padding: 6px 13px; font-size: .82rem; }
 .btn-secondary {
     background: var(--surface-raised); color: var(--text);
@@ -455,8 +456,8 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .btn-secondary:hover { background: var(--surface-sunken); border-color: var(--border-strong); }
 .btn-ghost { background: transparent; color: var(--text-body); border: 1.5px solid transparent; box-shadow: none; }
 .btn-ghost:hover { background: var(--surface-sunken); }
-.btn-accent { background: var(--gold-500); color: var(--ink-900); }
-.btn-accent:hover { background: var(--gold-600); }
+.btn-accent { background: var(--accent-2); color: var(--brand-accent-contrast, var(--ink-900)); }
+.btn-accent:hover { background: var(--brand-accent-hover, var(--gold-600)); }
 .btn-danger { background: var(--danger); color: #fff; }
 .btn-danger:hover { background: color-mix(in srgb, var(--danger) 82%, #000); }
 .btn[disabled], .btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -465,7 +466,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
    primary still; it also painted every other variant evergreen. */
 .btn-secondary:disabled:hover { background: var(--surface-raised); border-color: var(--border-soft); }
 .btn-ghost:disabled:hover { background: transparent; }
-.btn-accent:disabled:hover { background: var(--gold-500); }
+.btn-accent:disabled:hover { background: var(--accent-2); }
 .btn-danger:disabled:hover { background: var(--danger); }
 .btn-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
 
@@ -511,7 +512,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 /* Status chips */
 .chip-solved        { color: var(--on-done);   background: var(--surface-done);   border-color: var(--green-200); }
 .chip-needs         { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
-.chip-decision_made { color: var(--green-800); background: var(--brand-subtle);   border-color: var(--green-200); }
+.chip-decision_made { color: var(--on-done); background: var(--surface-done); border-color: var(--green-200); }
 .chip-pinned,
 .chip-locked        { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
 .chip-archived      { color: var(--text-faint); background: transparent; border-style: dashed; border-color: var(--border-strong); }
@@ -595,7 +596,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .reaction:hover { background: var(--surface-sunken); }
 .reaction:not(.reaction-static):hover { transform: translateY(-.5px); }
 .reaction:not(.reaction-static):active { transform: scale(.97); }
-.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-ink); }
+.reaction-on { border-color: var(--accent-2); background: var(--gold-soft); color: var(--gold-ink); }
 .reaction-static { cursor: default; }
 .reaction-glyph { color: var(--star); }
 .reaction-on .reaction-glyph { color: var(--gold-ink); }
@@ -741,7 +742,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     border-color: var(--accent);
     background-color: var(--brand-subtle);
 }
-.choice-card:has(input:checked)::after { opacity: 1; background: var(--gold-500); }
+.choice-card:has(input:checked)::after { opacity: 1; background: var(--accent-2); }
 .choice-card:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .choice-card-title { display: block; font-family: var(--font-label); letter-spacing: .04em; font-size: .82rem; color: var(--text-strong); }
 .choice-card-desc { display: block; font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
@@ -839,7 +840,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     border-radius: var(--radius-pill); padding: 5px 15px;
 }
 .segmented-item:hover { color: var(--text-strong); text-decoration: none; }
-.segmented-item.is-active { background: var(--brand); color: var(--parchment-50); }
+.segmented-item.is-active { background: var(--brand); color: var(--brand-contrast, var(--parchment-50)); }
 
 /* ── Inbox filter tabs (Marcellus pills) ─────────────────────────────────── */
 .inbox-tabs { display: inline-flex; gap: 6px; }
@@ -849,7 +850,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     color: var(--text-muted); border: 1px solid transparent; cursor: pointer; background: transparent;
 }
 .inbox-tab:hover { background: var(--surface-sunken); text-decoration: none; }
-.inbox-tab.is-active { background: var(--brand); color: var(--parchment-50); font-weight: var(--weight-medium); border-color: var(--brand); }
+.inbox-tab.is-active { background: var(--brand); color: var(--brand-contrast, var(--parchment-50)); font-weight: var(--weight-medium); border-color: var(--brand); }
 /* Underline-style tabs (sort / profile) */
 .text-tabs { display: inline-flex; gap: 4px; }
 .text-tab { font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-muted); padding: 8px 14px; cursor: pointer; background: none; border: 0; }
@@ -976,7 +977,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .board-rail-routes { display: flex; flex-direction: column; gap: 2px; }
 .board-rail-route { display: flex; align-items: center; gap: 9px; padding: 8px 12px; box-sizing: border-box; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; color: var(--text-muted); text-decoration: none; }
 .board-rail-route:hover { background: var(--surface-page); color: var(--text-body); }
-.board-rail-route.is-active { border-left-color: var(--gold-500); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: default; }
+.board-rail-route.is-active { border-left-color: var(--accent-2); background: var(--brand-subtle); color: var(--on-brand-subtle); cursor: default; }
 .board-rail-route > svg { flex: none; }
 .board-rail-route-text { display: grid; gap: 1px; min-width: 0; }
 .board-rail-route-label { font-family: var(--font-label); font-size: .88rem; letter-spacing: .02em; }
@@ -986,7 +987,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 .board-rail-item { display: flex; align-items: center; gap: 8px; padding: 7px 12px; box-sizing: border-box; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .84rem; letter-spacing: .02em; text-decoration: none; }
 .board-rail-item:hover { background: var(--surface-page); color: var(--text-body); }
 /* The active board keeps its href too: the row is also the way back to the board's first page. */
-.board-rail-item.is-active { border-left-color: var(--gold-500); background: var(--brand-subtle); color: var(--on-brand-subtle); }
+.board-rail-item.is-active { border-left-color: var(--accent-2); background: var(--brand-subtle); color: var(--on-brand-subtle); }
 .board-rail-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .board-rail-unread { flex: none; padding: 0 6px; text-align: center; border-radius: var(--radius-pill); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-mono); font-size: .66rem; }
 .board-rail-item.is-locked { color: var(--text-faint); cursor: default; }
@@ -1446,7 +1447,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
     font-size: .9rem;
 }
 .composer-draft-sync[hidden] { display: none; }
-.composer-draft-sync.is-conflict { border-color: var(--warning); background: var(--gold-soft); color: var(--text-strong); }
+.composer-draft-sync.is-conflict { border-color: var(--warning); background: var(--surface-review); color: var(--text-strong); }
 .composer-draft-sync p { margin: 0; }
 .composer-draft-sync-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 
@@ -2279,7 +2280,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .notification-message { color: var(--text-muted); line-height: 1.5; }
 .notification-context { font-style: italic; }
 .notification-row.is-unread .notification-message, .notification-row.is-unread .notification-context { color: var(--text-strong); }
-.notification-row.is-unread .notification-icon { background: var(--brand-subtle); color: var(--brand); }
+.notification-row.is-unread .notification-icon { background: var(--brand-subtle); color: var(--on-brand-subtle); }
 .notification-unread-dot { position: absolute; left: 0; top: .55em; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--gold-ink); }
 .notification-open time { color: var(--text-muted); font-family: var(--font-mono); font-size: .72rem; white-space: nowrap; }
 @media (max-width: 600px) {
@@ -2566,11 +2567,11 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 .thread-row-inbox::before { content: none; }
 .thread-row-inbox:hover { background: var(--surface-raised); }
 .thread-row-inbox.is-active {
-    border-left-color: var(--gold-500);
+    border-left-color: var(--accent-2);
     background: var(--brand-subtle);
 }
 .thread-row-inbox.is-cursor {
-    box-shadow: inset 0 0 0 1px var(--gold-500);
+    box-shadow: inset 0 0 0 1px var(--accent-2);
 }
 .thread-row-select {
     display: inline-flex;

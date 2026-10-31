@@ -1,0 +1,16 @@
+{
+  "selected": {
+    "colour": "rgb(15, 18, 24)",
+    "background": "rgb(255, 255, 255)",
+    "ratio": 18.74960333665853,
+    "outline": "rgb(15, 18, 24)",
+    "outlineStyle": "none"
+  },
+  "hovered": {
+    "colour": "rgb(15, 18, 24)",
+    "background": "rgb(255, 255, 255)",
+    "ratio": 18.74960333665853,
+    "outline": "rgb(15, 18, 24)",
+    "outlineStyle": "none"
+  }
+}

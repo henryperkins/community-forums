@@ -9,6 +9,7 @@ use App\Security\Packages\ThemeTokenPolicy;
 /** Resolved branding colours shared by delivery, preview, and contrast review. */
 final class BrandPalette
 {
+    public const CSS_VERSION = '2';
     /** @return array<string,array<string,array<string,string>>> */
     public static function presets(?array $packageTokens = null): array
     {
@@ -20,7 +21,10 @@ final class BrandPalette
                 '--border-soft' => '#dce3dd', '--border-strong' => '#94a095',
                 '--text-body' => '#313b33', '--text-faint' => '#5c685d',
                 '--gold-soft' => '#f4ebcf', '--gold-ink' => '#7e5f22',
-                '--field-rule' => '#9a7530',
+                '--gold' => '#c29a44', '--rule-gold' => '#c29a44',
+                '--surface-done' => '#edf3ed', '--on-done' => '#24402f',
+                '--brand-hover' => '#24402f', '--brand-press' => '#1c2e24',
+                '--focus-ring' => 'rgba(194,154,68,.7)', '--field-rule' => '#9a7530',
             ]),
             'dark' => array_replace(ThemeTokenPolicy::baseline('dark'), [
                 '--surface-page' => '#161d24', '--surface-raised' => '#1e2730',
@@ -30,7 +34,10 @@ final class BrandPalette
                 '--text-body' => '#d7dcd2', '--text-faint' => '#94a095',
                 '--brand-subtle' => 'rgba(78,116,89,.20)',
                 '--gold-soft' => 'rgba(194,154,68,.16)', '--gold-ink' => '#d2b062',
-                '--field-rule' => '#b08a3a',
+                '--gold' => '#c29a44', '--rule-gold' => '#d2b062',
+                '--surface-done' => 'rgba(78,116,89,.20)', '--on-done' => '#bcd0bf',
+                '--brand-hover' => '#6e9479', '--brand-press' => '#1c2e24',
+                '--focus-ring' => 'rgba(210,176,98,.75)', '--field-rule' => '#b08a3a',
             ]),
         ];
         // Package builds contain validated token data, never raw operator CSS.
@@ -51,7 +58,7 @@ final class BrandPalette
             }
             // An active package owns the preset; the stored Retro choice resumes
             // only when the package is disabled or safe mode suppresses it.
-            return ['classic' => $classic, 'retro' => $classic];
+            return self::previewDefaults(['classic' => $classic, 'retro' => $classic]);
         }
 
         $retro = [
@@ -78,26 +85,68 @@ final class BrandPalette
                 '--text-muted' => '#d4bd94', '--text-faint' => '#c4ae8a', '--text-inverse' => '#241706',
                 '--accent' => '#f0b778', '--accent-contrast' => '#241706', '--accent-2' => '#e6ad69',
                 '--brand' => '#d99b58', '--brand-hover' => '#f0b778', '--brand-press' => '#ffd2a0',
+                '--brand-contrast' => '#241706',
                 '--brand-subtle' => '#49331e', '--on-brand-subtle' => '#f0d3a2',
                 '--border' => '#776047', '--border-hair' => '#776047', '--border-soft' => '#57432f',
                 '--border-strong' => '#ad8b5e', '--field-rule' => '#c79c60',
                 '--gold-soft' => '#49331e', '--gold-ink' => '#f0c98c', '--rule-gold' => '#e6ad69',
             ]),
         ];
-        return ['classic' => $classic, 'retro' => $retro];
+        return self::previewDefaults(['classic' => $classic, 'retro' => $retro]);
+    }
+
+    /** Local defaults stop a cleared preview inheriting saved overrides from html. */
+    private static function previewDefaults(array $presets): array
+    {
+        foreach ($presets as &$modes) {
+            foreach ($modes as &$palette) {
+                $palette['--brand-primary'] = $palette['--accent'];
+                $palette['--brand-contrast'] ??= '#faf6ec';
+                $palette['--brand-hover-contrast'] = self::contrastInk($palette['--brand-hover']);
+                $palette['--brand-press-contrast'] = self::contrastInk($palette['--brand-press']);
+                $palette['--brand-primary-hover'] = self::mix($palette['--accent'], '#000000', .82);
+                $palette['--brand-primary-press'] = $palette['--brand-primary-hover'];
+                $palette['--brand-primary-hover-contrast'] = $palette['--accent-contrast'];
+                $palette['--brand-primary-press-contrast'] = $palette['--accent-contrast'];
+                $palette['--brand-accent'] = $palette['--accent-2'];
+                $palette['--brand-accent-contrast'] = self::contrastInk($palette['--accent-2']);
+                $palette['--brand-accent-hover'] = '#b08a3a';
+                $palette['--brand-accent-hover-contrast'] = '#1b231d';
+            }
+        }
+        return $presets;
     }
 
     /** @param array<string,string> $palette @return array<string,string> */
     public static function withColours(array $palette, string $primary, string $accent): array
     {
+        $surface = $palette['--surface-raised'] ?? '#faf6ec';
         if (self::isHex($primary)) {
             $palette['--accent'] = strtolower($primary);
             $palette['--brand-primary'] = strtolower($primary);
             $palette['--accent-contrast'] = self::contrastInk($primary);
+            $palette['--brand'] = strtolower($primary);
+            $palette['--brand-contrast'] = self::contrastInk($primary);
+            $palette['--brand-subtle'] = self::mix($primary, $surface, .14);
+            $palette['--on-brand-subtle'] = self::readableTone($primary, $palette['--brand-subtle']);
+            foreach (['hover' => .82, 'press' => .68] as $state => $weight) {
+                $fill = self::actionShade($primary, $weight);
+                $palette['--brand-' . $state] = $fill;
+                $palette['--brand-' . $state . '-contrast'] = self::contrastInk($fill);
+                $palette['--brand-primary-' . $state] = $fill;
+                $palette['--brand-primary-' . $state . '-contrast'] = self::contrastInk($fill);
+            }
+            $palette['--focus-ring'] = strtolower($primary);
         }
         if (self::isHex($accent)) {
             $palette['--accent-2'] = strtolower($accent);
             $palette['--brand-accent'] = strtolower($accent);
+            $palette['--gold'] = strtolower($accent);
+            $palette['--rule-gold'] = strtolower($accent);
+            $palette['--gold-soft'] = self::mix($accent, $surface, .14);
+            $palette['--gold-ink'] = self::readableTone($accent, $palette['--gold-soft']);
+            $palette['--brand-accent-hover'] = self::actionShade($accent, .82);
+            $palette['--brand-accent-hover-contrast'] = self::contrastInk($palette['--brand-accent-hover']);
         }
         if (isset($palette['--accent-2'])) {
             $palette['--brand-accent-contrast'] = self::contrastInk($palette['--accent-2']);
@@ -161,6 +210,31 @@ final class BrandPalette
                     $warnings[] = sprintf('%s gives %s only %.2f:1 contrast on %s surfaces; %.1f:1 is needed.', $label, $use, $ratio, $mode, $minimum);
                 }
             }
+            $resolved = self::withColours($palette, $primary, $accent);
+            $pairs = [];
+            if (self::isHex($primary)) {
+                $pairs += [
+                    'selected navigation' => ['--on-brand-subtle', '--brand-subtle'],
+                    'selected menu' => ['--brand-contrast', '--brand'],
+                    'hovered actions' => ['--brand-hover-contrast', '--brand-hover'],
+                    'pressed actions' => ['--brand-press-contrast', '--brand-press'],
+                ];
+            }
+            if (self::isHex($accent)) {
+                $pairs['unread counts'] = ['--gold-ink', '--gold-soft'];
+                $pairs['hovered accent actions'] = ['--brand-accent-hover-contrast', '--brand-accent-hover'];
+                // Accent ink is also used on ordinary content (board labels).
+                $ratio = min(array_map(static fn (string $surface): float => self::contrastRatio($resolved['--gold-ink'], $surface), $surfaces));
+                if ($ratio < 4.5) {
+                    $warnings[] = sprintf('Accent text gives board labels only %.2f:1 contrast on %s surfaces; 4.5:1 is needed.', $ratio, $mode);
+                }
+            }
+            foreach ($pairs as $use => [$foreground, $background]) {
+                $ratio = self::contrastRatio($resolved[$foreground], $resolved[$background]);
+                if ($ratio < 4.5) {
+                    $warnings[] = sprintf('Colours give %s only %.2f:1 contrast in %s; 4.5:1 is needed.', $use, $ratio, $mode);
+                }
+            }
         }
         foreach (['Primary colour' => $primary, 'Accent colour' => $accent] as $label => $colour) {
             if (self::isHex($colour) && self::contrastRatio($colour, self::contrastInk($colour)) < 4.5) {
@@ -177,7 +251,45 @@ final class BrandPalette
 
     public static function contrastInk(string $colour): string
     {
-        return self::contrastRatio($colour, '#ffffff') >= self::contrastRatio($colour, '#0f1218') ? '#ffffff' : '#0f1218';
+        $ink = self::contrastRatio($colour, '#ffffff') >= self::contrastRatio($colour, '#0f1218') ? '#ffffff' : '#0f1218';
+        return self::contrastRatio($colour, $ink) >= 4.5 ? $ink : '#000000';
+    }
+
+    /** Same sRGB interpolation as the enhanced preview, rounded to whole channels. */
+    private static function mix(string $colour, string $ground, float $weight): string
+    {
+        $result = '#';
+        foreach ([1, 3, 5] as $offset) {
+            $channel = (int) round(hexdec(substr($colour, $offset, 2)) * $weight + hexdec(substr($ground, $offset, 2)) * (1 - $weight));
+            $result .= str_pad(dechex($channel), 2, '0', STR_PAD_LEFT);
+        }
+        return $result;
+    }
+
+    private static function actionShade(string $colour, float $weight): string
+    {
+        $ink = self::contrastInk($colour);
+        // Retain one readable label colour through hover/press, including
+        // midpoint colours whose dark ink cannot tolerate the full darkening.
+        for ($step = (int) round($weight * 100); $step <= 100; ++$step) {
+            $shade = self::mix($colour, '#000000', $step / 100);
+            if (self::contrastRatio($shade, $ink) >= 4.5) {
+                return $shade;
+            }
+        }
+        return strtolower($colour);
+    }
+
+    private static function readableTone(string $colour, string $surface): string
+    {
+        $target = self::contrastInk($surface);
+        for ($step = 0; $step <= 100; ++$step) {
+            $tone = self::mix($colour, $target, 1 - $step / 100);
+            if (self::contrastRatio($tone, $surface) >= 4.5) {
+                return $tone;
+            }
+        }
+        return $target;
     }
 
     public static function contrastRatio(string $a, string $b): float

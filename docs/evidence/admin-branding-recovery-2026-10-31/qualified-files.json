@@ -1,0 +1,34 @@
+{
+  "base": "f0bbfc03ba90437f787ef77e3fad220b9f51f9b7",
+  "branch": "fix/admin-branding-recovery",
+  "files": {
+    "ADMIN.md": "2956a4a5fdbcc768cba6d3ed6f369b0910bc9e94281d2ad49528e17e045f9405",
+    "CHANGELOG.md": "5f546cc36f9a1d57a44369caf11afee260854066da0fb3766f1bebdcb327cadf",
+    "config/assets.json": "532cac7d7d21b98c1f377bf2e13717e1015b561811d88abcba8fb30799ffa6c4",
+    "docs/adr/0053-branding-contrast-preview-and-theme-recovery.md": "39c9aa9b29b434a1d2421df4054da7c76cbd4cd7afcd6f3a8a624495fac0b947",
+    "docs/runbooks/branding.md": "0dc57830cfd21ee43de108d7063d4dd7558735292ace1dd995234cdd596ed341",
+    "docs/superpowers/README.md": "a4ecee8c4d327f65bf54e428d4e6ad18b8ea045e611045654709dd0462a8aa2d",
+    "docs/superpowers/plans/2026-10-31-admin-branding-recovery.md": "44a6869a67bbca405218f46a18264c0ee14e9d71497becd13b87c92c00ee36f3",
+    "public/assets/app.css": "0c4c0bb0f69f7af1fe9c723916f704146e7e9f4950aa6184918be46b2dba1b3f",
+    "public/assets/app.js": "b340718c6047583b19a6ba87ff5778bd0d99a06e79fb2931b0fe04f397bf49a0",
+    "public/assets/dist/app-24135bf80748f0b0.js": "24135bf80748f0b0dad4ed56ec6cc40347717253d629d4ac8399191b15981d00",
+    "public/assets/dist/app-45ac58f23e6701c7.js": "45ac58f23e6701c778077023f4d75f11a1e1f6eb909feb0832932011cf004637",
+    "public/assets/dist/app-a41a60391b9a880f.js": "a41a60391b9a880fdc6c8ac9c02272893dbb5e209492e96676503d4aa1f281f5",
+    "public/assets/dist/app-f15c5d4e6d0de477.js": "f15c5d4e6d0de47795b4d8713e02a00550be1dbee319058cd5efc3342082a014",
+    "public/assets/dist/app-style-BaLoyX9O.css": "7b53239121925ba3015f87a574b66f1f2eda6e132b151decbc92da2ae5d908c5",
+    "public/assets/dist/app-style-Bz-afAfo.css": "07f12c1f197b55a1fdebdf51df8a7eb1383269093c0b983383c2c93e4a89a14c",
+    "public/assets/dist/app-style-C0epKJUk.css": "f5c8603e3bc1b04ef30b7da314c5de3064ae45fc517837811953826d05bdff2e",
+    "public/assets/dist/app-style-CunORmrQ.css": "b81eb697eb9d546f58116b24ed200dbd71a0661caabb37ca1a1e8c3d9faa1b29",
+    "src/Controller/BrandingController.php": "4a5e29949b2894bab08e13c41d100c7e7386cae014df78641b9bb0c7976009e6",
+    "templates/admin/branding.php": "00f06631d2e717f8e660c22247baf84957cda6af73e5a79648bf1e69e60e348e",
+    "tests/Integration/Core/AppBrandingThemeTest.php": "64e30d9e9f2f4b5298e13c591c7f23386f435701996fe567cca9bc6d17453d31",
+    "tests/browser/admin-appearance-followup.spec.ts": "1aba3515fbf4ca017122fa7ba72b3f5e61043ae0d1f6737f364b0327c5168f22",
+    "tests/browser/gate-a.spec.ts": "cde2b788b2f6cf5fa44b7621a3fa42200ccb0c29619896c6c2d5505ec1f032d2",
+    "tests/browser/theming-remediation-fixture.php": "19a5c3583b61801f1d3a9ba1efcf87bc23f524586ad1d1df583e6ba4ef9f0ccc",
+    "tests/browser/theming-remediation.spec.ts": "7036d446a98480797f0031a7a1212dd9a78846ef9f3436ff49cb443db6bc2028"
+  },
+  "deleted": [
+    "public/assets/dist/app-8e7515da87472a63.js",
+    "public/assets/dist/app-style--jg7dl7V.css"
+  ]
+}

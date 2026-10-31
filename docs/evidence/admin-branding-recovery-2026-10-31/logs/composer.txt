@@ -1,0 +1,1458 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/phpunit.xml
+
+.............................................................   61 / 3433 (  1%)
+.............................................................  122 / 3433 (  3%)
+.............................................................  183 / 3433 (  5%)
+.............................................................  244 / 3433 (  7%)
+.............................................................  305 / 3433 (  8%)
+.............................................................  366 / 3433 ( 10%)
+.............................................................  427 / 3433 ( 12%)
+.............................................................  488 / 3433 ( 14%)
+.............................................................  549 / 3433 ( 15%)
+.............................................................  610 / 3433 ( 17%)
+.............................................................  671 / 3433 ( 19%)
+.............................................................  732 / 3433 ( 21%)
+.............................................................  793 / 3433 ( 23%)
+.............................................................  854 / 3433 ( 24%)
+.............................................................  915 / 3433 ( 26%)
+........[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+................................  976 / 3433 ( 28%)
+............................................................. 1037 / 3433 ( 30%)
+.........................................[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F.[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F...[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F............ 1098 / 3433 ( 31%)
+........[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F....[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F......................................... 1159 / 3433 ( 33%)
+............................................................. 1220 / 3433 ( 35%)
+..........................................F.................. 1281 / 3433 ( 37%)
+............................................................. 1342 / 3433 ( 39%)
+............................................................. 1403 / 3433 ( 40%)
+............................................................. 1464 / 3433 ( 42%)
+............................................................. 1525 / 3433 ( 44%)
+.......................[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F..[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F.............................. 1586 / 3433 ( 46%)
+...................................................[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F......... 1647 / 3433 ( 47%)
+............................................................. 1708 / 3433 ( 49%)
+................................................[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F.[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F......... 1769 / 3433 ( 51%)
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F.......................................................... 1830 / 3433 ( 53%)
+.......[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+.[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+.[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F............................................ 1891 / 3433 ( 55%)
+............................................................. 1952 / 3433 ( 56%)
+............................................................. 2013 / 3433 ( 58%)
+.....................[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+FFF[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F......... 2074 / 3433 ( 60%)
+............................................................. 2135 / 3433 ( 62%)
+............................................................. 2196 / 3433 ( 63%)
+............................................................. 2257 / 3433 ( 65%)
+............................................................. 2318 / 3433 ( 67%)
+............................................................. 2379 / 3433 ( 69%)
+.................................[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F......[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F...........[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F........ 2440 / 3433 ( 71%)
+...[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F......................................................... 2501 / 3433 ( 72%)
+..................S.......................................... 2562 / 3433 ( 74%)
+.........................[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":104857600,"php_post_bytes":104857600}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":104857600,"php_post_bytes":104857600}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":104857600,"php_post_bytes":104857600}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":104857600,"php_post_bytes":104857600}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":104857600,"php_post_bytes":104857600}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":104857600,"php_post_bytes":104857600}
+..[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":104857600,"php_post_bytes":104857600}
+.................................. 2623 / 3433 ( 76%)
+.[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+[RetroBoards] WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37
+F........................................................... 2684 / 3433 ( 78%)
+............................................................. 2745 / 3433 ( 79%)
+............................................................. 2806 / 3433 ( 81%)
+............................................................. 2867 / 3433 ( 83%)
+............................................................. 2928 / 3433 ( 85%)
+............................................................. 2989 / 3433 ( 87%)
+............................................................. 3050 / 3433 ( 88%)
+............................................................. 3111 / 3433 ( 90%)
+............................................................. 3172 / 3433 ( 92%)
+............................................................. 3233 / 3433 ( 94%)
+............................................................. 3294 / 3433 ( 95%)
+............................................................. 3355 / 3433 ( 97%)
+............................................................. 3416 / 3433 ( 99%)
+.................                                             3433 / 3433 (100%)
+
+Time: 01:42.972, Memory: 54.00 MB
+
+There were 66 failures:
+
+1) Tests\Integration\Core\AppAccountConsoleTest::test_passwordless_security_and_lifecycle_offer_first_password_without_impossible_prompts
+Failed asserting that '<!doctype html>\n
+<html lang="en"\n
+      data-theme="system"\n
+      data-density="comfortable"\n
+      data-font-size="medium"\n
+      >\n
+<head>\n
+    <meta charset="utf-8">\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\n
+            <title>Error 500</title>\n
+    <meta name="description" content="RetroBoards — a community forum.">\n
+            <meta property="og:site_name" content="RetroBoards">\n
+    <meta property="og:title" content="Error 500">\n
+    <meta property="og:description" content="RetroBoards — a community forum.">\n
+    <meta property="og:type" content="website">\n
+                    <link rel="icon" href="data:,">\n
+        <link rel="stylesheet" href="/assets/dist/imladris-style-CRsa_HRN.css">\n
+    <link rel="stylesheet" href="/assets/dist/app-style-Bz-afAfo.css">\n
+    <link rel="stylesheet" href="/assets/dist/wysiwyg-composer-BRAFF38E.css">        </head>\n
+<body class="variant-plain is-rail-open is-reading-open" data-route="" data-drafts="1" data-server-drafts="1" data-rail-open="1" data-inbox-reading-open="1" data-wysiwyg-composer="1" data-wysiwyg-src="/assets/dist/wysiwyg-composer-XlKwRXnh.js" data-user="u3f33a98b" data-enter-to-send="1" data-show-preview="1" data-smart-lists="1" data-tour="1">\n
+<a class="skip-link" href="#main">Skip to content</a>\n
+<header class="forum-bar">\n
+        \n
+        <span class="forum-bar-lockup">\n
+        <a class="forum-bar-brand" href="/" aria-label="RetroBoards">\n
+                                            <svg class="forum-bar-mark" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\n
+                <span class="forum-bar-wordmark">RetroBoards</span>\n
+                    </a>\n
+    </span>\n
+\n
+        <nav class="forum-bar-surfaces" aria-label="Primary">\n
+                    <a data-primary-route="boards" class="forum-bar-surface" href="/">Boards</a>\n
+                                                                            <a data-primary-route="inbox" class="forum-bar-surface" href="/inbox" data-count-name="Inbox">Inbox</a>\n
+                                                                    <a data-primary-route="messages" class="forum-bar-surface" href="/messages" data-count-name="Messages">Messages<span class="forum-bar-count" data-dm-unread-count aria-hidden="true" hidden>0</span></a>\n
+                        </nav>\n
+\n
+                    <span class="forum-bar-searchwrap">\n
+            <a class="forum-bar-search" href="/search" aria-label="Search the council" data-shortcut="k">\n
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>\n
+                <span class="forum-bar-search-label">Search the council…</span>\n
+                <span class="forum-bar-kbd" data-shortcut-hint aria-hidden="true" hidden></span>\n
+            </a>\n
+        </span>\n
+    \n
+    <span class="forum-bar-right">\n
+                                \n
+            \n
+                        \n
+                                        <a class="forum-bar-bell bell" href="/notifications" data-bell data-notification-link aria-label="Notifications" title="Notifications">\n
+                    <svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\n
+                    <span class="bell-count" data-notification-count aria-hidden="true" hidden>0</span>\n
+                </a>\n
+                        <details class="identity-menu">\n
+                <summary class="forum-bar-user" aria-label="Account menu for u3f33a98b">\n
+                    <span class="avatar-wrap">\n
+                            <span class="monogram mono-7" aria-hidden="true">U3</span>\n
+                                                                            <span class="presence-dot" aria-hidden="true"></span>\n
+                                            </span>\n
+                    <span class="forum-bar-username">u3f33a98b</span>\n
+                    <svg class="icon icon-chevron-down" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>\n
+                </summary>\n
+                                <div class="identity-menu-panel">\n
+                    <a href="/u/u3f33a98b"><svg class="icon icon-user" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/></svg>\n
+<span>Profile</span></a>\n
+                                            <a href="/notifications" data-notification-link aria-label="Notifications"><svg class="icon icon-bell" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\n
+<span>Notifications</span><span class="notification-count" data-notification-count aria-hidden="true" hidden>0</span></a>\n
+                                        <a href="/drafts"><svg class="icon icon-file" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>\n
+<span>Drafts</span></a>                                            <a href="/feed"><svg class="icon icon-users" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>\n
+<span>Following</span></a>\n
+                        <a href="/leaderboard"><svg class="icon icon-commend-star" viewBox="0 0 100 100" width="16" height="16" fill="currentColor" stroke="none" aria-hidden="true"><path d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"/></svg>\n
+<span>Top contributors</span></a>\n
+                                        <a class="identity-menu-break" href="/settings/account"><svg class="icon icon-settings" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>\n
+<span>Settings</span></a>\n
+                                        <form class="identity-menu-break" method="post" action="/logout">\n
+                        <input type="hidden" name="_token" value="62c6f8ab24da92c210344389927a82397efab68fc1236e8e963feb607a321f61">                        <button type="submit"><svg class="icon icon-log-out" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>\n
+<span>Log out</span></button>\n
+                    </form>\n
+                </div>\n
+            </details>\n
+            </span>\n
+</header>\n
+    <main class="container" id="main">\n
+        <div class="forum-subheader" data-subheader>\n
+    <div class="forum-subheader-leading"></div>\n
+                        <details class="create-menu" name="inbox-controls" data-create-menu data-inbox-menu-align="end">\n
+                <summary class="create-trigger" data-create-trigger aria-label="New topic or message">\n
+                    <svg class="icon icon-plus" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>\n
+<span class="create-label">New</span><svg class="icon icon-chevron-down" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>\n
+                </summary>\n
+                <div class="create-menu-panel">\n
+                    <a href="/compose">New topic</a>\n
+                    <a href="/messages/new" data-new-message>New message</a>\n
+                </div>\n
+            </details>\n
+            </div>\n
+                <div class="auth-card error-card">\n
+    <h1>500</h1>\n
+    <p>WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it. @ /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Security/WebAuthn/RelyingParty.php:37</p>\n
+        <p><a class="btn" href="/">Back to home</a></p>\n
+</div>\n
+    </main>\n
+<script src="/assets/dist/app-45ac58f23e6701c7.js" defer></script>\n
+<script src="/assets/dist/composer-c1ff478070e3a1d8.js" defer></script><script src="/assets/dist/passkeys-16e7134417f0d6af.js" defer></script><script src="/assets/dist/tour-f068bdb2d74e6d21.js" defer></script></body>\n
+</html>\n
+' [UTF-8](length: 9843) contains "id="set-password"" [ASCII](length: 17).
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:29
+
+2) Tests\Integration\Core\AppAccountConsoleTest::test_security_first_password_validates_and_works_with_oauth_dark
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:49
+
+3) Tests\Integration\Core\AppAccountConsoleTest::test_first_password_is_rate_limited_and_restricted_accounts_cannot_set_credentials
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:87
+
+4) Tests\Integration\Core\AppAccountConsoleTest::test_all_account_routes_render_one_common_head_and_explicit_active_destination with data set "security" ('/settings/security', 'security')
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:164
+
+5) Tests\Integration\Core\AppAccountConsoleTest::test_every_existing_html_422_keeps_its_explicit_active_owner with data set "password" ('/settings/security', ['wrong', 'newpassword456', 'newpassword456'], 'security', 'Your current password is incorrect.')
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:399
+
+6) Tests\Integration\Core\AppAccountConsoleTest::test_every_existing_html_422_keeps_its_explicit_active_owner with data set "totp enroll" ('/settings/security/totp/enroll', ['wrong'], 'security', 'Your current password is incorrect.')
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:399
+
+7) Tests\Integration\Core\AppAccountConsoleTest::test_every_existing_html_422_keeps_its_explicit_active_owner with data set "totp confirm without pending enrollment" ('/settings/security/totp/confirm', ['password123', '000000'], 'security', 'Not enabled.')
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:399
+
+8) Tests\Integration\Core\AppAccountConsoleTest::test_every_existing_html_422_keeps_its_explicit_active_owner with data set "totp recovery rotation without MFA" ('/settings/security/totp/recov...rotate', ['password123'], 'security', 'Enable two-factor authenticat...codes.')
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:399
+
+9) Tests\Integration\Core\AppAccountConsoleTest::test_every_existing_html_422_keeps_its_explicit_active_owner with data set "totp disable" ('/settings/security/totp/disable', ['wrong', '000000'], 'security', 'Your current password is incorrect.')
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:399
+
+10) Tests\Integration\Core\AppAccountConsoleTest::test_passkey_rename_422_keeps_security_active_and_shows_the_error
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:415
+
+11) Tests\Integration\Core\AppAccountConsoleTest::test_passkey_revoke_422_keeps_security_active_and_shows_the_error
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:427
+
+12) Tests\Integration\Core\AppAccountConsoleTest::test_mobile_chooser_reuses_the_filtered_desktop_navigation_and_is_closed
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAccountConsoleTest.php:459
+
+13) Tests\Integration\Core\AppAuthHardeningTest::test_the_passkey_error_line_is_a_live_region_from_the_start
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppAuthHardeningTest.php:127
+
+14) Tests\Integration\Core\AppFeatureFlagTest::test_phase5_gate_a_surfaces_are_live_with_no_features_override
+Failed asserting that '<!doctype html>\n
+<html lang="en"\n
+      data-theme="system"\n
+      data-density="comfortable"\n
+      data-font-size="medium"\n
+      >\n
+<head>\n
+    <meta charset="utf-8">\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\n
+            <title>Log in</title>\n
+    <meta name="description" content="RetroBoards — a community forum.">\n
+            <meta property="og:site_name" content="RetroBoards">\n
+    <meta property="og:title" content="Log in">\n
+    <meta property="og:description" content="RetroBoards — a community forum.">\n
+    <meta property="og:type" content="website">\n
+                    <link rel="icon" href="data:,">\n
+        <link rel="stylesheet" href="/assets/dist/imladris-style-CRsa_HRN.css">\n
+    <link rel="stylesheet" href="/assets/dist/app-style-Bz-afAfo.css">\n
+    <link rel="stylesheet" href="/assets/dist/wysiwyg-composer-BRAFF38E.css">        </head>\n
+<body class="variant-auth is-rail-open is-reading-open" data-route="" data-drafts="1" data-server-drafts="1" data-rail-open="1" data-inbox-reading-open="1" data-wysiwyg-composer="1" data-wysiwyg-src="/assets/dist/wysiwyg-composer-XlKwRXnh.js">\n
+<a class="skip-link" href="#main">Skip to content</a>\n
+    <main class="auth-stage" id="main">\n
+        <svg class="auth-stage-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\n
+        <a class="auth-brand" href="/">\n
+            <svg class="auth-brand-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\n
+            <span class="auth-brand-name">RetroBoards</span>\n
+        </a>\n
+                <div class="auth-card">\n
+    <span class="auth-eyebrow">Welcome back</span>\n
+    <h1>Log in</h1>\n
+        <form method="post" action="/login" class="auth-form">\n
+        <input type="hidden" name="_token" value="6463624e9eda101f1bc9b6a55734e33981cf1218ea2d9e1f72f9350eb79f6319">        <input type="hidden" name="next" value="/inbox">\n
+        <label class="field">\n
+            <span>Email</span>\n
+            <input type="email" name="email" class="input input-engraved" autocomplete="username" value="" required autofocus>\n
+        </label>\n
+        <label class="field">\n
+            <span>Password</span>\n
+            <input type="password" name="password" class="input input-engraved" autocomplete="current-password" required>\n
+        </label>\n
+        <button class="btn" type="submit">Log in</button>\n
+    </form>\n
+            <div class="auth-links">\n
+        <p><a href="/forgot">Forgot your password?</a></p>\n
+        <p>New here? <a href="/register">Create an account</a>.</p>\n
+    </div>\n
+</div>\n
+    </main>\n
+<script src="/assets/dist/app-45ac58f23e6701c7.js" defer></script>\n
+<script src="/assets/dist/composer-c1ff478070e3a1d8.js" defer></script><script src="/assets/dist/passkeys-16e7134417f0d6af.js" defer></script></body>\n
+</html>\n
+' [UTF-8](length: 3576) contains "data-passkey-signin" [ASCII](length: 19).
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppFeatureFlagTest.php:305
+
+15) Tests\Integration\Core\AppFeatureFlagTest::test_passkeys_flag_gates_ceremony_routes
+Failed asserting that '<!doctype html>\n
+<html lang="en"\n
+      data-theme="system"\n
+      data-density="comfortable"\n
+      data-font-size="medium"\n
+      >\n
+<head>\n
+    <meta charset="utf-8">\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\n
+            <title>Log in</title>\n
+    <meta name="description" content="RetroBoards — a community forum.">\n
+            <meta property="og:site_name" content="RetroBoards">\n
+    <meta property="og:title" content="Log in">\n
+    <meta property="og:description" content="RetroBoards — a community forum.">\n
+    <meta property="og:type" content="website">\n
+                    <link rel="icon" href="data:,">\n
+        <link rel="stylesheet" href="/assets/dist/imladris-style-CRsa_HRN.css">\n
+    <link rel="stylesheet" href="/assets/dist/app-style-Bz-afAfo.css">\n
+    <link rel="stylesheet" href="/assets/dist/wysiwyg-composer-BRAFF38E.css">        </head>\n
+<body class="variant-auth is-rail-open is-reading-open" data-route="" data-drafts="1" data-server-drafts="1" data-rail-open="1" data-inbox-reading-open="1" data-wysiwyg-composer="1" data-wysiwyg-src="/assets/dist/wysiwyg-composer-XlKwRXnh.js">\n
+<a class="skip-link" href="#main">Skip to content</a>\n
+    <main class="auth-stage" id="main">\n
+        <svg class="auth-stage-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\n
+        <a class="auth-brand" href="/">\n
+            <svg class="auth-brand-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\n
+            <span class="auth-brand-name">RetroBoards</span>\n
+        </a>\n
+                <div class="auth-card">\n
+    <span class="auth-eyebrow">Welcome back</span>\n
+    <h1>Log in</h1>\n
+        <form method="post" action="/login" class="auth-form">\n
+        <input type="hidden" name="_token" value="ef055feac3d875bbf25f632e7781012dc838ea539e549ed2b4707fdf84c5dadf">        <input type="hidden" name="next" value="/inbox">\n
+        <label class="field">\n
+            <span>Email</span>\n
+            <input type="email" name="email" class="input input-engraved" autocomplete="username" value="" required autofocus>\n
+        </label>\n
+        <label class="field">\n
+            <span>Password</span>\n
+            <input type="password" name="password" class="input input-engraved" autocomplete="current-password" required>\n
+        </label>\n
+        <button class="btn" type="submit">Log in</button>\n
+    </form>\n
+            <div class="auth-links">\n
+        <p><a href="/forgot">Forgot your password?</a></p>\n
+        <p>New here? <a href="/register">Create an account</a>.</p>\n
+    </div>\n
+</div>\n
+    </main>\n
+<script src="/assets/dist/app-45ac58f23e6701c7.js" defer></script>\n
+<script src="/assets/dist/composer-c1ff478070e3a1d8.js" defer></script><script src="/assets/dist/passkeys-16e7134417f0d6af.js" defer></script></body>\n
+</html>\n
+' [UTF-8](length: 3576) contains "data-passkey-signin" [ASCII](length: 19).
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppFeatureFlagTest.php:505
+
+16) Tests\Integration\Core\AppImladrisFidelityTest::test_settings_pages_keep_one_main_landmark_and_real_section_headings
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppImladrisFidelityTest.php:203
+
+17) Tests\Integration\Core\AppLocalReturnTest::test_the_second_factor_keeps_only_a_local_next
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppLocalReturnTest.php:260
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppLocalReturnTest.php:244
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppLocalReturnTest.php:70
+
+18) Tests\Integration\Core\AppLocalReturnTest::test_the_second_factor_does_not_follow_a_stored_off_site_next
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppLocalReturnTest.php:260
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppLocalReturnTest.php:244
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppLocalReturnTest.php:90
+
+19) Tests\Integration\Core\AppLocalReturnTest::test_passkey_sign_in_answers_with_only_a_local_redirect
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppLocalReturnTest.php:272
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppLocalReturnTest.php:137
+
+20) Tests\Integration\Core\AppMemberFieldErrorA11yTest::test_security_page_scopes_its_error_to_the_form_that_raised_it
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMemberFieldErrorA11yTest.php:146
+
+21) Tests\Integration\Core\AppMemberFieldErrorA11yTest::test_a_failed_action_whose_form_is_gone_still_surfaces_its_error
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMemberFieldErrorA11yTest.php:176
+
+22) Tests\Integration\Core\AppMemberShellTest::test_directory_skips_editor_and_passkey_assets_while_their_surfaces_keep_them
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMemberShellTest.php:60
+
+23) Tests\Integration\Core\AppMfaTest::test_pending_enrollment_survives_invalid_code_password_and_reload
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:352
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:20
+
+24) Tests\Integration\Core\AppMfaTest::test_pending_enrollment_restarts_only_after_explicit_password_confirmation
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:352
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:50
+
+25) Tests\Integration\Core\AppMfaTest::test_disabled_enrollment_cannot_be_confirmed_again
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:330
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:67
+
+26) Tests\Integration\Core\AppMfaTest::test_user_enrolls_totp_uses_recovery_code_and_disables_without_javascript
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:82
+
+27) Tests\Integration\Core\AppMfaTest::test_totp_mfa_code_guessing_is_throttled_per_account_across_fresh_login_tokens
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:330
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:174
+
+28) Tests\Integration\Core\AppMfaTest::test_failed_totp_login_is_audited_not_silent
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:330
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:208
+
+29) Tests\Integration\Core\AppMfaTest::test_enabling_totp_revokes_other_sessions
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:330
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:273
+
+30) Tests\Integration\Core\AppMfaTest::test_disabling_totp_revokes_other_sessions
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:352
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppMfaTest.php:288
+
+31) Tests\Integration\Core\AppPasskeyLoginTest::test_registered_credential_signs_in_the_right_account
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:71
+
+32) Tests\Integration\Core\AppPasskeyLoginTest::test_registered_credential_defaults_to_the_community_inbox_without_next
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:94
+
+33) Tests\Integration\Core\AppPasskeyLoginTest::test_unknown_or_passkeyless_email_gets_fixed_shape_decoys_and_never_signs_in
+Unexpected HTTP status. Body: {"ok":false,"errors":{"passkey":"WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it."},"code":"invalid_rp_id"}
+Failed asserting that 422 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:46
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:109
+
+34) Tests\Integration\Core\AppPasskeyLoginTest::test_login_challenge_rate_limit_keeps_the_json_error_contract
+Unexpected HTTP status. Body: {"ok":false,"errors":{"passkey":"WEBAUTHN_RP_ID must equal the APP_URL host or be a parent domain of it."},"code":"invalid_rp_id"}
+Failed asserting that 422 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:139
+
+35) Tests\Integration\Core\AppPasskeyLoginTest::test_passkey_login_rate_limit_is_subject_keyed_and_cleared_after_success
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:152
+
+36) Tests\Integration\Core\AppPasskeyLoginTest::test_assertion_replay_is_rejected
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:185
+
+37) Tests\Integration\Core\AppPasskeyLoginTest::test_challenge_minted_for_one_account_rejects_another_accounts_credential
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:200
+
+38) Tests\Integration\Core\AppPasskeyLoginTest::test_altered_signature_fails_generically
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:220
+
+39) Tests\Integration\Core\AppPasskeyLoginTest::test_banned_account_cannot_passkey_sign_in
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:235
+
+40) Tests\Integration\Core\AppPasskeyLoginTest::test_non_increasing_counter_signs_in_and_writes_a_risk_audit_row
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:252
+
+41) Tests\Integration\Core\AppPasskeyLoginTest::test_totp_enrolled_account_requires_a_uv_assertion
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyLoginTest.php:282
+
+42) Tests\Integration\Core\AppPasskeyRecoveryTest::test_password_totp_and_recovery_paths_survive_passkey_enrollment
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRecoveryTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRecoveryTest.php:60
+
+43) Tests\Integration\Core\AppPasskeyRecoveryTest::test_lost_authenticator_journey_fallback_revoke_reenroll
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRecoveryTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRecoveryTest.php:98
+
+44) Tests\Integration\Core\AppPasskeyRecoveryTest::test_suspended_user_cannot_mint_an_enrollment_challenge
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 403.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRecoveryTest.php:130
+
+45) Tests\Integration\Core\AppPasskeyRecoveryTest::test_one_registration_challenge_admits_exactly_one_credential
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRecoveryTest.php:137
+
+46) Tests\Integration\Core\AppPasskeyRecoveryTest::test_export_includes_passkey_metadata_only
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRecoveryTest.php:32
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRecoveryTest.php:150
+
+47) Tests\Integration\Core\AppPasskeyRegistrationTest::test_user_enrolls_a_passkey_end_to_end_and_duplicates_are_refused
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:57
+
+48) Tests\Integration\Core\AppPasskeyRegistrationTest::test_enrolling_a_passkey_revokes_other_sessions_but_keeps_current_session
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:92
+
+49) Tests\Integration\Core\AppPasskeyRegistrationTest::test_challenge_requires_a_fresh_factor
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:107
+
+50) Tests\Integration\Core\AppPasskeyRegistrationTest::test_management_rate_limit_keeps_the_json_error_contract
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:119
+
+51) Tests\Integration\Core\AppPasskeyRegistrationTest::test_challenge_is_single_use
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:131
+
+52) Tests\Integration\Core\AppPasskeyRegistrationTest::test_challenge_minted_for_one_user_cannot_complete_for_another
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:144
+
+53) Tests\Integration\Core\AppPasskeyRegistrationTest::test_wrong_origin_and_wrong_rp_refuse_at_the_http_layer
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:158
+
+54) Tests\Integration\Core\AppPasskeyRegistrationTest::test_step_up_challenge_round_trip_verifies_a_registered_credential
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:170
+
+55) Tests\Integration\Core\AppPasskeyRegistrationTest::test_invalid_passkey_step_up_probe_falls_back_to_valid_password_factor
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:190
+
+56) Tests\Integration\Core\AppPasskeyRegistrationTest::test_rename_and_revoke_work_as_plain_forms
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:207
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:222
+
+57) Tests\Integration\Core\AppPasskeyRegistrationTest::test_revoke_requires_a_fresh_factor_and_supports_passkey_step_up
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:207
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:236
+
+58) Tests\Integration\Core\AppPasskeyRegistrationTest::test_revoking_a_passkey_revokes_other_sessions_but_keeps_current_session
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:207
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:252
+
+59) Tests\Integration\Core\AppPasskeyRegistrationTest::test_removing_the_last_sign_in_method_is_blocked
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:207
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:270
+
+60) Tests\Integration\Core\AppPasskeyRegistrationTest::test_passkey_removal_ignores_unusable_oauth_identities_when_protecting_the_last_method
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:207
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:289
+
+61) Tests\Integration\Core\AppPasskeyRegistrationTest::test_final_owner_last_method_removal_carries_the_owner_block
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:33
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:207
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppPasskeyRegistrationTest.php:309
+
+62) Tests\Integration\Core\AppSessionManagementTest::test_first_password_on_either_route_revokes_other_sessions_and_preserves_current_session
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppSessionManagementTest.php:50
+
+63) Tests\Integration\Core\AppSessionManagementTest::test_password_change_revokes_other_sessions
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppSessionManagementTest.php:157
+
+64) Tests\Integration\Core\AppSettingsHardeningTest::test_orphan_security_errors_use_the_shared_alert_without_password_echo
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppSettingsHardeningTest.php:93
+
+65) Tests\Integration\Core\AppSharedSubheaderTest::test_utility_page_headings_share_the_create_row_without_duplicate_titles
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 200.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppSharedSubheaderTest.php:144
+
+66) Tests\Integration\Core\AppUserSettingsTest::test_password_change_requires_current_password
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Error 500</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="og:site_name" content="R
+Failed asserting that 500 is identical to 422.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:423
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppUserSettingsTest.php:47
+
+FAILURES!
+Tests: 3433, Assertions: 30268, Failures: 66, Skipped: 1.
+Script phpunit handling the test event returned with error code 1

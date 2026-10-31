@@ -1,0 +1,47 @@
+
+> test:assets
+> node --test tests/worker/*.test.mjs
+
+✔ confirmed releases keep recent pages and lazy imports working, then retire the oldest release (2902.068821ms)
+✔ repeated local builds and source reverts preserve the deployed baseline (2871.940169ms)
+✔ recording a release requires the exact previously built version and never happens during checks (2058.796258ms)
+✔ a write failure preserves published assets and permits a normal retry (1371.66834ms)
+✔ a static-install failure preserves published assets and permits a normal retry (1414.696497ms)
+✔ a manifest-install failure preserves published assets and permits a normal retry (1447.118508ms)
+✔ a overlay-static-install failure preserves published assets and permits a normal retry (1388.024439ms)
+✔ overlayfs directory backups permit publication without losing deployed files (901.689032ms)
+✔ the real Workers Assets binding serves GET, conditional 304, HEAD and safe 404 responses (334.920927ms)
+✔ fingerprinted CSS, scripts, lazy chunks and fonts bypass the container and are immutable (24.018045ms)
+✔ only the genuine current version makes source asset URLs immutable (1.047876ms)
+✔ conditional requests retain 304 and validators, and HEAD retains its empty body (0.576413ms)
+✔ range responses and their status survive without exposing Set-Cookie (0.383645ms)
+✔ missing/private assets and unsupported methods never fall through to PHP or an SPA (0.489694ms)
+✔ branding, package themes and application routes retain dynamic response semantics (0.713791ms)
+✔ published manifest names only verified asset bytes and font preload matches emitted CSS (30.24816ms)
+✔ requests on the canonical origin pass through untouched (24.475209ms)
+✔ any other hostname is redirected to the same path and query on the canonical origin (1.087265ms)
+✔ plain http on the canonical host is upgraded to the canonical scheme (0.326076ms)
+✔ unsafe methods keep their method and body through a 308 (1.741517ms)
+✔ a stray request port is dropped and a non-default canonical port is carried over (0.459723ms)
+✔ loopback hosts (wrangler dev) and an unusable APP_URL fail open (0.352926ms)
+✔ certificate-validation paths on a non-canonical host go to the origin instead of redirecting (1.000527ms)
+✔ production deploy leaves the independently provisioned SaaS zone route untouched (6.713648ms)
+✔ production retires the container without losing its migration history or active edge bindings (0.996707ms)
+✔ the assertion is an RS256 JWT signed by the service account, asking for an ID token for the service (24.249881ms)
+✔ a token is reused until five minutes before it expires, then renewed (4.903124ms)
+✔ a burst of requests shares one token exchange (2.1876ms)
+✔ a failed exchange rejects and is not cached (4.172734ms)
+✔ a missing or malformed key fails before any network call (0.425824ms)
+✔ dynamic requests reach the service on the same path and query, carrying body, visitor IP and token (3.774179ms)
+✔ paths that look like another authority stay on the service, with the token never leaving it (2.836931ms)
+✔ /healthz, which Cloud Run reserves, reaches the app as /healthz/; other paths are untouched (2.363278ms)
+✔ without CF-Connecting-IP a client-sent X-Forwarded-For is dropped, not passed on (1.812516ms)
+✔ the app's redirects and cookies go back to the browser unchanged (2.052772ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14426.317784

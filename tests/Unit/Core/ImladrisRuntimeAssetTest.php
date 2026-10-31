@@ -433,7 +433,7 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertMatchesRegularExpression('/text-decoration:\s*none/', $hover);
 
         $active = $rule('.settings-rail-link.is-active');
-        self::assertMatchesRegularExpression('/border-left-color:\s*var\(--gold-500\)/', $active);
+        self::assertMatchesRegularExpression('/border-left-color:\s*var\(--accent-2\)/', $active);
         self::assertMatchesRegularExpression('/background:\s*var\(--brand-subtle\)/', $active);
         self::assertMatchesRegularExpression('/color:\s*var\(--on-brand-subtle\)/', $active);
         self::assertMatchesRegularExpression('/border-radius:\s*0 var\(--radius-md\) var\(--radius-md\) 0/', $active);

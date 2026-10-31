@@ -69,3 +69,58 @@ The owner subsequently authorized all five findings from a fresh rendered review
 The implementation record is
 `docs/superpowers/plans/2026-10-31-admin-appearance-followup.md`; current validation
 is retained in `docs/evidence/admin-appearance-followup-2026-10-31/README.md`.
+
+## Keyboard recovery and appearance guidance (2026-10-31)
+
+The owner approved the five findings from the subsequent rendered review:
+
+- Give reset an independent form with a hidden action, native typed-confirmation
+  constraints and the existing server validation. Enter resets without saving
+  pending branding edits/files; an ordinary invalid attempt stays on the page.
+- Normalize cleared/invalid mode and preset values to System/Classic before
+  rendering the saved preview, including without JavaScript.
+- Keep one preview and the desktop arrangement; mobile preview/return links
+  place both destinations within reach and move keyboard focus without JavaScript.
+- Show resolved colour defaults, explain inheritance, and enhance the helper
+  with device-aware values/swatches while preserving typed hex overrides.
+- Explain the existing Custom CSS recovery restriction in operator language.
+
+The implementation record is
+`docs/superpowers/plans/2026-10-31-admin-branding-recovery.md`; evidence is retained
+in `docs/evidence/admin-branding-recovery-2026-10-31/README.md`.
+
+## Public component coverage (2026-10-31)
+
+A real admin save followed by fresh guest/member views confirmed that dynamic
+settings and cache versioning worked, but selected navigation/menu states and
+rail indicators still consumed the built-in brand/gold families. The owner
+approved comprehensive remediation of that propagation review.
+
+- Resolve primary actions, links, focus, hover/press and selected fills/ink as one
+  family. Resolve accent highlights, unread counts, selection rules and semantic
+  gold ink/washes as the second. Preserve primitive scales and independent
+  status, presence and constant-ground families. Move the decision/moderator and
+  draft-conflict consumers off mutable brand washes; use derived selection ink
+  for active icons.
+- Derive opaque soft fills from the resolved raised surface, with readable
+  foregrounds. Cap action darkening where needed to keep the original label ink
+  readable. Retain exact chosen link/indicator colours and their explicit
+  contrast warnings across light/dark content surfaces. Review actual selected,
+  hover/pressed and unread-count text pairs as well.
+- Deliver only changed override roles after package CSS, except for the complete
+  built-in Retro preset. Include the resolver version in the brand stylesheet
+  URL. Clearing colours restores the underlying package/preset roles.
+  Retro dark explicitly pairs its amber selected fill with dark text; reusing
+  Classic's parchment ink gave only 2.22:1 contrast after clearing overrides.
+- Render real public component classes in the scoped preview. Show the feed
+  selection persistently, rather than relying on a disclosure that closes while
+  the operator edits. PHP and JavaScript use equivalent deterministic colour
+  recipes with browser parity checks, including clearing already-saved overrides.
+- Explain next-page-load timing, member appearance preference and package/base
+  precedence beside the controls. Preserve private package preview and public
+  contrast-review separation, no-JavaScript saving and recovery.
+
+The implementation plan is
+`docs/superpowers/plans/2026-10-31-branding-public-theme-coverage.md` and the
+combined local qualification is in
+`docs/evidence/branding-public-theme-coverage-2026-10-31/README.md`.

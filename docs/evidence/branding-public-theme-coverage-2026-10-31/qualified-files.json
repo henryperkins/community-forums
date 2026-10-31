@@ -1,0 +1,254 @@
+{
+  "recorded_at_utc": "2026-10-31T18:01:05.140113+00:00",
+  "base_commit": "f0bbfc03ba90437f787ef77e3fad220b9f51f9b7",
+  "branch": "fix/admin-branding-recovery",
+  "state": "Local uncommitted candidate; no commit, push, deployment or production settings mutation",
+  "primary_checkout_clean": true,
+  "qualification": {
+    "php": {
+      "tests": 3437,
+      "assertions": 31139,
+      "failures": 0,
+      "intentional_skips": 1
+    },
+    "browser": {
+      "chromium_distinct_cases": 64,
+      "webkit_distinct_cases": 64,
+      "additional_chromium_branding_journey_cases": 2,
+      "method": "Reconciled combined runs plus recorded focused corrections; final Retro/parity follow-up 8/8 per engine"
+    },
+    "asset_worker_tests": 35
+  },
+  "files": [
+    {
+      "path": "ADMIN.md",
+      "state": "modified",
+      "sha256": "ec39d33cc0b65ac9d61d4cbca271aba50d9a60f421e3ed81c939fb35d4c9d20a",
+      "base_sha256": "c9458b60e1ca469e2ce31eeb79625dabf99ed764f8c013f1417dcede427865ac"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "state": "modified",
+      "sha256": "c88b463bf9204a36d484723f08bc5d613a92d5c31213dd0ef1a143694f470798",
+      "base_sha256": "47361cdb8e4419a6a4aa4065506748e7c438748140e9469cf5546ed65ac5c528"
+    },
+    {
+      "path": "DESIGN.md",
+      "state": "modified",
+      "sha256": "58327723a5eab9bb9aa40d43dde89f88d4e9087fe95738ccc9ffceccf323ae1e",
+      "base_sha256": "324a22a7a17a66ff07a7484896936e853fb56594d662552545ba26dbfaf7a971"
+    },
+    {
+      "path": "config/assets.json",
+      "state": "modified",
+      "sha256": "cde3efdad8d4920a2c8727c30504ed1aaa4d174470c8be8c0d94079a7120450d",
+      "base_sha256": "92ffa4a137c2aaaafebfa084dfd42178c3c4600c26dc4df9cc89896c9719fde4"
+    },
+    {
+      "path": "docs/adr/0053-branding-contrast-preview-and-theme-recovery.md",
+      "state": "modified",
+      "sha256": "436d944b9d48d88ca27087478b8c3bb58ab9395b525b7a1729cb5be7cd97b497",
+      "base_sha256": "2c427ab6cfcd861a8f4963844b263c55d783e7b56ac061fb2946a6dcc4ae3598"
+    },
+    {
+      "path": "docs/design-system/imladris/components.css",
+      "state": "modified",
+      "sha256": "f9ddc771ca529b011613d1370dc9494fe4f8f0622e8e95299b921dac2ea2cd20",
+      "base_sha256": "cbc489eae2844bdcda5ab6686aec7b97ca9a591ea985c251444e96c93f587b4f"
+    },
+    {
+      "path": "docs/runbooks/branding.md",
+      "state": "modified",
+      "sha256": "579e8578762f7d6f50b5edf451acb33b2bc20eae31761432399f8ff7d8589290",
+      "base_sha256": "f9278a3ee4510ca455c88f7238485575389dedd0214483a24393e849d29ae425"
+    },
+    {
+      "path": "docs/superpowers/README.md",
+      "state": "modified",
+      "sha256": "99334c70fd75e1b19503181679d092d71f15d5cf32cdcdc9e2d2664dfd393289",
+      "base_sha256": "84489dd755b328970b7084147315e3b94010f9a8af048edbe184d9026687afe6"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-31-admin-branding-recovery.md",
+      "state": "added",
+      "sha256": "44a6869a67bbca405218f46a18264c0ee14e9d71497becd13b87c92c00ee36f3",
+      "base_sha256": null
+    },
+    {
+      "path": "docs/superpowers/plans/2026-10-31-branding-public-theme-coverage.md",
+      "state": "added",
+      "sha256": "12c6b03ba82d129a3ed5de21b4c61c5834f4d26f8525bec1693f03d21dc847ae",
+      "base_sha256": null
+    },
+    {
+      "path": "public/assets/app.css",
+      "state": "modified",
+      "sha256": "2c0631ddd34a3ff2dd5ea06ae78c019f0523bf57ddda46a75850a1b009d31b6e",
+      "base_sha256": "94bf62f60d4b64772ea92b9bcc17c029cc0171d08e93375f43053662d26819ca"
+    },
+    {
+      "path": "public/assets/app.js",
+      "state": "modified",
+      "sha256": "a94076949bc0a2a110bbd4ab95cd1ad66650c6a272977ea2c1dbca8beeaa5f15",
+      "base_sha256": "4014a7ffe49923edaf4daf948a93efddcdec02d6cac8a05406654bed00e53c78"
+    },
+    {
+      "path": "public/assets/dist/app-8e7515da87472a63.js",
+      "state": "deleted",
+      "sha256": null,
+      "base_sha256": "8e7515da87472a63bfcf3fd9a6095fa746390b14c0e9819b9f31920038cae0d1"
+    },
+    {
+      "path": "public/assets/dist/app-cf30497608de6b42.js",
+      "state": "added",
+      "sha256": "cf30497608de6b427f5dbccf7f515438262443d49947595859b7c9b69478225b",
+      "base_sha256": null
+    },
+    {
+      "path": "public/assets/dist/app-style--jg7dl7V.css",
+      "state": "deleted",
+      "sha256": null,
+      "base_sha256": "e2db92887eaae729341e1ad2abd4adb31029d485b8b2b3500f51716cc5780b84"
+    },
+    {
+      "path": "public/assets/dist/app-style-C0XC_uIT.css",
+      "state": "added",
+      "sha256": "c105a7b91ff3307e0a71dc3c1b0ce342000dfc41d6b4562fe4fddde07631c19c",
+      "base_sha256": null
+    },
+    {
+      "path": "public/assets/dist/imladris-style-DmYWEV0N.css",
+      "state": "added",
+      "sha256": "0a18658421b343b56d83052e820b5cfe7a88e1f0baffe989c95c0a91f54a2418",
+      "base_sha256": null
+    },
+    {
+      "path": "public/assets/imladris.css",
+      "state": "modified",
+      "sha256": "c139e59b544086286e7cfa56e559a4a86a45b3fb30c8843ee76a0c982789456e",
+      "base_sha256": "0ffe926bec55a63c187d76beb5dae15409dcdaf8b6f5beefb0a777db2f5b5191"
+    },
+    {
+      "path": "resources/imladris/components.css",
+      "state": "modified",
+      "sha256": "f9ddc771ca529b011613d1370dc9494fe4f8f0622e8e95299b921dac2ea2cd20",
+      "base_sha256": "cbc489eae2844bdcda5ab6686aec7b97ca9a591ea985c251444e96c93f587b4f"
+    },
+    {
+      "path": "resources/imladris/manifest.json",
+      "state": "modified",
+      "sha256": "8286c224712727bfdc3934f1e3232efb9a3b10ea26f5ef762ff7e46dbbbb5af7",
+      "base_sha256": "b87225fc3829404d295438a5bca1532593b2b94dc04e1560e31515c9be4bc53d"
+    },
+    {
+      "path": "src/Controller/BrandingController.php",
+      "state": "modified",
+      "sha256": "b52a6deddf871d9f0e656dd74897e5fea44111a01f288ef84a87ac7a7e4dfd47",
+      "base_sha256": "52bfab6bbb1e6b9a6fe8aa5d807e49c24a76cac23f14a46686345b5db9ca6389"
+    },
+    {
+      "path": "src/Support/BrandPalette.php",
+      "state": "modified",
+      "sha256": "634ac64b577c082377b862a0f9a4e98a44cb84e75b9e6fdc08355d7689028459",
+      "base_sha256": "6c699c9af3b2ac5d34a6caed726cedf5b659573b480352e4371981da630849df"
+    },
+    {
+      "path": "templates/admin/branding.php",
+      "state": "modified",
+      "sha256": "fb84a85cc9d4c253365500a3489bbfbc54b6610076c8f1705fd52fe85bd46f64",
+      "base_sha256": "989554e0293da2e6adf8bda6e6b1712e53d370f2952b3481a9e573c29cc8d558"
+    },
+    {
+      "path": "templates/layout.php",
+      "state": "modified",
+      "sha256": "8b4237104f166b7d78cffa45fb4f98d41bcb99e2b55f2bff61bb2008cc736bf1",
+      "base_sha256": "ee830db07d491b1fc6c3bdd9462e78aae5b9ea935c1664f9a3cf6050a47d834e"
+    },
+    {
+      "path": "tests/Integration/Core/AppBrandingThemeTest.php",
+      "state": "modified",
+      "sha256": "319e1e32f0c82009b360858b70f4e4af2e95adeb5b907d22e890d929e63ec2bf",
+      "base_sha256": "e0623b2c10ff5ad046a70e3f370f825046a7d82f7c7ec3ae76414c59bac28f1b"
+    },
+    {
+      "path": "tests/Unit/Core/AuthGateStylesContractTest.php",
+      "state": "modified",
+      "sha256": "976aa6352073b0adbbc7400f14ac08be753242a2c40f4b4aa7d78cee23a91953",
+      "base_sha256": "83aab0657cde00a7fb9700cadf27c0767eb307102352329e40bcb1edcbaa5fbb"
+    },
+    {
+      "path": "tests/Unit/Core/ImladrisRuntimeAssetTest.php",
+      "state": "modified",
+      "sha256": "dd79ff96f1095402348ed4558e749155af9dd93d334b7b9f28a73f89b9ace59a",
+      "base_sha256": "0e5ea9e98317f644cb5c55490a6f30952d9eeaa4df9802def913a285066bf26f"
+    },
+    {
+      "path": "tests/Unit/Support/BrandPaletteTest.php",
+      "state": "modified",
+      "sha256": "9df65f9f8831d22c86d1a41442c0bc10d9cc5a197adc9976b79dff4f958b649d",
+      "base_sha256": "96fe32b7fe6408fa33677b15d820347ed1162a92f46407616a448b5e8cb6b6e5"
+    },
+    {
+      "path": "tests/browser/admin-appearance-followup.spec.ts",
+      "state": "modified",
+      "sha256": "1aba3515fbf4ca017122fa7ba72b3f5e61043ae0d1f6737f364b0327c5168f22",
+      "base_sha256": "ce840886d0b5f2e0088d28ac6dae717f3c43789fb5a11f7111f1bec64d68a472"
+    },
+    {
+      "path": "tests/browser/branding-public-theme.spec.ts",
+      "state": "added",
+      "sha256": "07bb4e5388dfeecee909394081fcc5ea3eb62b1f54ec617e4395d888fd6c7c9b",
+      "base_sha256": null
+    },
+    {
+      "path": "tests/browser/gate-a.spec.ts",
+      "state": "modified",
+      "sha256": "9a7f6ff84a0968031b76a83f03d00178a617a1de1be85bf97d4c627bd4e56fa7",
+      "base_sha256": "2ef765a989ad78e11bfdba6fa8c8ca538a8c5b2935e1e2524e131566a3830be5"
+    },
+    {
+      "path": "tests/browser/theming-remediation-fixture.php",
+      "state": "modified",
+      "sha256": "03bde781e60628c9317d6a0f42ec0b7247b6cfa5472bcd6fe9c1512473f06ca8",
+      "base_sha256": "ee7da67c060d8917f6b5ea7f5767881747430c84beea598e78b22e6c4904fbe1"
+    },
+    {
+      "path": "tests/browser/theming-remediation.spec.ts",
+      "state": "modified",
+      "sha256": "30d16a1fb38394d75f6a9c213de76f19d9f7e215b50de556e40a40840ee6bcd5",
+      "base_sha256": "05320184480354174d16047e86f6b1e360352ed8a832ab18582d5e025c404a1d"
+    }
+  ],
+  "proof_logs": {
+    "asset-check-final.txt": "5bfb096c7a92b6f6f08c2bac8a12bb061823f97b2fbd5cfe8c6b0ddabd8b36db",
+    "asset-tests-final.txt": "2e0a4ef6798780fb9474006830351eb54ea0c45baf4005d350bd6f8d9dab81d1",
+    "branding-journey-final.txt": "9b0501cae9cb2c9038ad3f0d31b698d968bce2fa3a9797dcbea09c6e20244455",
+    "branding-journey-qualified.txt": "7d76868be15e1532ded21a3c1ccc05e13a8e2e6cc0f23c2dfcaa7f63d33dff0e",
+    "build-assets.txt": "277e2222d62dd6562d098a723c8aee8a0978d2c6af074c33b5fae3681588f8f2",
+    "build-imladris.txt": "2629cd3cb0569fa720e5294fdddc6ac3a7b68643ee7df57611c70626628a7c35",
+    "chromium-final.txt": "d218e483b056bd47a617f74b7593a405e61b99fc1353d26520117f64b78226a9",
+    "chromium-preview-rerun.txt": "e1df392c730d6651b5de2d5976a800fcdd9bda3770eda81e35a413f97712e328",
+    "chromium-recovery-sync.txt": "8bdcfb0a07443cfa648d94af20608afbedd48e095fd3098fb3bd4d0f6e8c1b93",
+    "focused-php-final.txt": "21cc171a7ca26b1c4183d96880ce3eb5f1fcd6bd9c19dcd382e16a6d8d22f2c4",
+    "full-php-final-retro.txt": "d5dfa8c7877b774e66b74f163d2bf8c2e94b5c8fef8be4061953a506d3f872e0",
+    "full-php-final.txt": "7bf5ecd847fdf03e54eb37e38698b136e791538a8769c15adf5d6f0f6ac4f0b7",
+    "full-php.txt": "75a747a24dc2060027b51e56179fb21660a100e35f056a56f7c3e75846cbc1f2",
+    "messages-green.txt": "79a94de76c69565e27191bfff6ff5048c163b2b937b9564d9f23a7e3a5f9ac88",
+    "messages-red-confirmed.txt": "dd1f38146380395a21809c66bcce38e89302ba6b1fb6a6b39f43b6e219231cd4",
+    "palette-green.txt": "3b166e608329509c0f1be8ed675bc8acaa1539ef977c6594f99d54821fcdfd4f",
+    "palette-red.txt": "1a38ae72623f722c156ee70d4fa14552f693bdf744290a69f15b86fc09bde06d",
+    "retro-default-chromium.txt": "c3777d6b90929b4214f36595e82c2910274368b51220d23235a3ed902af7a743",
+    "retro-default-red.txt": "0ec4d164d25511051ae20fa1c078367207ac424efa6293ab66a4ef71cb6c43ad",
+    "retro-default-webkit.txt": "869db8a359cb57ecf84f5242c74ab73705a79d5d64d3a9f21d576f178dbcc2e9",
+    "style-contracts.txt": "b335521f93fb79ccb9b64711d1d473ef08549826dca6755bf4fa50382bf354c3",
+    "webkit-final.txt": "4926878237a26fbd635c7195ab605ec70516d1f82674af409a42605537c2f783",
+    "webkit-recovery-rerun.txt": "f42cb5a57a2b93c81dc892d6900ce677739defed30ce7ddad7a2b7731f7b08ad"
+  },
+  "cleanup": {
+    "task_databases_removed": 2,
+    "task_database_grants_removed": 4,
+    "temporary_dependency_symlinks_removed": 2,
+    "port_8040_listening": false,
+    "shared_dependencies_and_mariadb_preserved": true
+  }
+}

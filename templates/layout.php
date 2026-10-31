@@ -6,7 +6,7 @@ $composing = $composing ?? ['enter_to_send' => true, 'show_preview' => true, 'sm
 $memberSurfaces = $member_surfaces ?? ['rail_open' => true, 'inbox_reading_open' => true, 'directory_sort' => 'category', 'directory_peek' => 3];
 $brand = $branding ?? ['name' => $site_name, 'logo_path' => null, 'favicon_path' => null, 'color_primary' => '#2f6fed', 'color_accent' => '#7c3aed'];
 $themePackage = $package_theme ?? ['active_css_digest' => null, 'preview_css_digest' => null];
-$brandStylesVersion = ($brand['version'] ?? '1') . '-'
+$brandStylesVersion = \App\Support\BrandPalette::CSS_VERSION . '-' . ($brand['version'] ?? '1') . '-'
     . ($themePackage['preview_css_digest'] ?? $themePackage['active_css_digest'] ?? 'system');
 $brandStylesUrl = '/brand.css?v=' . rawurlencode($brandStylesVersion)
     . (!empty($themePackage['preview_css_digest']) ? '&preview=1' : '');

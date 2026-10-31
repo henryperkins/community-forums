@@ -83,6 +83,22 @@ if ($action === 'reset') {
     } else {
         $installs->setState((int) $installed['id'], 'enabled');
     }
+} elseif ($action === 'admin-dark-appearance') {
+    (new UserPreferenceRepository($db))->merge((int) $admin['id'], ['theme' => 'dark']);
+} elseif ($action === 'reader-conversation') {
+    $reader = (new UserRepository($db))->findByUsername('bob');
+    if ($reader === null) {
+        throw new RuntimeException('Missing reader fixture.');
+    }
+    $conversationId = (new \App\Repository\ConversationRepository($db))->findOrCreateBetween((int) $reader['id'], (int) $admin['id']);
+} elseif ($action === 'reader-unread') {
+    $reader = (new UserRepository($db))->findByUsername('bob');
+    $thread = $db->fetch('SELECT t.id FROM threads t JOIN boards b ON b.id = t.board_id WHERE b.slug = ? AND t.is_deleted = 0 AND t.is_pending = 0 AND t.last_post_id IS NOT NULL ORDER BY t.id LIMIT 1', ['general']);
+    if ($reader === null || $thread === null) {
+        throw new RuntimeException('Missing reader/unread fixture.');
+    }
+    (new \App\Repository\ThreadUserRepository($db))->markUnread((int) $reader['id'], (int) $thread['id']);
+    (new UserPreferenceRepository($db))->merge((int) $reader['id'], ['theme' => 'system']);
 } elseif ($action === 'long-theme-name') {
     $db->run('UPDATE packages SET name = ? WHERE package_uid = ?', [str_repeat('Theme', 36), 'acme/theme-evidence']);
 } elseif ($action === 'flags-off') {
@@ -109,6 +125,7 @@ if ($action === 'reset') {
 $override = $db->fetch("SELECT id, after_json FROM moderation_log WHERE action = 'branding_contrast_override' ORDER BY id DESC LIMIT 1");
 $brandingUpdate = $db->fetch("SELECT after_json FROM moderation_log WHERE action = 'branding_update' ORDER BY id DESC LIMIT 1");
 echo json_encode([
+    'conversation_id' => $conversationId ?? null,
     'site_name' => $settings->getString('site_name'),
     'primary' => $settings->getString('brand_color_primary'),
     'accent' => $settings->getString('brand_color_accent'),

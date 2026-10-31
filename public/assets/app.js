@@ -643,46 +643,104 @@
             return (hi + 0.05) / (lo + 0.05);
         };
         var contrastToken = function (v) {
-            return contrast(v, '#ffffff') >= contrast(v, '#0f1218') ? '#ffffff' : '#0f1218';
+            var ink = contrast(v, '#ffffff') >= contrast(v, '#0f1218') ? '#ffffff' : '#0f1218';
+            return contrast(v, ink) >= 4.5 ? ink : '#000000';
+        };
+        // Keep the deterministic sRGB recipes in step with BrandPalette.php.
+        // Browser regressions compare every PHP/JS token, including cleared drafts.
+        var mixBrandColour = function (colour, ground, weight) {
+            var a = rgb(colour), b = rgb(ground);
+            return '#' + a.map(function (channel, i) {
+                return Math.round(channel * weight + b[i] * (1 - weight)).toString(16).padStart(2, '0');
+            }).join('');
+        };
+        var brandActionShade = function (colour, weight) {
+            var ink = contrastToken(colour);
+            for (var step = Math.round(weight * 100); step <= 100; step++) {
+                var shade = mixBrandColour(colour, '#000000', step / 100);
+                if (contrast(shade, ink) >= 4.5) { return shade; }
+            }
+            return colour.toLowerCase();
+        };
+        var readableBrandTone = function (colour, surface) {
+            var target = contrastToken(surface);
+            for (var step = 0; step <= 100; step++) {
+                var tone = mixBrandColour(colour, target, 1 - step / 100);
+                if (contrast(tone, surface) >= 4.5) { return tone; }
+            }
+            return target;
+        };
+        var resolveBrandColours = function (base, primary, accent) {
+            var resolved = Object.assign({}, base);
+            var surface = resolved['--surface-raised'] || '#faf6ec';
+            if (primary) {
+                resolved['--accent'] = resolved['--brand'] = resolved['--brand-primary'] = primary.toLowerCase();
+                resolved['--accent-contrast'] = resolved['--brand-contrast'] = contrastToken(primary);
+                resolved['--brand-subtle'] = mixBrandColour(primary, surface, .14);
+                resolved['--on-brand-subtle'] = readableBrandTone(primary, resolved['--brand-subtle']);
+                ['hover', 'press'].forEach(function (state, i) {
+                    var fill = brandActionShade(primary, i === 0 ? .82 : .68);
+                    resolved['--brand-' + state] = resolved['--brand-primary-' + state] = fill;
+                    resolved['--brand-' + state + '-contrast'] = resolved['--brand-primary-' + state + '-contrast'] = contrastToken(fill);
+                });
+                resolved['--focus-ring'] = primary.toLowerCase();
+            }
+            if (accent) {
+                resolved['--accent-2'] = resolved['--brand-accent'] = resolved['--gold'] = resolved['--rule-gold'] = accent.toLowerCase();
+                resolved['--gold-soft'] = mixBrandColour(accent, surface, .14);
+                resolved['--gold-ink'] = readableBrandTone(accent, resolved['--gold-soft']);
+                resolved['--brand-accent-hover'] = brandActionShade(accent, .82);
+                resolved['--brand-accent-hover-contrast'] = contrastToken(resolved['--brand-accent-hover']);
+            }
+            resolved['--brand-accent-contrast'] = contrastToken(resolved['--accent-2']);
+            return resolved;
+        };
+        var updateColourHelp = function (field, input, colour, mode) {
+            var help = brandForm.querySelector('[data-brand-colour-help="' + field + '"]');
+            if (!help || !input || !colour) { return; }
+            var inherited = input.value.trim() === '';
+            var description = help.querySelector('[data-brand-colour-description]');
+            if (description) {
+                description.textContent = (inherited ? 'Using theme default: ' : 'Theme default: ')
+                    + colour + ' (' + (mode === 'dark' ? 'Dark' : 'Light') + ').'
+                    + (inherited ? '' : ' Clear this field to use it.');
+            }
+            var swatch = help.querySelector('[data-brand-colour-swatch]');
+            if (swatch) {
+                swatch.style.backgroundColor = colour;
+                swatch.hidden = false;
+            }
         };
         var updateBrandPreview = function () {
             var theme = brandTheme ? brandTheme.value : 'system';
             var mode = theme === 'system' ? (darkPreference.matches ? 'dark' : 'light') : theme;
             var preset = brandPreset ? brandPreset.value : 'classic';
             var tokens = palettes[preset] && palettes[preset][mode];
+            if (tokens) {
+                updateColourHelp('primary', brandPrimary, tokens['--accent'], mode);
+                updateColourHelp('accent', brandAccent, tokens['--accent-2'], mode);
+            }
             brandPreview.setAttribute('data-brand-theme', theme);
             brandPreview.setAttribute('data-brand-preset', preset);
             appliedPreviewTokens.forEach(function (key) { brandPreview.style.removeProperty(key); });
             appliedPreviewTokens = [];
-            if (tokens) {
-                Object.keys(tokens).forEach(function (key) {
-                    if (key.indexOf('--') !== 0) { return; }
-                    brandPreview.style.setProperty(key, tokens[key]);
-                    appliedPreviewTokens.push(key);
-                });
-            }
             var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value.trim() : '';
             var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value.trim() : '';
-            if (primary !== '') {
-                brandPreview.style.setProperty('--accent', primary);
-                brandPreview.style.setProperty('--accent-contrast', contrastToken(primary));
-                brandPreview.style.setProperty('--preview-accent', primary);
-                brandPreview.style.setProperty('--preview-accent-contrast', contrastToken(primary));
-            } else {
-                brandPreview.style.setProperty('--preview-accent', 'var(--accent)');
-                brandPreview.style.setProperty('--preview-accent-contrast', 'var(--accent-contrast)');
-            }
-            if (accent !== '') {
-                brandPreview.style.setProperty('--accent-2', accent);
-                brandPreview.style.setProperty('--preview-accent-2', accent);
-                brandPreview.style.setProperty('--preview-accent-2-contrast', contrastToken(accent));
-            } else {
-                brandPreview.style.setProperty('--preview-accent-2', 'var(--accent-2)');
-                brandPreview.style.setProperty('--preview-accent-2-contrast', tokens && tokens['--accent-2'] ? contrastToken(tokens['--accent-2']) : 'var(--ink-900)');
+            if (tokens) {
+                var resolved = resolveBrandColours(tokens, primary, accent);
+                Object.keys(resolved).forEach(function (key) {
+                    if (key.indexOf('--') !== 0) { return; }
+                    brandPreview.style.setProperty(key, resolved[key]);
+                    appliedPreviewTokens.push(key);
+                });
+                ['accent', 'accent-contrast', 'accent-2'].forEach(function (key) {
+                    brandPreview.style.setProperty('--preview-' + key, resolved['--' + key]);
+                });
+                brandPreview.style.setProperty('--preview-accent-2-contrast', resolved['--brand-accent-contrast']);
             }
             if (previewName && brandName) { previewName.textContent = brandName.value || 'Community'; }
             if (previewTheme) {
-                previewTheme.textContent = (preset === 'retro' ? 'Retro · ' : '')
+                previewTheme.textContent = (brandForm.getAttribute('data-brand-package-active') === '1' ? 'Package · ' : (preset === 'retro' ? 'Retro · ' : ''))
                     + (theme === 'system' ? 'System · ' : '') + (mode === 'dark' ? 'Dark' : 'Light');
             }
             if (previewLogo) {

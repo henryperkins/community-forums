@@ -190,8 +190,9 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 /* Hover deepens the button's own fill, the .btn.danger:hover recipe below. It
    used --brand-hover, which is evergreen in both registers and untouched by
    operator branding: a gold twilight button, or a branded one, turned green. */
-.btn:hover { text-decoration: none; background: color-mix(in srgb, var(--accent) 82%, #000); }
+.btn:hover { text-decoration: none; background: var(--brand-primary-hover, color-mix(in srgb, var(--accent) 82%, #000)); }
 .btn:active { transform: translateY(0.5px) scale(.995); }
+.btn:where(:not(.btn-secondary, .btn-ghost, .btn-accent, .btn-danger, .danger)):active { background: var(--brand-primary-press, color-mix(in srgb, var(--accent) 82%, #000)); }
 .btn-small { padding: 6px 13px; font-size: .82rem; }
 .btn.danger, .danger { color: var(--danger); }
 .btn.danger { background: var(--danger); color: #fff; }
@@ -224,8 +225,8 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     box-shadow: none;
 }
 .btn-ghost:hover { background: var(--surface-sunken); }
-.btn-accent { background: var(--gold-500); color: var(--ink-900); }
-.btn-accent:hover { background: var(--gold-600); }
+.btn-accent { background: var(--accent-2); color: var(--brand-accent-contrast, var(--ink-900)); }
+.btn-accent:hover { background: var(--brand-accent-hover, var(--gold-600)); }
 /* The mirrored danger variant otherwise inherits .btn's unlayered fill. */
 .btn.btn-danger { background: revert-layer; color: revert-layer; }
 .btn:is(.btn-secondary, .btn-ghost, .btn-accent, .btn-danger):disabled:hover {
@@ -659,7 +660,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     background: var(--surface); color: var(--text); cursor: pointer;
 }
 .reaction:hover { background: var(--surface-3); }
-.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: revert-layer; }
+.reaction-on { border-color: var(--accent-2); background: var(--gold-soft); color: revert-layer; }
 .reaction-static { cursor: default; }
 .reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
 .reaction-on .reaction-n { color: revert-layer; }
@@ -707,7 +708,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
        red alert badge — kept in sync with the Imladris topbar rule below so the
        two .bell-count definitions can't disagree (handoff §10: gold = unread). */
     position: absolute; top: -4px; right: -8px; min-width: 16px; height: 16px;
-    padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--ink-900);
+    padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--brand-accent-contrast, var(--ink-900));
     font-size: 11px; line-height: 16px; text-align: center; font-weight: var(--weight-semibold);
 }
 .subscribe-form .input-small { padding: 2px 6px; font-size: .85rem; }
@@ -723,7 +724,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .profile-web a { word-break: break-all; }
 .badge-title { background: var(--surface-3); color: var(--text); }
 .pill-online { background: var(--surface-done); color: var(--on-done); }
-.btn-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
+.btn-on { border-color: var(--accent-2); background: var(--gold-soft); color: var(--gold-ink); }
 
 /* Badges */
 .profile-badges { margin: 16px 0; }
@@ -1358,7 +1359,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     font-size: .9rem;
 }
 .composer-draft-sync[hidden] { display: none; }
-.composer-draft-sync.is-conflict { border-color: var(--warning); background: var(--gold-soft); color: var(--text-strong); }
+.composer-draft-sync.is-conflict { border-color: var(--warning); background: var(--surface-review); color: var(--text-strong); }
 .composer-draft-sync p { margin: 0; }
 .composer-draft-sync-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .composer-draft-copies { display: grid; gap: var(--space-3); min-width: 0; }
@@ -1765,7 +1766,7 @@ body[data-route="inbox"] .app-shell { max-width: none; }
     color: var(--text-muted); border: 1px solid transparent;
 }
 .inbox-tab:hover { background: var(--surface-sunken); text-decoration: none; }
-.inbox-tab.is-active { background: var(--brand); color: var(--parchment-50); font-weight: var(--weight-medium); border-color: var(--brand); }
+.inbox-tab.is-active { background: var(--brand); color: var(--brand-contrast, var(--parchment-50)); font-weight: var(--weight-medium); border-color: var(--brand); }
 
 .mobile-only { display: none; }
 /* A whole topic injected into the reading pane keeps the measure it gets on its
@@ -2295,7 +2296,7 @@ body[data-route="thread"] .thread-conversation {
    the numbered greens never flip, so the literal painted dark-green ink on the
    twilight brand wash and the word vanished. Same colour in light, legible in
    both. Surfaced by the board row, where Decision is a pill in its own column. */
-.chip-decision_made { color: var(--on-brand-subtle); background: var(--brand-subtle); border-color: var(--green-200); }
+.chip-decision_made { color: var(--on-done); background: var(--surface-done); border-color: var(--green-200); }
 
 /* — Reactions read "emoji · count"; the dot is the lapidary separator (§5.1) — */
 .reaction-n::before { content: "· "; color: inherit; opacity: .7; }
@@ -3034,7 +3035,7 @@ textarea.textarea-engraved {
     text-decoration: none;
 }
 .settings-rail-link.is-active {
-    border-left-color: var(--gold-500);
+    border-left-color: var(--accent-2);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     background: var(--brand-subtle);
     color: var(--on-brand-subtle);
@@ -6417,7 +6418,7 @@ textarea.textarea-engraved {
     border: 1px solid var(--border-hair);
 }
 .role-admin { color: var(--gold-700); background: var(--gold-100); border-color: var(--gold-200); }
-.role-moderator { color: var(--green-800); background: var(--brand-subtle); border-color: var(--green-200); }
+.role-moderator { color: var(--on-done); background: var(--surface-done); border-color: var(--green-200); }
 /* — Admin appearance: AdminAppearance.dc.html body adoption (Slice 8). — */
 .admin-console .admin-appearance > .pane-intro {
     margin: 0;
@@ -6451,6 +6452,36 @@ textarea.textarea-engraved {
 }
 .branding-field-wide {
     grid-column: 1 / -1;
+}
+.branding-colour-help {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: .84rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+.branding-colour-swatch {
+    flex: 0 0 .8em;
+    height: .8em;
+    margin-top: .3em;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+}
+.branding-colour-swatch[hidden] {
+    display: none;
+}
+.admin-console .branding-preview-shortcut {
+    display: none;
+}
+.branding-preview-target {
+    scroll-margin-top: 110px;
+}
+.branding-preview-target:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
 }
 .branding-field > label,
 .branding-css-label,
@@ -6711,8 +6742,8 @@ textarea.textarea-engraved {
     justify-content: space-between;
     gap: 12px;
     padding: 11px 14px;
-    background: var(--preview-accent);
-    color: var(--preview-accent-contrast);
+    background: var(--surface-raised);
+    color: var(--accent);
 }
 .brand-preview-bar strong {
     flex: 1;
@@ -6735,7 +6766,7 @@ textarea.textarea-engraved {
     font-size: .68rem;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--preview-accent-contrast) 85%, var(--preview-accent));
+    color: var(--text-muted);
 }
 .brand-preview-body {
     display: flex;
@@ -6745,20 +6776,17 @@ textarea.textarea-engraved {
     padding: 16px 14px;
     background: var(--surface-raised);
 }
-.brand-preview-body a {
-    color: var(--preview-accent);
-    font-size: .95rem;
-}
-.admin-console .brand-preview-body .btn {
-    align-self: flex-start;
-    padding: 7px 16px;
-    border: 0;
-    box-shadow: none;
-    font-size: .78rem;
-    letter-spacing: .04em;
-    background: var(--preview-accent);
-    color: var(--preview-accent-contrast);
-}
+/* Only sample geometry is local. Public component classes retain their real
+   colour, hover, focus and selected-state rules. */
+.brand-preview-nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.brand-preview-rail, .brand-preview-menu, .brand-preview-content { width: 100%; min-width: 0; }
+.brand-preview-menu > .inbox-menu-panel { position: static; min-width: 0; width: 100%; margin-top: 8px; }
+.brand-preview-menu .feed-tabs { flex-wrap: wrap; }
+.brand-preview-content { display: grid; gap: 8px; }
+.brand-preview-content p { margin: 0; }
+.brand-preview-nav a:hover, .brand-preview-rail a:hover { text-decoration: none; }
+.brand-preview-content .thread-title { order: 0; }
+.brand-preview-copy { display: flex; align-items: center; gap: 8px; }
 .brand-preview-accent {
     align-self: flex-start;
     padding: 3px 11px;
@@ -7182,6 +7210,12 @@ textarea.textarea-engraved {
 }
 
 @media (max-width: 760px) {
+    .admin-console .branding-preview-shortcut {
+        display: inline-flex;
+        max-width: 100%;
+        margin-top: 12px;
+        white-space: normal;
+    }
     .admin-console .admin-appearance-branding .brand-cols,
     .branding-field-grid,
     .branding-marks {
@@ -7824,11 +7858,9 @@ textarea.textarea-engraved {
        gold edge of the own-letter plate and its chips (≈ gold-200 by day). */
     --dm-brand-line: color-mix(in srgb, var(--brand) 25%, var(--brand-subtle));
     --dm-gold-line: color-mix(in srgb, var(--rule-gold) 25%, var(--gold-soft));
-    /* Ink on an evergreen --brand fill. The system's filter tab pairs --brand
-       with parchment in both registers (.inbox-tab.is-active); no semantic token
-       carries that pairing (--accent-contrast turns twilight-900 at night, 3.3:1
-       on green-500), so it is named once here, in the token layer. */
-    --dm-on-brand: var(--parchment-50);
+    /* Branded fills share derived ink; unset branding keeps the original
+       parchment pairing with the quiet evergreen family in both registers. */
+    --dm-on-brand: var(--brand-contrast, var(--parchment-50));
     --dm-list-inset: var(--space-4);
 }
 .dm-shell {
@@ -8258,7 +8290,7 @@ textarea.textarea-engraved {
     transition: background 140ms var(--ease-calm), color 140ms var(--ease-calm);
 }
 .dm-iconbtn:hover { background: var(--surface-sunken); color: var(--brand); }
-.dm-iconbtn.is-active { background: var(--brand-subtle); color: var(--brand); border-color: var(--dm-brand-line); }
+.dm-iconbtn.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); border-color: var(--dm-brand-line); }
 .dm-iconbtn .icon { width: 18px; height: 18px; }
 
 /* The header ··· overflow — a native <details> popover (works with no JS). */
@@ -8703,7 +8735,7 @@ form[data-submit-once] button[aria-disabled="true"] { opacity: .55; cursor: prog
     font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;
 }
 .dm-newpill .icon { width: 14px; height: 14px; }
-.dm-newpill:hover { background: var(--brand); color: var(--surface-raised); }
+.dm-newpill:hover { background: var(--brand); color: var(--brand-contrast, var(--surface-raised)); }
 .dm-events {
     margin-top: var(--space-4);
     padding-top: var(--space-3);
@@ -9869,7 +9901,7 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
 }
 
 .choice-card:has(input:checked) { background-color: var(--brand-subtle); }
-.choice-card:has(input:checked)::after { opacity: 1; background: var(--gold-500); }
+.choice-card:has(input:checked)::after { opacity: 1; background: var(--accent-2); }
 .switch {
     width: 42px;
     height: 24px;
@@ -10959,7 +10991,7 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
 .thread-status-chip.is-open { color: var(--on-pending); background: var(--surface-pending); }
 .thread-status-chip.is-needs_answer { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
 .thread-status-chip.is-solved { color: var(--on-done); background: var(--surface-done); border-color: var(--green-200); }
-.thread-status-chip.is-decision_made { color: var(--green-800); background: var(--brand-subtle); border-color: var(--green-200); }
+.thread-status-chip.is-decision_made { color: var(--on-done); background: var(--surface-done); border-color: var(--green-200); }
 .thread-status-chip.is-archived,
 .thread-state-chip.is-locked { color: var(--text-muted); background: var(--surface-sunken); }
 .thread-state-chip.is-pinned { color: var(--gold-700); background: var(--gold-100); border-color: var(--gold-200); }
@@ -15619,7 +15651,7 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .notification-message { color: var(--text-muted); line-height: 1.5; }
 .notification-context { font-style: italic; }
 .notification-row.is-unread .notification-message, .notification-row.is-unread .notification-context { color: var(--text-strong); }
-.notification-row.is-unread .notification-icon { background: var(--brand-subtle); color: var(--brand); }
+.notification-row.is-unread .notification-icon { background: var(--brand-subtle); color: var(--on-brand-subtle); }
 .notification-unread-dot { position: absolute; left: 0; top: .55em; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--gold-ink); }
 .notification-open time { color: var(--text-muted); font-family: var(--font-mono); font-size: .72rem; white-space: nowrap; }
 @media (max-width: 600px) {
@@ -15906,11 +15938,11 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 .thread-row-inbox::before { content: none; }
 .thread-row-inbox:hover { background: var(--surface-raised); }
 .thread-row-inbox.is-active {
-    border-left-color: var(--gold-500);
+    border-left-color: var(--accent-2);
     background: var(--brand-subtle);
 }
 .thread-row-inbox.is-cursor {
-    box-shadow: inset 0 0 0 1px var(--gold-500);
+    box-shadow: inset 0 0 0 1px var(--accent-2);
 }
 .thread-row-select {
     display: inline-flex;
@@ -16789,7 +16821,8 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
    height as its target. Log in had no hover: it deepens its fill, the
    .btn:hover recipe, so operator branding and twilight follow. */
 .forum-bar-signup { display: inline-flex; align-items: center; min-height: 32px; }
-.forum-bar-signin:hover { background: color-mix(in srgb, var(--accent) 82%, #000); color: var(--accent-contrast); }
+.forum-bar-signin:hover { background: var(--brand-primary-hover, color-mix(in srgb, var(--accent) 82%, #000)); color: var(--accent-contrast); }
+.forum-bar-signin:active { background: var(--brand-primary-press, color-mix(in srgb, var(--accent) 82%, #000)); }
 /* The lockup and the seat draw no box, but their focus rings take the pills'
    corner rather than the 2px one. */
 .forum-bar-brand, .forum-bar-user { border-radius: var(--radius-md); }
@@ -17574,7 +17607,7 @@ a.users-online-page:hover { background: var(--surface-sunken); text-decoration: 
 [data-bell] { flex: 0 0 40px; width: 40px; height: 40px; justify-content: center; border-radius: var(--radius); }
 .forum-bar-bell > .icon { width: 18px; height: 18px; }
 [data-bell] > .bell-count { top: 0; right: 0; }
-.notification-count { display: inline-block; min-width: 16px; padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--ink-900); font-size: 11px; line-height: 16px; text-align: center; font-weight: var(--weight-semibold); }
+.notification-count { display: inline-block; min-width: 16px; padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--brand-accent-contrast, var(--ink-900)); font-size: 11px; line-height: 16px; text-align: center; font-weight: var(--weight-semibold); }
 [data-notification-count][hidden] { display: none; }
 [data-notification-heading] [data-notification-count]::after { content: " unread"; }
 

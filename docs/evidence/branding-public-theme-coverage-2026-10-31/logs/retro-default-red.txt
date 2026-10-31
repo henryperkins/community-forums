@@ -1,0 +1,19 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/phpunit.xml
+
+F                                                                   1 / 1 (100%)
+
+Time: 00:00.018, Memory: 6.00 MB
+
+There was 1 failure:
+
+1) Tests\Unit\Support\BrandPaletteTest::test_built_in_selected_menu_labels_remain_readable_after_clearing_colours
+retro dark selected menu
+Failed asserting that 2.2162621580546324 is equal to 4.5 or is greater than 4.5.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Unit/Support/BrandPaletteTest.php:17
+
+FAILURES!
+Tests: 1, Assertions: 8, Failures: 1.

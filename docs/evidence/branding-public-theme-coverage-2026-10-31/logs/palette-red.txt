@@ -1,0 +1,45 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/phpunit.xml
+
+FEF...                                                              6 / 6 (100%)
+
+Time: 00:00.020, Memory: 6.00 MB
+
+There was 1 error:
+
+1) Tests\Unit\Support\BrandPaletteTest::test_derived_pairs_remain_readable_for_extreme_and_midpoint_colours
+TypeError: App\Support\BrandPalette::contrastRatio(): Argument #2 ($b) must be of type string, null given, called in /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Unit/Support/BrandPaletteTest.php on line 46
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/src/Support/BrandPalette.php:183
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Unit/Support/BrandPaletteTest.php:46
+
+--
+
+There were 2 failures:
+
+1) Tests\Unit\Support\BrandPaletteTest::test_operator_colours_cover_selected_actions_and_highlights_without_recolouring_status
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'#005fcc'
++'#2e4a3a'
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Unit/Support/BrandPaletteTest.php:21
+
+2) Tests\Unit\Support\BrandPaletteTest::test_clearing_colours_restores_package_roles_and_derivation_uses_its_surface
+Failed asserting that two strings are not identical.
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Unit/Support/BrandPaletteTest.php:60
+
+--
+
+1 test triggered 1 PHP warning:
+
+1) /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Unit/Support/BrandPaletteTest.php:46
+Undefined array key "--brand-contrast"
+
+ERRORS!
+Tests: 6, Assertions: 158, Errors: 1, Failures: 2, Warnings: 1.

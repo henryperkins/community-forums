@@ -1,0 +1,72 @@
+{
+  "preview .forum-bar-surface.is-active": {
+    "colour": "rgb(108, 175, 255)",
+    "background": "rgb(56, 56, 58)",
+    "ratio": 5.133170343690445,
+    "outline": "rgb(108, 175, 255)",
+    "outlineStyle": "none"
+  },
+  "preview .board-rail-item.is-active": {
+    "colour": "rgb(108, 175, 255)",
+    "background": "rgb(56, 56, 58)",
+    "ratio": 5.133170343690445,
+    "outline": "rgb(108, 175, 255)",
+    "outlineStyle": "none"
+  },
+  "preview .inbox-tab.is-active": {
+    "colour": "rgb(49, 51, 54)",
+    "background": "rgb(99, 161, 227)",
+    "ratio": 4.668590957975717,
+    "outline": "rgb(49, 51, 54)",
+    "outlineStyle": "none"
+  },
+  "preview .board-rail-unread": {
+    "colour": "rgb(240, 141, 87)",
+    "background": "rgb(75, 52, 35)",
+    "ratio": 4.768240042716526,
+    "outline": "rgb(240, 141, 87)",
+    "outlineStyle": "none"
+  },
+  "preview .btn": {
+    "colour": "rgb(15, 18, 24)",
+    "background": "rgb(103, 167, 240)",
+    "ratio": 7.46631852485448,
+    "outline": "rgb(15, 18, 24)",
+    "outlineStyle": "none"
+  },
+  "preview .brand-preview-accent": {
+    "colour": "rgb(15, 18, 24)",
+    "background": "rgb(240, 141, 87)",
+    "ratio": 7.725396869768152,
+    "outline": "rgb(15, 18, 24)",
+    "outlineStyle": "none"
+  },
+  "guestNavigation": {
+    "colour": "rgb(108, 175, 255)",
+    "background": "rgb(56, 56, 58)",
+    "ratio": 5.133170343690445,
+    "outline": "rgb(108, 175, 255)",
+    "outlineStyle": "none"
+  },
+  "memberNavigation": {
+    "colour": "rgb(68, 107, 156)",
+    "background": "rgb(234, 237, 225)",
+    "ratio": 4.622550795886761,
+    "outline": "rgb(68, 107, 156)",
+    "outlineStyle": "none"
+  },
+  "memberUnreadCount": {
+    "colour": "rgb(150, 92, 62)",
+    "background": "rgb(253, 232, 201)",
+    "ratio": 4.50643350017835,
+    "outline": "rgb(150, 92, 62)",
+    "outlineStyle": "none"
+  },
+  "memberFeed": {
+    "colour": "rgb(15, 18, 24)",
+    "background": "rgb(108, 175, 255)",
+    "ratio": 8.226270510954347,
+    "outline": "rgb(15, 18, 24)",
+    "outlineStyle": "none"
+  }
+}

@@ -2,6 +2,27 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Branding propagation, preview and recovery
+
+- Make Enter in the reset confirmation reset branding without publishing pending
+  edits or uploading selected files. Keep invalid confirmation on the page and
+  retain the server-side confirmation and write gates.
+- Restore meaningful System/Classic saved previews after reset, including
+  without JavaScript and with a different personal admin appearance.
+- Add mobile preview/return links, explain inherited colours with resolved
+  defaults and enhanced swatches, and state the Custom CSS recovery restriction.
+- Apply primary colours to selected navigation, menus, hover/pressed actions and
+  focus, and accent colours to highlights, unread counts and selection rules.
+  Derive readable state pairs while preserving independent status/presence roles.
+- Keep the built-in Retro dark selected-menu text readable after clearing custom
+  colours, including System mode on a dark device.
+- Expand the preview to public components and verify admin save to fresh guest
+  and member pages. Explain next-page-load timing and package/member precedence;
+  clearing overrides restores the base palette.
+- Combined local qualification is recorded in
+  `docs/evidence/branding-public-theme-coverage-2026-10-31/README.md`; the earlier
+  keyboard/guidance evidence remains in `admin-branding-recovery-2026-10-31`.
+
 ## [2026-10-31] - Admin appearance follow-up
 
 - Reject PHP upload-intake failures before saving any branding; retain typed

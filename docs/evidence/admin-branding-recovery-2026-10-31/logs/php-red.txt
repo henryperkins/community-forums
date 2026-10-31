@@ -1,0 +1,238 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/phpunit.xml
+
+F                                                                   1 / 1 (100%)
+
+Time: 00:00.053, Memory: 6.00 MB
+
+There was 1 failure:
+
+1) Tests\Integration\Core\AppBrandingThemeTest::test_cleared_or_invalid_branding_defaults_render_the_visitor_preview
+Failed asserting that '<!doctype html>\n
+<html lang="en"\n
+      data-theme="dark"\n
+      data-density="comfortable"\n
+      data-font-size="medium"\n
+      >\n
+<head>\n
+    <meta charset="utf-8">\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\n
+            <title>Branding</title>\n
+    <meta name="description" content="RetroBoards — a community forum.">\n
+    <meta name="robots" content="noindex, nofollow">        <meta property="og:site_name" content="RetroBoards">\n
+    <meta property="og:title" content="Branding">\n
+    <meta property="og:description" content="RetroBoards — a community forum.">\n
+    <meta property="og:type" content="website">\n
+                    <link rel="icon" href="data:,">\n
+        <link rel="stylesheet" href="/assets/dist/imladris-style-CRsa_HRN.css">\n
+    <link rel="stylesheet" href="/assets/dist/app-style--jg7dl7V.css">\n
+    <link rel="stylesheet" href="/assets/dist/wysiwyg-composer-BRAFF38E.css">        <link rel="stylesheet" href="/brand.css?v=-system"></head>\n
+<body class="variant-admin is-rail-open is-reading-open" data-route="" data-drafts="1" data-server-drafts="1" data-rail-open="1" data-inbox-reading-open="1" data-wysiwyg-composer="1" data-wysiwyg-src="/assets/dist/wysiwyg-composer-XlKwRXnh.js" data-user="ud96c58c0" data-enter-to-send="1" data-show-preview="1" data-smart-lists="1" data-tour="1">\n
+<a class="skip-link" href="#main">Skip to content</a>\n
+        <div class="admin-bar">\n
+    <div class="admin-bar-id">\n
+        <a class="admin-bar-brand" href="/" aria-label="RetroBoards">\n
+                            <svg class="admin-bar-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>\n
+                <span class="admin-bar-wordmark">RetroBoards</span>\n
+                    </a>\n
+        <a class="admin-bar-exit" href="/">\n
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>\n
+            Back to the forum\n
+        </a>\n
+        <div class="admin-bar-right">\n
+                            <form class="admin-bar-search" method="get" action="/search" role="search">\n
+                    <input class="input input-small" type="search" enterkeyhint="search" name="q" placeholder="Search…" aria-label="Search">\n
+                </form>\n
+                                                                                <a class="topbar-link bell" href="/notifications" data-bell data-notification-link aria-label="Notifications" title="Notifications">\n
+                        <svg class="bell-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\n
+                        <span class="bell-count" data-notification-count aria-hidden="true" hidden>0</span>\n
+                        <span class="sr-only">Notifications</span>\n
+                    </a>\n
+                                <a class="admin-bar-user" href="/u/ud96c58c0" aria-label="ud96c58c0">\n
+                        <span class="monogram mono-7" aria-hidden="true">UD</span>\n
+                    <span class="admin-bar-username">ud96c58c0</span>\n
+                </a>\n
+                <form class="inline" method="post" action="/logout">\n
+                    <input type="hidden" name="_token" value="cd2e53d21569722348efb9bcc66ac3f2056c3daa40961e6eee02e426f05a258d">                    <button class="linkbtn" type="submit" aria-label="Log out">\n
+                        <svg class="icon icon-log-out" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>\n
+                        <span class="admin-bar-action-label">Log out</span>\n
+                    </button>\n
+                </form>\n
+                                    <span class="admin-bar-mode">Admin mode</span>\n
+        </div>\n
+    </div>\n
+    <nav class="admin-tier" aria-label="Admin areas" data-admin-tier>\n
+                    <a class="admin-tier-item" href="/admin">Overview</a>\n
+                <a class="admin-tier-item" href="/mod/reports">Moderation</a>\n
+                <a class="admin-tier-item" href="/admin/structure">Content</a>\n
+                <a class="admin-tier-item" href="/admin/roles">People</a>\n
+                <a class="admin-tier-item" href="/admin/users">Members</a>\n
+                <span class="admin-tier-item is-active" aria-current="page">Appearance</span>\n
+                <a class="admin-tier-item" href="/admin/email">Notifications</a>\n
+                <a class="admin-tier-item" href="/admin/api-tokens">Integrations</a>\n
+                <a class="admin-tier-item" href="/admin/packages">Packages</a>\n
+                <a class="admin-tier-item" href="/admin/features">Features</a>\n
+                <a class="admin-tier-item" href="/admin/settings">Settings</a>\n
+        </nav>\n
+    <details class="admin-area-menu">\n
+        <summary data-admin-current-area><span>Admin areas</span><strong>Appearance</strong><svg class="icon icon-chevron-down" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>\n
+</summary>\n
+        <nav class="admin-mobile-areas" aria-label="Admin areas" data-admin-mobile-areas>\n
+                        <a class="admin-area-item" href="/admin">Overview</a>\n
+                <a class="admin-area-item" href="/mod/reports">Moderation</a>\n
+                <a class="admin-area-item" href="/admin/structure">Content</a>\n
+                <a class="admin-area-item" href="/admin/roles">People</a>\n
+                <a class="admin-area-item" href="/admin/users">Members</a>\n
+                <span class="admin-area-item is-active" aria-current="page">Appearance</span>\n
+                <a class="admin-area-item" href="/admin/email">Notifications</a>\n
+                <a class="admin-area-item" href="/admin/api-tokens">Integrations</a>\n
+                <a class="admin-area-item" href="/admin/packages">Packages</a>\n
+                <a class="admin-area-item" href="/admin/features">Features</a>\n
+                <a class="admin-area-item" href="/admin/settings">Settings</a>\n
+            </nav>\n
+    </details>\n
+</div>\n
+<main class="admin-console" id="main" data-area="appearance">\n
+            <h1 class="admin-title">Branding &amp; themes</h1>\n
+        <nav class="admin-tabs" aria-label="Appearance sections">\n
+                                                <span class="admin-tab is-active" aria-current="page">Branding</span>\n
+                                                                <a class="admin-tab" href="/admin/themes">Themes</a>\n
+                                    </nav>\n
+            <div class="admin-pane admin-appearance admin-appearance-branding">\n
+        \n
+        <p class="pane-intro">Set the community name, colours and appearance. The preview shows the visitor theme you select; your account appearance stays unchanged.</p>\n
+\n
+        <form method="post" action="/admin/branding" class="brand-cols" enctype="multipart/form-data" data-brand-form data-brand-upload-max-bytes="5242880" data-brand-palettes="{&quot;classic&quot;:{&quot;light&quot;:{&quot;--surface&quot;:&quot;#faf6ec&quot;,&quot;--surface-2&quot;:&quot;#f5efe1&quot;,&quot;--surface-3&quot;:&quot;#ece4d2&quot;,&quot;--border&quot;:&quot;#ded2b8&quot;,&quot;--text&quot;:&quot;#1b231d&quot;,&quot;--text-muted&quot;:&quot;#515c52&quot;,&quot;--text-strong&quot;:&quot;#1b231d&quot;,&quot;--text-inverse&quot;:&quot;#faf6ec&quot;,&quot;--accent&quot;:&quot;#2e4a3a&quot;,&quot;--accent-contrast&quot;:&quot;#faf6ec&quot;,&quot;--accent-2&quot;:&quot;#c29a44&quot;,&quot;--danger&quot;:&quot;#9c4a33&quot;,&quot;--brand&quot;:&quot;#2e4a3a&quot;,&quot;--brand-subtle&quot;:&quot;#edf3ed&quot;,&quot;--on-brand-subtle&quot;:&quot;#24402f&quot;,&quot;--surface-page&quot;:&quot;#f5efe1&quot;,&quot;--surface-raised&quot;:&quot;#faf6ec&quot;,&quot;--surface-sunken&quot;:&quot;#ece4d2&quot;,&quot;--surface-cool&quot;:&quot;#eef1ed&quot;,&quot;--surface-inverse&quot;:&quot;#1e2730&quot;,&quot;--border-hair&quot;:&quot;#ded2b8&quot;,&quot;--border-soft&quot;:&quot;#dce3dd&quot;,&quot;--border-strong&quot;:&quot;#94a095&quot;,&quot;--text-body&quot;:&quot;#313b33&quot;,&quot;--text-faint&quot;:&quot;#5c685d&quot;,&quot;--gold-soft&quot;:&quot;#f4ebcf&quot;,&quot;--gold-ink&quot;:&quot;#7e5f22&quot;,&quot;--field-rule&quot;:&quot;#9a7530&quot;},&quot;dark&quot;:{&quot;--surface&quot;:&quot;#283440&quot;,&quot;--surface-2&quot;:&quot;#161d24&quot;,&quot;--surface-3&quot;:&quot;#1e2730&quot;,&quot;--border&quot;:&quot;#36434f&quot;,&quot;--text&quot;:&quot;#ece4d2&quot;,&quot;--text-muted&quot;:&quot;#aeb8b4&quot;,&quot;--text-strong&quot;:&quot;#faf6ec&quot;,&quot;--text-inverse&quot;:&quot;#1b231d&quot;,&quot;--accent&quot;:&quot;#d2b062&quot;,&quot;--accent-contrast&quot;:&quot;#161d24&quot;,&quot;--accent-2&quot;:&quot;#c29a44&quot;,&quot;--danger&quot;:&quot;#db8c73&quot;,&quot;--brand&quot;:&quot;#4e7459&quot;,&quot;--brand-subtle&quot;:&quot;rgba(78,116,89,.20)&quot;,&quot;--on-brand-subtle&quot;:&quot;#bcd0bf&quot;,&quot;--surface-page&quot;:&quot;#161d24&quot;,&quot;--surface-raised&quot;:&quot;#1e2730&quot;,&quot;--surface-sunken&quot;:&quot;#283440&quot;,&quot;--surface-cool&quot;:&quot;#eef1ed&quot;,&quot;--surface-inverse&quot;:&quot;#f5efe1&quot;,&quot;--border-hair&quot;:&quot;#36434f&quot;,&quot;--border-soft&quot;:&quot;#2c3742&quot;,&quot;--border-strong&quot;:&quot;#51606c&quot;,&quot;--text-body&quot;:&quot;#d7dcd2&quot;,&quot;--text-faint&quot;:&quot;#94a095&quot;,&quot;--gold-soft&quot;:&quot;rgba(194,154,68,.16)&quot;,&quot;--gold-ink&quot;:&quot;#d2b062&quot;,&quot;--field-rule&quot;:&quot;#b08a3a&quot;}},&quot;retro&quot;:{&quot;light&quot;:{&quot;--surface&quot;:&quot;#fff7dc&quot;,&quot;--surface-2&quot;:&quot;#f6e8c4&quot;,&quot;--surface-3&quot;:&quot;#f0dfb3&quot;,&quot;--border&quot;:&quot;#c78b45&quot;,&quot;--text&quot;:&quot;#241706&quot;,&quot;--text-muted&quot;:&quot;#655131&quot;,&quot;--text-strong&quot;:&quot;#241706&quot;,&quot;--text-inverse&quot;:&quot;#fff7dc&quot;,&quot;--accent&quot;:&quot;#8f3d12&quot;,&quot;--accent-contrast&quot;:&quot;#ffffff&quot;,&quot;--accent-2&quot;:&quot;#a95e12&quot;,&quot;--danger&quot;:&quot;#9c4a33&quot;,&quot;--brand&quot;:&quot;#8f3d12&quot;,&quot;--brand-subtle&quot;:&quot;#f4dfb4&quot;,&quot;--on-brand-subtle&quot;:&quot;#63330f&quot;,&quot;--surface-page&quot;:&quot;#f6e8c4&quot;,&quot;--surface-raised&quot;:&quot;#fff7dc&quot;,&quot;--surface-sunken&quot;:&quot;#f0dfb3&quot;,&quot;--surface-cool&quot;:&quot;#f0e7d4&quot;,&quot;--surface-inverse&quot;:&quot;#30251a&quot;,&quot;--border-hair&quot;:&quot;#d4b276&quot;,&quot;--border-soft&quot;:&quot;#deca9e&quot;,&quot;--border-strong&quot;:&quot;#9f7137&quot;,&quot;--text-body&quot;:&quot;#392b16&quot;,&quot;--text-faint&quot;:&quot;#6b5738&quot;,&quot;--gold-soft&quot;:&quot;#f4dfb4&quot;,&quot;--gold-ink&quot;:&quot;#6b450f&quot;,&quot;--field-rule&quot;:&quot;#8f6429&quot;,&quot;--surface-soft&quot;:&quot;#fff1bd&quot;,&quot;--brand-hover&quot;:&quot;#70300e&quot;,&quot;--brand-press&quot;:&quot;#57240b&quot;,&quot;--rule-gold&quot;:&quot;#a95e12&quot;},&quot;dark&quot;:{&quot;--surface&quot;:&quot;#382c20&quot;,&quot;--surface-2&quot;:&quot;#211b14&quot;,&quot;--surface-3&quot;:&quot;#30251a&quot;,&quot;--border&quot;:&quot;#776047&quot;,&quot;--text&quot;:&quot;#fff1d2&quot;,&quot;--text-muted&quot;:&quot;#d4bd94&quot;,&quot;--text-strong&quot;:&quot;#fff7dc&quot;,&quot;--text-inverse&quot;:&quot;#241706&quot;,&quot;--accent&quot;:&quot;#f0b778&quot;,&quot;--accent-contrast&quot;:&quot;#241706&quot;,&quot;--accent-2&quot;:&quot;#e6ad69&quot;,&quot;--danger&quot;:&quot;#db8c73&quot;,&quot;--brand&quot;:&quot;#d99b58&quot;,&quot;--brand-subtle&quot;:&quot;#49331e&quot;,&quot;--on-brand-subtle&quot;:&quot;#f0d3a2&quot;,&quot;--surface-page&quot;:&quot;#211b14&quot;,&quot;--surface-raised&quot;:&quot;#30251a&quot;,&quot;--surface-sunken&quot;:&quot;#382c20&quot;,&quot;--surface-cool&quot;:&quot;#302b25&quot;,&quot;--surface-inverse&quot;:&quot;#fff7dc&quot;,&quot;--border-hair&quot;:&quot;#776047&quot;,&quot;--border-soft&quot;:&quot;#57432f&quot;,&quot;--border-strong&quot;:&quot;#ad8b5e&quot;,&quot;--text-body&quot;:&quot;#f0dfbd&quot;,&quot;--text-faint&quot;:&quot;#c4ae8a&quot;,&quot;--gold-soft&quot;:&quot;#49331e&quot;,&quot;--gold-ink&quot;:&quot;#f0c98c&quot;,&quot;--field-rule&quot;:&quot;#c79c60&quot;,&quot;--surface-soft&quot;:&quot;#403122&quot;,&quot;--brand-hover&quot;:&quot;#f0b778&quot;,&quot;--brand-press&quot;:&quot;#ffd2a0&quot;,&quot;--rule-gold&quot;:&quot;#e6ad69&quot;}}}">\n
+            <input type="hidden" name="_token" value="cd2e53d21569722348efb9bcc66ac3f2056c3daa40961e6eee02e426f05a258d">\n
+            <section class="branding-form-card">\n
+                <div class="branding-field-grid">\n
+                    <div class="branding-field branding-field-wide">\n
+                        <label for="branding-site-name">Site name</label>\n
+                        <input id="branding-site-name" type="text" name="site_name" class="input" maxlength="80" value="RetroBoards" required data-brand-name>\n
+                                            </div>\n
+\n
+                    <div class="branding-field">\n
+                        <label for="branding-primary">Primary colour (hex)</label>\n
+                        <input id="branding-primary" type="text" name="color_primary" class="input branding-hex-input" maxlength="7" placeholder="#2e4a3a" value="" data-brand-primary>\n
+                                            </div>\n
+\n
+                    <div class="branding-field">\n
+                        <label for="branding-accent">Accent colour (hex)</label>\n
+                        <input id="branding-accent" type="text" name="color_accent" class="input branding-hex-input" maxlength="7" placeholder="#c29a44" value="" data-brand-accent>\n
+                                            </div>\n
+\n
+                    <div class="branding-field">\n
+                        <label for="branding-theme-default">Default theme for signed-out visitors</label>\n
+                        <select id="branding-theme-default" name="theme_default" class="input" data-brand-theme>\n
+                            <option value="system">System</option>\n
+                            <option value="light">Light</option>\n
+                            <option value="dark">Dark</option>\n
+                        </select>\n
+                    </div>\n
+\n
+                    <div class="branding-field">\n
+                        <label for="branding-theme-preset">Theme preset</label>\n
+                        <select id="branding-theme-preset" name="theme_preset" class="input" data-brand-preset>\n
+                            <option value="classic">Classic</option>\n
+                            <option value="retro">Retro</option>\n
+                        </select>\n
+                    </div>\n
+                </div>\n
+\n
+                \n
+                \n
+                <h3 class="branding-section-label">Marks</h3>\n
+                <p class="brand-preview-note">Choose a replacement file or mark an existing image for removal. Changes apply when you save branding.</p>\n
+                <p class="brand-preview-note" id="branding-upload-help">JPEG, PNG, GIF, WebP images, up to 5 MiB per file and 4096 × 4096 pixels. Keep all files in one save below 100 MiB combined.</p>\n
+                <div class="branding-marks">\n
+                                            <div class="branding-mark-field" data-brand-asset="logo" data-brand-saved-asset="">\n
+                            <label for="branding-file-logo">Logo</label>\n
+                            <div class="branding-asset-preview">\n
+                                <img data-brand-asset-image alt="" hidden>\n
+                                <span data-brand-asset-status role="status">No image saved.</span>\n
+                            </div>\n
+                            <input id="branding-file-logo" class="branding-file-input" type="file" name="logo" accept="image/jpeg,image/png,image/gif,image/webp" aria-describedby="branding-upload-help">\n
+                                                        <button class="btn btn-secondary branding-file-clear" type="button" data-brand-file-clear hidden>Clear selected logo</button>\n
+                                                    </div>\n
+                                            <div class="branding-mark-field" data-brand-asset="favicon" data-brand-saved-asset="">\n
+                            <label for="branding-file-favicon">Favicon</label>\n
+                            <div class="branding-asset-preview">\n
+                                <img data-brand-asset-image alt="" hidden>\n
+                                <span data-brand-asset-status role="status">No image saved.</span>\n
+                            </div>\n
+                            <input id="branding-file-favicon" class="branding-file-input" type="file" name="favicon" accept="image/jpeg,image/png,image/gif,image/webp" aria-describedby="branding-upload-help">\n
+                                                        <button class="btn btn-secondary branding-file-clear" type="button" data-brand-file-clear hidden>Clear selected favicon</button>\n
+                                                    </div>\n
+                                            <div class="branding-mark-field" data-brand-asset="logo_light" data-brand-saved-asset="">\n
+                            <label for="branding-file-logo_light">Light theme logo</label>\n
+                            <div class="branding-asset-preview">\n
+                                <img data-brand-asset-image alt="" hidden>\n
+                                <span data-brand-asset-status role="status">No image saved.</span>\n
+                            </div>\n
+                            <input id="branding-file-logo_light" class="branding-file-input" type="file" name="logo_light" accept="image/jpeg,image/png,image/gif,image/webp" aria-describedby="branding-upload-help">\n
+                                                        <button class="btn btn-secondary branding-file-clear" type="button" data-brand-file-clear hidden>Clear selected light theme logo</button>\n
+                                                    </div>\n
+                                            <div class="branding-mark-field" data-brand-asset="logo_dark" data-brand-saved-asset="">\n
+                            <label for="branding-file-logo_dark">Dark theme logo</label>\n
+                            <div class="branding-asset-preview">\n
+                                <img data-brand-asset-image alt="" hidden>\n
+                                <span data-brand-asset-status role="status">No image saved.</span>\n
+                            </div>\n
+                            <input id="branding-file-logo_dark" class="branding-file-input" type="file" name="logo_dark" accept="image/jpeg,image/png,image/gif,image/webp" aria-describedby="branding-upload-help">\n
+                                                        <button class="btn btn-secondary branding-file-clear" type="button" data-brand-file-clear hidden>Clear selected dark theme logo</button>\n
+                                                    </div>\n
+                                    </div>\n
+\n
+                <h3 class="branding-section-label">Custom CSS</h3>\n
+                                    <p class="callout callout-review branding-css-unavailable">Custom CSS is saved behind the custom_css feature flag and is not available on this install.</p>\n
+                \n
+                <div class="branding-save-row">\n
+                    <button class="btn branding-primary-button" type="submit">Save branding</button>\n
+                                                        </div>\n
+            </section>\n
+\n
+            <aside class="branding-preview-column">\n
+                <section class="brand-preview-panel" aria-live="polite">\n
+                    <p class="eyebrow">Live preview</p>\n
+                    <div class="brand-preview brand-preview-shell" data-brand-preview data-brand-theme="" data-brand-preset="" data-brand-logos="{&quot;base&quot;:&quot;&quot;,&quot;light&quot;:&quot;&quot;,&quot;dark&quot;:&quot;&quot;}">\n
+                        <div class="brand-preview-bar">\n
+                            <img class="brand-preview-logo" data-brand-preview-logo alt="" hidden>\n
+                            <strong data-brand-preview-name>RetroBoards</strong>\n
+                            <span data-brand-preview-theme></span>\n
+                        </div>\n
+                        <div class="brand-preview-body">\n
+                            <p class="brand-preview-copy">A sample discussion</p>\n
+                            <a href="#">Sample link</a>\n
+                            <button class="btn" type="button">Primary button</button>\n
+                            <span class="brand-preview-accent">Accent marker</span>\n
+                            <label class="brand-preview-field">Sample field<input class="input" type="text" value="Sample text" readonly tabindex="-1"></label>\n
+                        </div>\n
+                    </div>\n
+                    <p class="brand-preview-note">Light and dark logo variants are used when the resolved theme explicitly matches that variant; system theme falls back to the base logo.</p>\n
+                                        <noscript><p class="brand-preview-note">This preview shows the saved colours and logos. Turn on JavaScript to preview edits before saving.</p></noscript>\n
+                </section>\n
+\n
+                <section class="branding-reset-card" id="branding-reset">\n
+                    <h2>Reset branding</h2>\n
+                    <p>Clears saved colours, logos, favicon, visitor appearance, theme preset, and custom CSS. Keeps the community name and active package theme. This cannot be undone.</p>\n
+                                            <p>To pause package themes instead, use <a href="/admin/themes/safe-mode">theme safe mode</a>.</p>\n
+                                        <label for="branding-reset-confirm">Type RESET to confirm</label>\n
+                    <input id="branding-reset-confirm" type="text" name="reset_confirm" class="input branding-reset-input" value="" autocomplete="off" autocapitalize="off" spellcheck="false">\n
+                                        <button class="btn branding-reset-button" type="submit" name="reset" value="1" formnovalidate>Reset branding</button>\n
+                                    </section>\n
+            </aside>\n
+        </form>\n
+    </div>\n
+</main>\n
+<script src="/assets/dist/app-8e7515da87472a63.js" defer></script>\n
+<script src="/assets/dist/composer-c1ff478070e3a1d8.js" defer></script><script src="/assets/dist/passkeys-16e7134417f0d6af.js" defer></script><script src="/assets/dist/tour-f068bdb2d74e6d21.js" defer></script></body>\n
+</html>\n
+' [UTF-8](length: 23425) contains "data-brand-theme="system" data-brand-preset="classic"" [ASCII](length: 53).
+
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Support/TestCase.php:442
+/home/ubuntu/.local/state/community-forums/worktrees/branding-20261031/tests/Integration/Core/AppBrandingThemeTest.php:429
+
+FAILURES!
+Tests: 1, Assertions: 3, Failures: 1.

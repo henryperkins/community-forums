@@ -1,0 +1,30 @@
+{
+  "dark preview": {
+    "colour": "rgb(36, 23, 6)",
+    "background": "rgb(217, 155, 88)",
+    "ratio": 7.315267022359137,
+    "outline": "rgb(36, 23, 6)",
+    "outlineStyle": "none"
+  },
+  "dark public": {
+    "colour": "rgb(36, 23, 6)",
+    "background": "rgb(217, 155, 88)",
+    "ratio": 7.315267022359137,
+    "outline": "rgb(36, 23, 6)",
+    "outlineStyle": "none"
+  },
+  "system preview": {
+    "colour": "rgb(36, 23, 6)",
+    "background": "rgb(217, 155, 88)",
+    "ratio": 7.315267022359137,
+    "outline": "rgb(36, 23, 6)",
+    "outlineStyle": "none"
+  },
+  "system public": {
+    "colour": "rgb(36, 23, 6)",
+    "background": "rgb(217, 155, 88)",
+    "ratio": 7.315267022359137,
+    "outline": "rgb(36, 23, 6)",
+    "outlineStyle": "none"
+  }
+}

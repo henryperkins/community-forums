@@ -1,0 +1,355 @@
+{
+  "propagation": {
+    "guestBefore": {
+      "path": "/",
+      "mode": "system",
+      "tokens": {
+        "--accent": "#2e4a3a",
+        "--accent-2": "#c29a44",
+        "--brand": "#2e4a3a",
+        "--brand-hover": "#24402f",
+        "--brand-press": "#1c2e24",
+        "--brand-subtle": "#edf3ed",
+        "--on-brand-subtle": "#24402f",
+        "--gold-ink": "#7e5f22",
+        "--gold-soft": "#f4ebcf",
+        "--gold-500": "#c29a44"
+      },
+      "elements": {
+        "headerSignIn": {
+          "text": "Log in",
+          "color": "rgb(250, 246, 236)",
+          "bg": "rgb(46, 74, 58)",
+          "border": "rgb(250, 246, 236)"
+        },
+        "activeHeader": {
+          "text": "Boards",
+          "color": "rgb(36, 64, 47)",
+          "bg": "rgb(237, 243, 237)",
+          "border": "rgb(36, 64, 47)"
+        },
+        "activeRail": {
+          "text": "Boards",
+          "color": "rgb(36, 64, 47)",
+          "bg": "rgb(237, 243, 237)",
+          "border": "rgb(36, 64, 47) rgb(36, 64, 47) rgb(36, 64, 47) rgb(194, 154, 68)"
+        }
+      },
+      "brandCss": null
+    },
+    "memberBefore": {
+      "path": "/inbox",
+      "mode": "system",
+      "tokens": {
+        "--accent": "#2e4a3a",
+        "--accent-2": "#c29a44",
+        "--brand": "#2e4a3a",
+        "--brand-hover": "#24402f",
+        "--brand-press": "#1c2e24",
+        "--brand-subtle": "#edf3ed",
+        "--on-brand-subtle": "#24402f",
+        "--gold-ink": "#7e5f22",
+        "--gold-soft": "#f4ebcf",
+        "--gold-500": "#c29a44"
+      },
+      "elements": {
+        "activeHeader": {
+          "text": "Inbox",
+          "color": "rgb(36, 64, 47)",
+          "bg": "rgb(237, 243, 237)",
+          "border": "rgb(36, 64, 47)"
+        },
+        "threadTitle": {
+          "text": "Mobile layout looks great",
+          "color": "rgb(27, 35, 29)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "border": "rgb(27, 35, 29)"
+        },
+        "primaryButton": {
+          "text": "Next",
+          "color": "rgb(250, 246, 236)",
+          "bg": "rgb(46, 74, 58)",
+          "border": "rgba(0, 0, 0, 0)"
+        }
+      },
+      "brandCss": null,
+      "threadHover": "rgb(46, 74, 58)"
+    },
+    "feedBefore": {
+      "path": "/feed",
+      "mode": "system",
+      "tokens": {
+        "--accent": "#2e4a3a",
+        "--accent-2": "#c29a44",
+        "--brand": "#2e4a3a",
+        "--brand-hover": "#24402f",
+        "--brand-press": "#1c2e24",
+        "--brand-subtle": "#edf3ed",
+        "--on-brand-subtle": "#24402f",
+        "--gold-ink": "#7e5f22",
+        "--gold-soft": "#f4ebcf",
+        "--gold-500": "#c29a44"
+      },
+      "elements": {
+        "feedTab": {
+          "text": "Following",
+          "color": "rgb(250, 246, 236)",
+          "bg": "rgb(46, 74, 58)",
+          "border": "rgb(250, 246, 236)"
+        },
+        "primaryButton": {
+          "text": "Next",
+          "color": "rgb(250, 246, 236)",
+          "bg": "rgb(46, 74, 58)",
+          "border": "rgba(0, 0, 0, 0)"
+        }
+      },
+      "brandCss": null
+    },
+    "firstSaveStatus": 422,
+    "acknowledgedSaveStatus": 303,
+    "adminSample": {
+      "primary": "rgb(0, 95, 204)",
+      "accent": "rgb(163, 51, 0)"
+    },
+    "openGuestBeforeReload": {
+      "path": "/",
+      "mode": "system",
+      "tokens": {
+        "--accent": "#2e4a3a",
+        "--accent-2": "#c29a44",
+        "--brand": "#2e4a3a",
+        "--brand-hover": "#24402f",
+        "--brand-press": "#1c2e24",
+        "--brand-subtle": "#edf3ed",
+        "--on-brand-subtle": "#24402f",
+        "--gold-ink": "#7e5f22",
+        "--gold-soft": "#f4ebcf",
+        "--gold-500": "#c29a44"
+      },
+      "elements": {
+        "headerSignIn": {
+          "text": "Log in",
+          "color": "rgb(250, 246, 236)",
+          "bg": "rgb(46, 74, 58)",
+          "border": "rgb(250, 246, 236)"
+        },
+        "activeHeader": {
+          "text": "Boards",
+          "color": "rgb(36, 64, 47)",
+          "bg": "rgb(237, 243, 237)",
+          "border": "rgb(36, 64, 47)"
+        },
+        "activeRail": {
+          "text": "Boards",
+          "color": "rgb(36, 64, 47)",
+          "bg": "rgb(237, 243, 237)",
+          "border": "rgb(36, 64, 47) rgb(36, 64, 47) rgb(36, 64, 47) rgb(194, 154, 68)"
+        }
+      },
+      "brandCss": null
+    },
+    "guestAfter": {
+      "path": "/",
+      "mode": "system",
+      "tokens": {
+        "--accent": "#005fcc",
+        "--accent-2": "#a33300",
+        "--brand": "#2e4a3a",
+        "--brand-hover": "#24402f",
+        "--brand-press": "#1c2e24",
+        "--brand-subtle": "#edf3ed",
+        "--on-brand-subtle": "#24402f",
+        "--gold-ink": "#7e5f22",
+        "--gold-soft": "#f4ebcf",
+        "--gold-500": "#c29a44"
+      },
+      "elements": {
+        "headerSignIn": {
+          "text": "Log in",
+          "color": "rgb(255, 255, 255)",
+          "bg": "rgb(0, 95, 204)",
+          "border": "rgb(255, 255, 255)"
+        },
+        "activeHeader": {
+          "text": "Boards",
+          "color": "rgb(36, 64, 47)",
+          "bg": "rgb(237, 243, 237)",
+          "border": "rgb(36, 64, 47)"
+        },
+        "activeRail": {
+          "text": "Boards",
+          "color": "rgb(36, 64, 47)",
+          "bg": "rgb(237, 243, 237)",
+          "border": "rgb(36, 64, 47) rgb(36, 64, 47) rgb(36, 64, 47) rgb(194, 154, 68)"
+        }
+      },
+      "brandCss": "/brand.css?v=c2e9f6df449b7ebf-system"
+    },
+    "publicName": "Propagation Review",
+    "memberAfter": {
+      "path": "/inbox",
+      "mode": "system",
+      "tokens": {
+        "--accent": "#005fcc",
+        "--accent-2": "#a33300",
+        "--brand": "#2e4a3a",
+        "--brand-hover": "#24402f",
+        "--brand-press": "#1c2e24",
+        "--brand-subtle": "#edf3ed",
+        "--on-brand-subtle": "#24402f",
+        "--gold-ink": "#7e5f22",
+        "--gold-soft": "#f4ebcf",
+        "--gold-500": "#c29a44"
+      },
+      "elements": {
+        "activeHeader": {
+          "text": "Inbox",
+          "color": "rgb(36, 64, 47)",
+          "bg": "rgb(237, 243, 237)",
+          "border": "rgb(36, 64, 47)"
+        },
+        "threadTitle": {
+          "text": "Mobile layout looks great",
+          "color": "rgb(27, 35, 29)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "border": "rgb(27, 35, 29)"
+        },
+        "primaryButton": {
+          "text": "Next",
+          "color": "rgb(255, 255, 255)",
+          "bg": "rgb(0, 95, 204)",
+          "border": "rgba(0, 0, 0, 0)"
+        }
+      },
+      "brandCss": "/brand.css?v=c2e9f6df449b7ebf-system",
+      "threadHover": "rgb(0, 95, 204)"
+    },
+    "feedAfter": {
+      "path": "/feed",
+      "mode": "system",
+      "tokens": {
+        "--accent": "#005fcc",
+        "--accent-2": "#a33300",
+        "--brand": "#2e4a3a",
+        "--brand-hover": "#24402f",
+        "--brand-press": "#1c2e24",
+        "--brand-subtle": "#edf3ed",
+        "--on-brand-subtle": "#24402f",
+        "--gold-ink": "#7e5f22",
+        "--gold-soft": "#f4ebcf",
+        "--gold-500": "#c29a44"
+      },
+      "elements": {
+        "feedTab": {
+          "text": "Following",
+          "color": "rgb(250, 246, 236)",
+          "bg": "rgb(46, 74, 58)",
+          "border": "rgb(250, 246, 236)"
+        },
+        "primaryButton": {
+          "text": "Next",
+          "color": "rgb(255, 255, 255)",
+          "bg": "rgb(0, 95, 204)",
+          "border": "rgba(0, 0, 0, 0)"
+        }
+      },
+      "brandCss": "/brand.css?v=c2e9f6df449b7ebf-system"
+    },
+    "guestDarkDefault": {
+      "path": "/login",
+      "mode": "dark",
+      "tokens": {
+        "--accent": "#005fcc",
+        "--accent-2": "#a33300",
+        "--brand": "#4e7459",
+        "--brand-hover": "#6e9479",
+        "--brand-press": "#1c2e24",
+        "--brand-subtle": "#4e745933",
+        "--on-brand-subtle": "#bcd0bf",
+        "--gold-ink": "#d2b062",
+        "--gold-soft": "#c29a4429",
+        "--gold-500": "#c29a44"
+      },
+      "elements": {
+        "primaryButton": {
+          "text": "Log in",
+          "color": "rgb(255, 255, 255)",
+          "bg": "rgb(0, 95, 204)",
+          "border": "rgba(0, 0, 0, 0)"
+        }
+      },
+      "brandCss": "/brand.css?v=b5381d57bd755e06-system"
+    },
+    "memberModeAfterGuestDefault": {
+      "path": "/inbox",
+      "mode": "system",
+      "tokens": {
+        "--accent": "#005fcc",
+        "--accent-2": "#a33300",
+        "--brand": "#2e4a3a",
+        "--brand-hover": "#24402f",
+        "--brand-press": "#1c2e24",
+        "--brand-subtle": "#edf3ed",
+        "--on-brand-subtle": "#24402f",
+        "--gold-ink": "#7e5f22",
+        "--gold-soft": "#f4ebcf",
+        "--gold-500": "#c29a44"
+      },
+      "elements": {
+        "activeHeader": {
+          "text": "Inbox",
+          "color": "rgb(36, 64, 47)",
+          "bg": "rgb(237, 243, 237)",
+          "border": "rgb(36, 64, 47)"
+        },
+        "threadTitle": {
+          "text": "Mobile layout looks great",
+          "color": "rgb(27, 35, 29)",
+          "bg": "rgba(0, 0, 0, 0)",
+          "border": "rgb(27, 35, 29)"
+        },
+        "primaryButton": {
+          "text": "Next",
+          "color": "rgb(255, 255, 255)",
+          "bg": "rgb(0, 95, 204)",
+          "border": "rgba(0, 0, 0, 0)"
+        }
+      },
+      "brandCss": "/brand.css?v=b5381d57bd755e06-system",
+      "threadHover": "rgb(0, 95, 204)"
+    }
+  },
+  "visible": {
+    "guest": [
+      {
+        "text": "Boards",
+        "bg": "rgb(237, 243, 237)",
+        "color": "rgb(36, 64, 47)",
+        "border": "rgb(36, 64, 47)"
+      },
+      {
+        "text": "Log in",
+        "bg": "rgb(0, 95, 204)",
+        "color": "rgb(255, 255, 255)",
+        "border": "rgb(255, 255, 255)"
+      }
+    ],
+    "visibleFeedChoice": {
+      "text": "Following",
+      "bg": "rgb(46, 74, 58)",
+      "color": "rgb(250, 246, 236)",
+      "menuOpen": true
+    }
+  },
+  "production": {
+    "url": "https://forum.candidary.online/",
+    "observed_title": "WordPress AI Forums",
+    "brand_stylesheet_link_present": false,
+    "brand_root_declarations": "",
+    "app_css_matches_main": true,
+    "app_css_sha256": "e2db92887eaae729341e1ad2abd4adb31029d485b8b2b3500f51716cc5780b84",
+    "brand_css_bytes": 7097,
+    "reads_only": true
+  }
+}

@@ -434,13 +434,23 @@ filenames without JavaScript; saved thumbnails, configured upload requirements,
 and enhanced pending previews cover every logo variant and the favicon. PHP
 upload-intake errors reject the draft before any branding is saved. Its sample previews candidate colours,
 modes, presets, and logos without changing the operator's
-account appearance. Contrast warnings cover normal content surfaces in both
-light and dark; saving a warning requires an explicit, audited acknowledgement
+account appearance. The sample includes public navigation, board and feed
+selections, unread indicators, content, actions and field focus. Primary colours
+govern actions and selections; accent colours govern highlights and unread
+indicators, with readable derived state pairs. Status/presence families retain
+their meaning. Saves appear on the next page load. Clearing overrides restores
+the package or built-in base; signed-in members retain personal light/dark
+preferences. Contrast warnings cover content surfaces and the actual selected,
+hover/pressed and unread-count pairs in both light and dark; saving a warning requires an explicit, audited acknowledgement
 of that exact candidate (ADR 0053). `/admin/themes` manages installed package
 previews, activation, rollback, and safe mode. The full token editor remains
 later scope, and custom CSS remains safety-blocked in the Features console.
 Package details and guarded actions stack on narrow screens. Branding reset
-keeps the community name and package state; package safe mode keeps ordinary
+keeps the community name and package state; its independent form also makes
+Enter in the typed confirmation perform reset without publishing pending edits.
+Cleared preview settings resolve to System/Classic without JavaScript. Colour
+helpers explain inheritance, and narrow screens offer preview/return links
+beside the appearance controls. Package safe mode keeps ordinary
 branding, and each recovery surface explains and links to the other action.
 See `docs/runbooks/branding.md` and `docs/runbooks/package_themes.md` for current
 controls and recovery behavior; the priority table above is not an availability ledger.

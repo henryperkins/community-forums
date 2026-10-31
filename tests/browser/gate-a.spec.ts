@@ -1057,7 +1057,10 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
   await page.locator('[data-brand-accent]').fill('#a33300');
   await expect(page.locator('[data-brand-preview-name]')).toHaveText('Lakeside Forum');
   await expect(page.locator('[data-brand-preview]')).toHaveCSS('--preview-accent', '#005fcc');
-  await expect(page.locator('.brand-preview-bar')).toHaveCSS('background-color', 'rgb(0, 95, 204)');
+  // The sample header now uses the public raised surface and branded identity.
+  await expect(page.locator('.brand-preview-bar')).toHaveCSS('background-color', 'rgb(250, 246, 236)');
+  await expect(page.locator('.brand-preview-bar')).toHaveCSS('color', 'rgb(0, 95, 204)');
+  await expect(page.locator('.brand-preview-body .btn')).toHaveCSS('background-color', 'rgb(0, 95, 204)');
   await expect(page.locator('.brand-preview-accent')).toHaveCSS('background-color', 'rgb(163, 51, 0)');
   await expect(page.locator('.brand-preview-accent')).toHaveCSS('color', 'rgb(255, 255, 255)');
   const accentA11y = await new AxeBuilder({ page })
@@ -1071,7 +1074,7 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
   await expect(page.locator('.branding-contrast-warning')).toBeVisible();
   await page.locator('[name="contrast_ack"]').check();
   await page.getByRole('button', { name: 'Save branding' }).click();
-  await expect(page.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. The chrome is live for everyone.');
+  await expect(page.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. Branding appears on the next page load.');
   await shot(page, info, '18-branding-preview');
 
   await page.locator('input[name="favicon"]').setInputFiles({
@@ -1116,7 +1119,7 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
       name: 'brand-logo.png', mimeType: 'image/png', buffer: Buffer.from(PNG_1X1, 'base64'),
     });
     await noJsPage.getByRole('button', { name: 'Save branding' }).click();
-    await expect(noJsPage.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. The chrome is live for everyone.');
+    await expect(noJsPage.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. Branding appears on the next page load.');
     await expect(noJsPage.locator('.branding-marks input[type="file"]')).toHaveCount(4);
     await expect(noJsPage.locator('[data-brand-asset-status]')).toHaveText(['Saved image', 'No image saved.', 'No image saved.', 'No image saved.']);
     await expect(noJsPage.locator('input[name="logo"]')).toHaveAccessibleName('Logo');
@@ -1124,7 +1127,7 @@ test('phase 3 branding preview and product-tour replay', async ({ page, browser,
     await noJsPage.locator('[data-brand-name]').fill('');
     await noJsPage.locator('input[name="reset_confirm"]').fill('RESE');
     await noJsPage.getByRole('button', { name: 'Reset branding' }).click();
-    await expect(noJsPage.getByText('Type RESET to confirm restoring the default branding.', { exact: true })).toBeVisible();
+    expect(await noJsPage.locator('input[name="reset_confirm"]').evaluate((input: HTMLInputElement) => input.validity.valid)).toBe(false);
     await expect(noJsPage.locator('[data-brand-name]')).toHaveValue('');
     await expect(noJsPage.locator('input[name="reset_confirm"]')).toHaveValue('RESE');
 

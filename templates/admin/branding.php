@@ -9,7 +9,7 @@ $previewLogos = ['base' => $logo_path, 'light' => $logo_light_path, 'dark' => $l
 $previewLogo = ($previewLogos[$theme_default] ?? '') ?: $logo_path;
 $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' : '';
 $flashMessage = trim((string) ($flash ?? ''));
-$saveStatus = $flashMessage === 'Saved. The chrome is live for everyone.'
+$saveStatus = $flashMessage === 'Saved. Branding appears on the next page load.'
     || str_starts_with($flashMessage, 'Branding updated, but ')
     ? $flashMessage
     : '';
@@ -22,6 +22,16 @@ foreach (($errors ?? []) as $field => $message) {
     }
 }
 $saveError = implode(' ', $saveErrorMessages);
+$colourDefaultText = static function (string $token, string $value) use ($brand_preview_palettes, $theme_preset, $theme_default): string {
+    $modes = $theme_default === 'system' ? ['light', 'dark'] : [$theme_default];
+    $defaults = [];
+    foreach ($modes as $mode) {
+        $defaults[] = ucfirst($mode) . ' ' . $brand_preview_palettes[$theme_preset][$mode][$token];
+    }
+    return ($value === '' ? 'Using theme default: ' : 'Theme default: ')
+        . implode(' · ', $defaults) . '.'
+        . ($value === '' ? '' : ' Clear this field to use it.');
+};
 ?>
 <?= $this->partial('admin/_console', [
     'area' => 'appearance',
@@ -33,13 +43,13 @@ $saveError = implode(' ', $saveErrorMessages);
             <?= $this->partial('partials/flash', ['flash' => $unplacedFlash]) ?>
         <?php endif; ?>
 
-        <p class="pane-intro">Set the community name, colours and appearance. The preview shows the visitor theme you select; your account appearance stays unchanged.</p>
+        <p class="pane-intro">Set the community name, colours and appearance. Saved branding appears across the community on the next page load. The preview shows the visitor theme you select; signed-in members keep their own light/dark preference.</p>
 
-        <form method="post" action="/admin/branding" class="brand-cols" enctype="multipart/form-data" data-brand-form data-brand-upload-max-bytes="<?= $e($upload_max_bytes) ?>" data-brand-palettes="<?= $e(json_encode($brand_preview_palettes ?? [], JSON_THROW_ON_ERROR)) ?>">
+        <div class="brand-cols">
+        <form method="post" action="/admin/branding" class="branding-form-card" enctype="multipart/form-data" data-brand-form data-brand-package-active="<?= !empty($brand_package_active) ? '1' : '0' ?>" data-brand-upload-max-bytes="<?= $e($upload_max_bytes) ?>" data-brand-palettes="<?= $e(json_encode($brand_preview_palettes ?? [], JSON_THROW_ON_ERROR)) ?>">
             <?= $this->csrfField() ?>
 
-            <section class="branding-form-card">
-                <div class="branding-field-grid">
+                <div class="branding-field-grid branding-preview-target" id="branding-palette" tabindex="-1">
                     <div class="branding-field branding-field-wide">
                         <label for="branding-site-name">Site name</label>
                         <input id="branding-site-name" type="text" name="site_name" class="input" maxlength="80" value="<?= $e($site_name) ?>"<?= field_attrs($errors ?? [], 'site_name') ?> required data-brand-name>
@@ -48,33 +58,41 @@ $saveError = implode(' ', $saveErrorMessages);
 
                     <div class="branding-field">
                         <label for="branding-primary">Primary colour (hex)</label>
-                        <input id="branding-primary" type="text" name="color_primary" class="input branding-hex-input" maxlength="7" placeholder="#2e4a3a" value="<?= $e($color_primary) ?>"<?= field_attrs($errors ?? [], 'color_primary') ?> data-brand-primary>
+                        <p id="branding-primary-scope" class="branding-colour-help">Actions, links, focus and selected navigation. Lighter backgrounds and readable text are derived from this colour.</p>
+                        <input id="branding-primary" type="text" name="color_primary" class="input branding-hex-input" maxlength="7" placeholder="Use theme default" value="<?= $e($color_primary) ?>"<?= field_attrs($errors ?? [], 'color_primary', describedBy: 'branding-primary-help branding-primary-scope') ?> data-brand-primary>
+                        <p id="branding-primary-help" class="branding-colour-help" data-brand-colour-help="primary"><span class="branding-colour-swatch" data-brand-colour-swatch aria-hidden="true" hidden></span><span data-brand-colour-description><?= $e($colourDefaultText('--accent', $color_primary)) ?></span></p>
                         <?= field_error($errors ?? [], 'color_primary') ?>
                     </div>
 
                     <div class="branding-field">
                         <label for="branding-accent">Accent colour (hex)</label>
-                        <input id="branding-accent" type="text" name="color_accent" class="input branding-hex-input" maxlength="7" placeholder="#c29a44" value="<?= $e($color_accent) ?>"<?= field_attrs($errors ?? [], 'color_accent') ?> data-brand-accent>
+                        <p id="branding-accent-scope" class="branding-colour-help">Highlights, unread indicators and counts, and selection rules. Warning, success, moderation and presence colours keep their meanings.</p>
+                        <input id="branding-accent" type="text" name="color_accent" class="input branding-hex-input" maxlength="7" placeholder="Use theme default" value="<?= $e($color_accent) ?>"<?= field_attrs($errors ?? [], 'color_accent', describedBy: 'branding-accent-help branding-accent-scope') ?> data-brand-accent>
+                        <p id="branding-accent-help" class="branding-colour-help" data-brand-colour-help="accent"><span class="branding-colour-swatch" data-brand-colour-swatch aria-hidden="true" hidden></span><span data-brand-colour-description><?= $e($colourDefaultText('--accent-2', $color_accent)) ?></span></p>
                         <?= field_error($errors ?? [], 'color_accent') ?>
                     </div>
 
                     <div class="branding-field">
                         <label for="branding-theme-default">Default theme for signed-out visitors</label>
-                        <select id="branding-theme-default" name="theme_default" class="input" data-brand-theme>
+                        <select id="branding-theme-default" name="theme_default" class="input" aria-describedby="branding-mode-help" data-brand-theme>
                             <option value="system"<?= $sel('system', $theme_default) ?>>System</option>
                             <option value="light"<?= $sel('light', $theme_default) ?>>Light</option>
                             <option value="dark"<?= $sel('dark', $theme_default) ?>>Dark</option>
                         </select>
+                        <p id="branding-mode-help" class="branding-colour-help">System follows the visitor’s device. Members keep their personal light/dark preference.</p>
                     </div>
 
                     <div class="branding-field">
                         <label for="branding-theme-preset">Theme preset</label>
-                        <select id="branding-theme-preset" name="theme_preset" class="input" data-brand-preset>
+                        <select id="branding-theme-preset" name="theme_preset" class="input" aria-describedby="branding-preset-help" data-brand-preset>
                             <option value="classic"<?= $sel('classic', $theme_preset) ?>>Classic</option>
                             <option value="retro"<?= $sel('retro', $theme_preset) ?>>Retro</option>
                         </select>
+                        <p id="branding-preset-help" class="branding-colour-help">An active package supplies the base theme; Classic or Retro resumes when that package is disabled or in safe mode. Colours entered above override either base.</p>
                     </div>
                 </div>
+
+                <a class="btn btn-secondary branding-preview-shortcut" href="#branding-preview">View appearance preview</a>
 
                 <?php if (!empty($contrast_warnings)): ?>
                     <section class="callout callout-review branding-contrast-warning" aria-labelledby="branding-contrast-title">
@@ -147,7 +165,7 @@ $saveError = implode(' ', $saveErrorMessages);
                         </div>
                     </div>
                 <?php else: ?>
-                    <p class="callout callout-review branding-css-unavailable">Custom CSS is saved behind the custom_css feature flag and is not available on this install.</p>
+                    <p class="callout callout-review branding-css-unavailable">Custom CSS is unavailable until safe recovery is supported. You can use the colours and theme presets above to customize the community.</p>
                 <?php endif; ?>
 
                 <div class="branding-save-row">
@@ -163,23 +181,42 @@ $saveError = implode(' ', $saveErrorMessages);
                         <span class="branding-error" role="alert"><?= $e($saveError) ?></span>
                     <?php endif; ?>
                 </div>
-            </section>
+        </form>
 
             <aside class="branding-preview-column">
-                <section class="brand-preview-panel" aria-live="polite">
+                <section class="brand-preview-panel branding-preview-target" id="branding-preview" tabindex="-1" aria-live="polite">
                     <p class="eyebrow">Live preview</p>
                     <div class="brand-preview brand-preview-shell" data-brand-preview data-brand-theme="<?= $e($theme_default) ?>" data-brand-preset="<?= $e($theme_preset) ?>" data-brand-logos="<?= $e(json_encode($previewLogos, JSON_THROW_ON_ERROR)) ?>">
                         <div class="brand-preview-bar">
                             <img class="brand-preview-logo" data-brand-preview-logo alt=""<?= $previewLogo !== '' ? ' src="' . $e($previewLogo) . '"' : ' hidden' ?>>
                             <strong data-brand-preview-name><?= $e($site_name) ?></strong>
-                            <span data-brand-preview-theme><?= $e(ucfirst($theme_default)) ?></span>
+                            <span data-brand-preview-theme><?= !empty($brand_package_active) ? 'Package · ' : '' ?><?= $e(ucfirst($theme_default)) ?></span>
                         </div>
                         <div class="brand-preview-body">
-                            <p class="brand-preview-copy">A sample discussion</p>
-                            <a href="#">Sample link</a>
+                            <nav class="brand-preview-nav" aria-label="Sample community navigation">
+                                <a class="forum-bar-surface is-active" href="#branding-preview" aria-current="page">Boards</a>
+                                <a class="forum-bar-surface" href="#branding-preview">Inbox <span class="forum-bar-count">3</span></a>
+                            </nav>
+                            <nav class="brand-preview-rail" aria-label="Sample board navigation">
+                                <a class="board-rail-item is-active" href="#branding-preview" aria-current="page"><span class="board-rail-name">General discussion</span><span class="board-rail-unread" aria-label="3 unread topics">3</span></a>
+                            </nav>
+                            <section class="feed-view-menu brand-preview-menu" aria-label="Sample feed menu">
+                                <p class="brand-preview-copy">Feed view</p>
+                                <div class="inbox-menu-panel">
+                                    <nav class="inbox-tabs feed-tabs" aria-label="Sample feed views">
+                                        <a class="inbox-tab is-active" href="#branding-preview" aria-current="page">Following</a>
+                                        <a class="inbox-tab" href="#branding-preview">Latest</a>
+                                    </nav>
+                                </div>
+                            </section>
+                            <div class="brand-preview-content thread-row-inbox">
+                                <p class="brand-preview-copy"><span class="unread-dot" aria-label="Unread"></span> A sample discussion</p>
+                                <a class="thread-title" href="#branding-preview">Sample link</a>
+                                <p>Readable content with a <span class="chip chip-decision_made">Decision</span> status.</p>
+                            </div>
                             <button class="btn" type="button">Primary button</button>
                             <span class="brand-preview-accent">Accent marker</span>
-                            <label class="brand-preview-field">Sample field<input class="input" type="text" value="Sample text" readonly tabindex="-1"></label>
+                            <label class="brand-preview-field">Sample field<input class="input" type="text" value="Sample text" readonly></label>
                         </div>
                     </div>
                     <p class="brand-preview-note">Light and dark logo variants are used when the resolved theme explicitly matches that variant; system theme falls back to the base logo.</p>
@@ -187,22 +224,25 @@ $saveError = implode(' ', $saveErrorMessages);
                         <p class="brand-preview-note">This sample uses the package theme currently shown in your session. Classic and Retro apply when no package theme is shown. Saving branding changes the live community.</p>
                     <?php endif; ?>
                     <noscript><p class="brand-preview-note">This preview shows the saved colours and logos. Turn on JavaScript to preview edits before saving.</p></noscript>
+                    <a class="btn btn-secondary branding-preview-shortcut" href="#branding-palette">Back to appearance controls</a>
                 </section>
 
-                <section class="branding-reset-card" id="branding-reset">
+                <form method="post" action="/admin/branding" class="branding-reset-card" id="branding-reset">
+                    <?= $this->csrfField() ?>
+                    <input type="hidden" name="reset" value="1">
                     <h2>Reset branding</h2>
                     <p>Clears saved colours, logos, favicon, visitor appearance, theme preset, and custom CSS. Keeps the community name and active package theme. This cannot be undone.</p>
                     <?php if (!empty($features['package_themes'])): ?>
                         <p>To pause package themes instead, use <a href="/admin/themes/safe-mode">theme safe mode</a>.</p>
                     <?php endif; ?>
                     <label for="branding-reset-confirm">Type RESET to confirm</label>
-                    <input id="branding-reset-confirm" type="text" name="reset_confirm" class="input branding-reset-input" value="<?= $e($reset_confirm ?? '') ?>" autocomplete="off" autocapitalize="off" spellcheck="false"<?= field_attrs($errors ?? [], 'reset_confirm') ?>>
+                    <input id="branding-reset-confirm" type="text" name="reset_confirm" class="input branding-reset-input" value="<?= $e($reset_confirm ?? '') ?>" autocomplete="off" autocapitalize="off" spellcheck="false" required pattern="RESET"<?= field_attrs($errors ?? [], 'reset_confirm') ?>>
                     <?= field_error($errors ?? [], 'reset_confirm') ?>
-                    <button class="btn branding-reset-button" type="submit" name="reset" value="1" formnovalidate>Reset branding</button>
+                    <button class="btn branding-reset-button" type="submit">Reset branding</button>
                     <?php if ($resetStatus !== ''): ?>
                         <p class="branding-reset-status" role="status"><?= $e($resetStatus) ?></p>
                     <?php endif; ?>
-                </section>
+                </form>
             </aside>
-        </form>
+        </div>
 <?= $this->partial('admin/_console_end') ?>

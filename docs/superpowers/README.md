@@ -59,5 +59,8 @@ Plans in this index are frozen design/implementation records, not a live task bo
 | 2026-10-23 | [`2026-10-23-admin-safeguards-and-audit.md`](plans/2026-10-23-admin-safeguards-and-audit.md) | Admin safeguards and readable audit | ✓ |
 | 2026-10-23 | [`2026-10-23-draft-recovery-remediation.md`](plans/2026-10-23-draft-recovery-remediation.md) | Complete composer draft recovery; release integration recorded in ADR 0052 | ✓ |
 | 2026-10-31 | [`2026-10-31-admin-appearance-followup.md`](plans/2026-10-31-admin-appearance-followup.md) | Branding upload feedback, contrast, responsive theme actions and recovery scope | ADR 0053 |
+| 2026-10-31 | [`2026-10-31-admin-branding-recovery.md`](plans/2026-10-31-admin-branding-recovery.md) | Keyboard reset, saved preview defaults and appearance guidance | ADR 0053 |
 
 **Stage-1 working suite:** [`plans/imladris-admin-account-stage1/`](plans/imladris-admin-account-stage1/) — the Stage 1 admin/account inventory's full working set (F findings · R reconciliation · D deviation ledgers · S synthesis · V verification per surface, plus `README.md`). Cited as the rationale record by ADR 0024 and the slice evidence under `docs/evidence/imladris-admin-account-slice-*/`.
+
+- [Branding public theme coverage](plans/2026-10-31-branding-public-theme-coverage.md) — approved propagation, preview and qualification follow-up (2026-10-31).

@@ -375,6 +375,15 @@ final class AppBrandingThemeTest extends TestCase
         $this->assertSeeText($css, '--accent-contrast:#ffffff');
         $this->assertSeeText($css, '--accent-2:#abcdef');
         $this->assertSeeText($css, '--brand-accent-contrast:#0f1218');
+        // Check delivered root rules, not just the isolated preview rules.
+        $rootCss = explode("\n.brand-preview", $css->body())[0];
+        foreach (['--brand:#123456', '--gold:#abcdef', '--rule-gold:#abcdef',
+            '--brand-subtle:', '--on-brand-subtle:', '--gold-soft:', '--gold-ink:',
+            '--brand-primary-hover:', '--brand-primary-press:', '--brand-contrast:'] as $role) {
+            self::assertStringContainsString($role, $rootCss);
+        }
+        self::assertStringNotContainsString('--surface-raised:', $rootCss);
+        self::assertStringNotContainsString('--surface-review:', $rootCss);
 
         // Regression guard: both brand tokens must be CONSUMED by the stylesheet,
         // otherwise the colour picker is inert (the accent previously emitted a
@@ -386,7 +395,7 @@ final class AppBrandingThemeTest extends TestCase
         // The shell now links it and shows the new name; the signed-out default
         // theme is dark.
         $home = $this->get('/');
-        $this->assertSeeText($home, '/brand.css?v=');
+        $this->assertSeeText($home, '/brand.css?v=' . \App\Support\BrandPalette::CSS_VERSION . '-');
         $this->assertSeeText($home, 'Lakeside Forum');
     }
 
@@ -412,6 +421,23 @@ final class AppBrandingThemeTest extends TestCase
         // Colours cleared → brand.css carries no overrides and the shell stops linking it.
         $this->assertDontSeeText($this->get('/brand.css'), '#222222');
         $this->assertDontSeeText($this->get('/'), '/brand.css');
+    }
+
+    public function test_cleared_or_invalid_branding_defaults_render_the_visitor_preview(): void
+    {
+        $admin = $this->makeAdmin();
+        $this->actingAs($admin);
+        (new \App\Repository\UserPreferenceRepository($this->db))->merge((int) $admin['id'], ['theme' => 'dark']);
+        $settings = new \App\Repository\SettingRepository($this->db);
+        foreach (['', 'invalid'] as $stored) {
+            $settings->set('brand_theme_default', $stored);
+            $settings->set('brand_theme_preset', $stored);
+            $response = $this->get('/admin/branding');
+            $this->assertStatus(200, $response);
+            $this->assertSeeText($response, 'data-theme="dark"');
+            $this->assertSeeText($response, 'data-brand-theme="system" data-brand-preset="classic"');
+            $this->assertSeeText($response, 'data-brand-preview-theme>System</span>');
+        }
     }
 
     public function test_reset_validation_preserves_the_submitted_branding_draft(): void
@@ -441,7 +467,7 @@ final class AppBrandingThemeTest extends TestCase
         self::assertStringContainsString('.draft-rule{letter-spacing:.02em;}', $response->body());
         self::assertStringContainsString('name="custom_css_ack" value="1" checked', $response->body());
         self::assertStringContainsString(
-            'type="submit" name="reset" value="1" formnovalidate>Reset branding</button>',
+            'type="hidden" name="reset" value="1"',
             $response->body(),
         );
     }
@@ -455,7 +481,7 @@ final class AppBrandingThemeTest extends TestCase
             'site_name' => 'Status Forum',
             'theme_default' => 'system',
         ]), '/admin/branding');
-        $this->assertSeeText($this->get('/admin/branding'), 'Saved. The chrome is live for everyone.');
+        $this->assertSeeText($this->get('/admin/branding'), 'Saved. Branding appears on the next page load.');
 
         $this->assertRedirect($this->post('/admin/branding', [
             'reset' => '1',
@@ -510,7 +536,8 @@ final class AppBrandingThemeTest extends TestCase
         $this->actingAs($admin);
         $res = $this->post('/admin/branding', ['site_name' => 'X', 'color_primary' => '#7a7a7a', 'theme_default' => 'system']);
         $this->assertStatus(422, $res);
-        $this->assertSeeText($res, 'readable button text');
+        $this->assertSeeText($res, 'links');
+        $this->assertSeeText($res, '4.5:1 is needed');
     }
 
     public function test_non_admin_cannot_change_branding(): void

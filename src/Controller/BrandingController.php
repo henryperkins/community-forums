@@ -22,8 +22,8 @@ use App\Support\UploadLimits;
  * Operator branding (P3-07): site name, light/dark logo, favicon, and primary/
  * accent colors with a live-served stylesheet, reset, and audit. Brand colors
  * are delivered as an external /brand.css (the strict CSP forbids inline styles):
- * the primary colour maps onto --accent (the whole UI re-themes safely) and the
- * accent colour onto --accent-2 (highlight/indicator surfaces).
+ * primary colours resolve action/selection roles; accent colours resolve
+ * highlights/indicators. Status and presence families retain their meanings.
  * Uploaded brand assets go through the same sniff/re-encode pipeline as post
  * media; everything falls back to the safe built-in chrome when unset or invalid.
  */
@@ -60,13 +60,14 @@ final class BrandingController extends Controller
 
         $packageTokens = $this->packageTokens($previewRequest);
         $presets = BrandPalette::presets($packageTokens);
-        $modes = $preset === 'retro' && $packageTokens === null
-            ? $presets['retro']
-            : ['light' => [], 'dark' => []];
-        foreach ($modes as &$palette) {
-            $palette = BrandPalette::withColours($palette, $primary, $accent);
+        $retro = $preset === 'retro' && $packageTokens === null;
+        $modes = [];
+        foreach ($presets[$retro ? 'retro' : 'classic'] as $mode => $base) {
+            $resolved = BrandPalette::withColours($base, $primary, $accent);
+            // Derive against the serving palette without republishing its
+            // surfaces/type over the package stylesheet.
+            $modes[$mode] = $retro ? $resolved : array_diff_assoc($resolved, $base);
         }
-        unset($palette);
         $css = BrandPalette::css($modes);
         $css .= BrandPalette::previewCss($presets, $primary, $accent);
 
@@ -278,7 +279,7 @@ final class BrandingController extends Controller
                 'Branding updated, but ' . implode(' ', $assetErrors) . ' The previous asset was kept.',
             );
         }
-        return $this->redirectWithFlash('/admin/branding', 'Saved. The chrome is live for everyone.');
+        return $this->redirectWithFlash('/admin/branding', 'Saved. Branding appears on the next page load.');
     }
 
     /** @param array<string,mixed> $overrides */
@@ -326,7 +327,16 @@ final class BrandingController extends Controller
             'upload_max_height' => (int) $this->config()->get('uploads.max_height', 4096),
             'errors' => [],
         ];
-        return array_replace($data, $overrides);
+        $data = array_replace($data, $overrides);
+        // Reset stores empty strings. Resolve them before rendering so the
+        // saved no-JS sample follows visitor defaults, not the admin's palette.
+        if (!in_array($data['theme_default'], ['system', 'light', 'dark'], true)) {
+            $data['theme_default'] = 'system';
+        }
+        if (!in_array($data['theme_preset'], ['classic', 'retro'], true)) {
+            $data['theme_preset'] = 'classic';
+        }
+        return $data;
     }
 
     /** @return array<string,mixed> */

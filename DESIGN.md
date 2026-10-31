@@ -277,7 +277,7 @@ Warm, low-chroma, and drawn from a single landscape: parchment and stone for the
 
 ### The semantic registers
 
-The server stamps `data-theme="light|dark|system"` on `<html>`. System follows `prefers-color-scheme`; its dark aliases are restated in the application layer so a default-system visit gets the same register as an explicit dark choice. Operator branding loads afterward and can override action tokens.
+The server stamps `data-theme="light|dark|system"` on `<html>`. System follows `prefers-color-scheme`; its dark aliases are restated in the application layer so a default-system visit gets the same register as an explicit dark choice. Operator branding loads afterward. Custom primary colours resolve the action and selection family; custom accents resolve highlights and unread indicators, including soft backgrounds with readable ink. Primitive ramps, status/presence families and constant twilight surfaces retain their meaning. With no override, the built-in or package palette remains (ADR 0053).
 
 | Purpose | Semantic token | Day | Twilight |
 |---|---|---|---|
@@ -406,7 +406,7 @@ The register is **plain**: quiet surfaces, hairline borders, restrained radii, a
 ### Buttons
 
 - **Shape:** gently curved (`7px`), 1px transparent border, `--shadow-xs` at rest, pressing to `translateY(0.5px) scale(.995)`.
-- **Primary:** evergreen (`#2E4A3A`) on parchment text (`#FAF6EC`), padded `9px 17px`, Marcellus at 0.9rem with 0.03em tracking, **sentence case**. Hover deepens the resting fill toward black, `color-mix(in srgb, var(--accent) 82%, #000)` (the danger button's recipe): about `green-800` by day, a deeper gold in twilight, and the operator's own colour under branding, never a different hue (ADR 0039).
+- **Primary:** evergreen (`#2E4A3A`) on parchment text (`#FAF6EC`), padded `9px 17px`, Marcellus at 0.9rem with 0.03em tracking, **sentence case**. Hover deepens the resting fill toward black, `color-mix(in srgb, var(--accent) 82%, #000)` (the danger button's recipe): about `green-800` by day, a deeper gold in twilight, and the operator's own colour under branding, never a different hue (ADR 0039). With an operator primary colour, hover and press use derived shades; darkening is capped when needed to retain the label’s 4.5:1 contrast (ADR 0053).
 - **Secondary:** raised parchment (`#FAF6EC`) with ink text and a 1.5px `--border-soft` outline, no shadow. Hover sinks the fill to `parchment-200` and strengthens the border.
 - **Ghost:** transparent with `ink-700` text and a transparent 1.5px border, so it occupies the same box as its siblings and does not shift the row on hover.
 - **Accent:** mallorn gold (`#C29A44`) with `ink-900` text — the one place gold is a fill, reserved for a single moment of emphasis per screen.

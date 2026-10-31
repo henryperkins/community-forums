@@ -62,6 +62,59 @@ async function fieldContrasts(page: Page) {
 
 test.beforeEach(() => fixture('reset'));
 
+test('Enter in reset clears branding without publishing pending edits or files', async ({ page }, info) => {
+  await login(page);
+  await page.goto('/admin/branding');
+  await page.locator('[name="site_name"]').fill('Saved community identity');
+  await page.locator('[name="logo"]').setInputFiles({ name: 'saved.png', mimeType: 'image/png', buffer: png });
+  expect(await save(page)).toBe(303);
+  await page.locator('[name="site_name"]').fill('Pending identity must not publish');
+  await page.locator('[name="favicon"]').setInputFiles({ name: 'pending.png', mimeType: 'image/png', buffer: png });
+  await page.locator('[name="reset_confirm"]').fill('RESET');
+  await page.locator('[name="reset_confirm"]').press('Enter');
+  await page.waitForLoadState('networkidle');
+  const state = fixture();
+  expect(state.site_name).toBe('Saved community identity');
+  expect(Object.values(state.assets)).toEqual(['', '', '', '']);
+  await expect(page.locator('.branding-reset-status')).toContainText('community name and package theme were kept');
+  await shot(page, info, 'keyboard-reset-keeps-identity');
+});
+
+test('invalid reset confirmation leaves the pending branding draft in the page', async ({ page }) => {
+  await login(page);
+  await page.goto('/admin/branding');
+  await page.locator('[name="site_name"]').fill('Pending recovery draft');
+  await page.locator('[name="reset_confirm"]').fill('RESE');
+  let writes = 0;
+  page.on('request', request => { if (request.method() === 'POST' && new URL(request.url()).pathname === '/admin/branding') writes++; });
+  await page.locator('[name="reset_confirm"]').press('Enter');
+  expect(await page.locator('[name="reset_confirm"]').evaluate((element: HTMLInputElement) => element.validity.valid)).toBe(false);
+  expect(writes).toBe(0);
+  await expect(page.locator('[name="site_name"]')).toHaveValue('Pending recovery draft');
+  expect(fixture().site_name).toBe('RetroBoards');
+});
+
+test('inherited colour guidance follows the selected palette without replacing typed overrides', async ({ page }, info) => {
+  await login(page);
+  await page.goto('/admin/branding');
+  const primaryHelp = page.locator('#branding-primary-help');
+  await expect(primaryHelp).toContainText('Using theme default');
+  await page.locator('[name="theme_default"]').selectOption('dark');
+  await page.locator('[name="theme_preset"]').selectOption('retro');
+  await expect(primaryHelp).toContainText('#f0b778');
+  await expect(page.locator('#branding-accent-help')).toContainText('#e6ad69');
+  await page.locator('[name="color_primary"]').fill('#123456');
+  await expect(primaryHelp).toContainText('Clear');
+  await expect(page.locator('[name="color_primary"]')).toHaveValue('#123456');
+  await page.locator('[name="theme_preset"]').selectOption('classic');
+  await expect(primaryHelp).not.toContainText('#f0b778');
+  await expect(page.locator('[name="color_primary"]')).toHaveValue('#123456');
+  await page.locator('[name="color_primary"]').fill('');
+  await expect(primaryHelp).toContainText('Using theme default');
+  await noOverflow(page);
+  await shot(page, info, 'inherited-colour-guidance');
+});
+
 test('PHP-rejected branding files preserve the draft and saved marks', async ({ page }, info) => {
   await login(page);
   await page.goto('/admin/branding');
@@ -194,6 +247,39 @@ test('branding reset and package safe mode describe their retained state', async
 
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
+  test('reset preview uses visitor defaults while the admin keeps Dark', async ({ page }, info) => {
+    fixture('admin-dark-appearance');
+    await login(page);
+    await page.goto('/admin/branding');
+    await page.locator('[name="reset_confirm"]').fill('RESET');
+    await page.getByRole('button', { name: 'Reset branding', exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.locator('.brand-preview')).toHaveAttribute('data-brand-theme', 'system');
+    await expect(page.locator('.brand-preview')).toHaveAttribute('data-brand-preset', 'classic');
+    await expect(page.locator('[data-brand-preview-theme]')).toHaveText('System');
+    await expect(page.locator('.brand-preview-body')).toHaveCSS('background-color', 'rgb(250, 246, 236)');
+    await expect(page.locator('#branding-primary-help')).toContainText('Light');
+    await expect(page.locator('#branding-primary-help')).toContainText('Dark');
+    await shot(page, info, 'no-js-reset-visitor-preview');
+  });
+  test('mobile preview links provide keyboard focus and a return to the controls', async ({ page }, info) => {
+    await login(page);
+    await page.goto('/admin/branding');
+    const jump = page.getByRole('link', { name: 'View appearance preview', exact: true });
+    if (info.project.name === 'desktop') {
+      await expect(jump).toBeHidden();
+      return;
+    }
+    for (const width of [390, 320]) {
+      await page.setViewportSize({ width, height: 844 });
+      await jump.click();
+      await expect(page.locator('#branding-preview')).toBeFocused();
+      await page.getByRole('link', { name: 'Back to appearance controls', exact: true }).click();
+      await expect(page.locator('#branding-palette')).toBeFocused();
+      await noOverflow(page);
+    }
+    await shot(page, info, 'mobile-preview-return-no-js');
+  });
   test('native file choices and upload errors remain usable', async ({ page }, info) => {
     await login(page);
     await page.goto('/admin/branding');
