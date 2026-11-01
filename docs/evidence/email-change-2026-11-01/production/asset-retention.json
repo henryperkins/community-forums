@@ -1,0 +1,17 @@
+{
+  "verified_release": "67ba8434286ff7e6",
+  "published_application": "a187ae4fbc063954731b306c39e2012bedecf8db",
+  "current_asset_version_unchanged": true,
+  "deployed_release_pins": [
+    "67ba8434286ff7e6",
+    "0abd713b0ebf7bca",
+    "545bd84edf0dc37c"
+  ],
+  "manifest_files_before": 57,
+  "manifest_files_after": 55,
+  "retired_paths": [
+    "/assets/dist/app-cf5ed8f684affceb.js",
+    "/assets/dist/app-style-ClFk7sNL.css"
+  ],
+  "publication_policy": "Local bookkeeping only; include with next application change, no bookkeeping redeploy."
+}

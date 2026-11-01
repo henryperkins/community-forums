@@ -1,0 +1,14 @@
+{
+  "build_uuid": "8fb7757b-974d-4b7a-91f8-06849a942d2d",
+  "build_outcome": "success",
+  "commit": "a187ae4fbc063954731b306c39e2012bedecf8db",
+  "build_finished_at": "2026-11-01T00:54:27.732Z",
+  "deployment_id": "a3f60675-8b35-463b-9317-66fa209b38c2",
+  "deployed_at": "2026-11-01T00:54:21.595383Z",
+  "versions": [
+    {
+      "version_id": "8eb74d31-9da6-492a-8fa3-4782cebb5bc4",
+      "percentage": 100
+    }
+  ]
+}

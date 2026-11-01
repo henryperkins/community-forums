@@ -1,0 +1,18 @@
+[
+  {
+    "name": "retroboards-cron-0310",
+    "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:a187ae4fbc063954731b306c39e2012bedecf8db"
+  },
+  {
+    "name": "retroboards-cron-0700",
+    "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:a187ae4fbc063954731b306c39e2012bedecf8db"
+  },
+  {
+    "name": "retroboards-cron-5m",
+    "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:a187ae4fbc063954731b306c39e2012bedecf8db"
+  },
+  {
+    "name": "retroboards-cron-6h",
+    "image": "us-east4-docker.pkg.dev/rising-woods-449718-v6/retroboards/app:a187ae4fbc063954731b306c39e2012bedecf8db"
+  }
+]

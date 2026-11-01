@@ -1,0 +1,9 @@
+{
+  "main": "a187ae4fbc063954731b306c39e2012bedecf8db",
+  "origin_main": "a187ae4fbc063954731b306c39e2012bedecf8db",
+  "primary_clean": true,
+  "qualified_file_hashes_match": 52,
+  "included_previous_bookkeeping": "a75eee98",
+  "unrelated_worktrees_preserved": true,
+  "no_schema_migrations": true
+}

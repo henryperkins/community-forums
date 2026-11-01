@@ -1,0 +1,1 @@
+[{"fixed_at":null,"number":63,"package":"undici","patched":"7.30.1","range":"\u003e= 7.18.0, \u003c 7.30.1","state":"open","updated_at":"2026-10-23T22:26:01Z"},{"fixed_at":null,"number":60,"package":"zod","patched":"4.6.6","range":"\u003c 4.6.6","state":"open","updated_at":"2026-10-23T22:26:00Z"}]

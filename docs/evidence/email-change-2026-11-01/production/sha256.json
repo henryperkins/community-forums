@@ -1,0 +1,19 @@
+{
+  "README.md": "ce942a71424559ec739aab21202dcf474c8582d1fda4dae637807505e39e8f5b",
+  "asset-record-check.log": "9ebad42e69f8f7972c7eb33400ea2dd406b311eda1aff0b4e7fbac2d59d99d8e",
+  "asset-record-release.log": "78f3b1085c4244e1db29ddf56fd17296d027206a054a0e43c71959bd97e428e6",
+  "asset-retention.json": "ca640d0b7c9d9f885882987be54ba2d99ed537a38f64924a7cb1f40fc5aff2df",
+  "cloud-build-list.json": "b44f97b4f84f607ce3f2f3655cc0dd6de775b61c077e993a2270a60cd79b336c",
+  "cloud-build.json": "d9620568fb883562775fa1654394ae4f043d2140cc458984fd3f24ab0ad4aa32",
+  "cloud-run-service.json": "231ade618937f5ca8f69e04f1dc30d341490c1edc744e6e32c30daee87335116",
+  "cron-images-raw.json": "6993b401a25922112d42d346449465ab171343b156e63525ed90079dd5ff30bb",
+  "cron-images.json": "ae7fb4a9d05c3553ccadee8c41f2543dc85c89dc76e437887f1fa148f096b155",
+  "cron-readiness.json": "8ffb6a59dc2febc73e706f2e28ebbe3d60ca636af3ee5ebf01a2b79a10e71715",
+  "dependabot.json": "8842e26aafdb8a89f2a3b2bf3541c17f34ab53633240471169a41b67fc661eb3",
+  "git-state.json": "db3a5e8755e6df5823bf7965103b63515c281c2698acda64ec291ddf07508d26",
+  "live-assets-and-pages.json": "5c4274467cd16b06b692d3ffeceb8bbee602f318a08a0bcf879b285951d49524",
+  "post-cloud-run-smoke.json": "1dc79441b8f4224958e3b103ce4f47e3ca105fd20abbeb312f9b0dda5a8152c4",
+  "publication.json": "40839ce068c187613e6821bb89f4fe7a7232da1903a3b10db94331c648005bf9",
+  "summary.json": "f0b67cd15fc211a49b5489a0689b357b1ece796f46f776c24c32940704d3480e",
+  "worker.json": "e47153188f7ad5b086421ee2b6d96e8a159d13b1ca8dd4152065790c20ad4f87"
+}

@@ -1,0 +1,20 @@
+{
+  "verified_at": "2026-11-01T00:57:03.278978+00:00",
+  "commit": "a187ae4fbc063954731b306c39e2012bedecf8db",
+  "cloud_build": "6409eb92-81e9-49a4-97c4-f8c7bd315257",
+  "cloud_run_revision": "retroboards-00071-hl7",
+  "cloud_run_ready": true,
+  "cloud_run_traffic_percent": 100,
+  "cron_images_match": 4,
+  "cron_jobs_ready": 4,
+  "worker": "8eb74d31-9da6-492a-8fa3-4782cebb5bc4",
+  "worker_traffic_percent": 100,
+  "asset_version": "67ba8434286ff7e6",
+  "assets_matched": 57,
+  "health": "ok",
+  "database": "ok",
+  "effective_email_change": "default-dark; routes 404",
+  "primary_clean_and_synchronized": true,
+  "mailbox_receipt": "not tested; no production member mutation",
+  "dependabot_alerts": "60 and63 remain open; unchanged Oct23 records"
+}

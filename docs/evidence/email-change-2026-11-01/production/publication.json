@@ -1,0 +1,11 @@
+{
+  "published_at": "2026-11-01T00:53:02.730273+00:00",
+  "commit": "a187ae4fbc063954731b306c39e2012bedecf8db",
+  "branch": "main",
+  "base": "f269c9a0403ba1e6f476779a1240abde2808084b",
+  "asset_version": "67ba8434286ff7e6",
+  "feature_default": {
+    "email_change": false
+  },
+  "scope": "One application publication; automatic Cloud Run and Worker deployments; no production member email change."
+}

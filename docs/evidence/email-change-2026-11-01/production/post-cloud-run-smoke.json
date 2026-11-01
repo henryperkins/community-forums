@@ -1,0 +1,37 @@
+{
+  "checked_at": "2026-11-01T00:56:27.112516+00:00",
+  "asset_version": "67ba8434286ff7e6",
+  "pages": [
+    {
+      "path": "/healthz",
+      "status": 200,
+      "health": {
+        "status": "ok",
+        "database": "ok"
+      }
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "uses_current_passkeys_js": false,
+      "uses_current_app_css": true
+    },
+    {
+      "path": "/login",
+      "status": 200,
+      "uses_current_passkeys_js": true,
+      "uses_current_app_css": true
+    },
+    {
+      "path": "/settings/account/email",
+      "status": 404
+    },
+    {
+      "path": "/settings/account/email/confirm",
+      "status": 404
+    }
+  ],
+  "scope": "Passive post-Cloud-Run smoke; no member contact or settings change.",
+  "validated": true,
+  "asset_scope": "Current passkey script is required on login; the board index intentionally omits that enhancement."
+}
