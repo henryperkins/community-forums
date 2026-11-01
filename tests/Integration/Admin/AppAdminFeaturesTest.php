@@ -57,10 +57,10 @@ final class AppAdminFeaturesTest extends TestCase
         $this->actingAs($this->makeAdmin());
 
         $off = $this->get('/admin/features', ['q' => 'email', 'state' => 'off']);
-        self::assertSame(['email', 'email_change'], $this->inventoryFlags($off->body()));
+        self::assertSame(['email'], $this->inventoryFlags($off->body()));
         $on = $this->get('/admin/features', ['q' => 'email', 'state' => 'on']);
-        self::assertSame([], $this->inventoryFlags($on->body()));
-        self::assertStringContainsString('Showing 0 of 58 declared flags', $on->body());
+        self::assertSame(['email_change'], $this->inventoryFlags($on->body()));
+        self::assertStringContainsString('Showing 1 of 58 declared flags', $on->body());
     }
 
     public function test_malformed_filter_shapes_do_not_break_the_inventory(): void
@@ -102,8 +102,8 @@ final class AppAdminFeaturesTest extends TestCase
         $this->assertStatus(200, $page);
         self::assertStringContainsString('Feature flags', $page->body());
         self::assertStringContainsString('58 declared', $page->body());
-        self::assertStringContainsString('51 default-on', $page->body());
-        self::assertStringContainsString('7 default-dark', $page->body());
+        self::assertStringContainsString('52 default-on', $page->body());
+        self::assertStringContainsString('6 default-dark', $page->body());
         self::assertStringContainsString('<code>server_extensions</code>', $page->body());
         self::assertStringContainsString('Phase 5 Gate B', $page->body());
         self::assertStringContainsString('Effective on', $page->body());

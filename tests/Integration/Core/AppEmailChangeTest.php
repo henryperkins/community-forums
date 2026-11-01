@@ -39,8 +39,9 @@ final class AppEmailChangeTest extends TestCase
         return $match[1];
     }
 
-    public function test_email_change_is_declared_dark_and_routes_are_unavailable_by_default(): void
+    public function test_an_explicit_off_override_keeps_all_email_change_routes_unavailable(): void
     {
+        (new SettingRepository($this->db))->set('features', ['email_change' => false]);
         $flags = new FeatureFlags(new SettingRepository($this->db));
         self::assertArrayHasKey('email_change', $flags->all());
         self::assertFalse($flags->enabled('email_change'));
@@ -54,9 +55,11 @@ final class AppEmailChangeTest extends TestCase
         self::assertStringNotContainsString('href="/settings/account/email"', $this->get('/settings/account')->body());
     }
 
-    public function test_enabled_account_page_exposes_a_separate_email_form(): void
+    public function test_default_account_page_exposes_a_separate_email_form_without_an_override(): void
     {
-        $this->enable();
+        $settings = new SettingRepository($this->db);
+        self::assertArrayNotHasKey('email_change', $settings->get('features', []));
+        self::assertTrue((new FeatureFlags($settings))->enabled('email_change'));
         $this->actingAs($this->makeUser());
         self::assertStringContainsString('href="/settings/account/email"', $this->get('/settings/account')->body());
         $response = $this->get('/settings/account/email');

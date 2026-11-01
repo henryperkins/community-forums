@@ -151,7 +151,7 @@ pronouns, location, website, bio, signature and avatar. Username change is an
 open requirement in [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md):
 the `username_history` table and the `/u/{old}` 301 lookup exist, but nothing
 renames an account or writes that history. Verified email changes are available
-behind the default-off `email_change` flag. When enabled, Account settings links
+by default behind the reversible `email_change` flag. Account settings links
 to a separate form requiring a current password, passkey or already-connected
 provider, followed by confirmation in the new inbox. The old address remains
 active until the owner submits confirmation; other sessions and outstanding
@@ -480,7 +480,7 @@ A first-run interactive tour helps newcomers learn the Slack/email-style layout 
 3. **Sign in with GitHub.** GitHub consent (`user:email`) → fetch primary email → if **unverified**, treat as unverified (prompt to verify before privileged actions) → log in/create.
 4. **Link a second provider.** Settings → Connections → "Add Google/Apple/GitHub" → provider flow → identity attached to current account.
 5. **Email collision.** A provider's verified email matches an existing local account → we **offer** to link, requiring the user to log into that account (never auto-merge) → identities joined.
-6. **Change email** *(available when `email_change` is enabled; default off)*. Settings → Account → Change email address → current password/passkey/connected provider → verification sent to the **new** address → signed-in owner confirms with POST → switch; old-address security notice queued. Links expire after one hour by default and can be replaced or cancelled; recovery and other sessions are invalidated on success.
+6. **Change email** *(default on; independently reversible via `email_change`)*. Settings → Account → Change email address → current password/passkey/connected provider → verification sent to the **new** address → signed-in owner confirms with POST → switch; old-address security notice queued. Links expire after one hour by default and can be replaced or cancelled; recovery and other sessions are invalidated on success.
 7. **Set a password (OAuth-only).** Settings → Security → "Set password" → now email/password is an available method; unlink rules updated.
 8. **Upload an avatar.** Profile/Settings → upload → crop square → save → resized/stored; fallback chain updated; reportable thereafter.
 9. **Edit signature.** Settings/Profile → edit (sanitised, capped) → save; **new accounts** see "available after N posts."

@@ -1,0 +1,24 @@
+{
+  "base_commit": "ad4d7ae61a5ed996a07fdcbd8c3e7a70340c2e2c",
+  "published_base": "a187ae4fbc063954731b306c39e2012bedecf8db",
+  "carried_bookkeeping": "ad4d7ae61a5ed996a07fdcbd8c3e7a70340c2e2c",
+  "asset_version": "67ba8434286ff7e6",
+  "files": {
+    ".env.example": "80715f8788f68019aa7d5b911dce315721e24702907af51180c83958ddcc1cbe",
+    "CHANGELOG.md": "40e00c58e5b73d9c2d1f8c4611eb805e2e8a5283e80c1e26bb6b3e01117fef45",
+    "PRODUCT_DESIGN.md": "74b5d48deaef532281bd585ae29a254fcc0b5d951c3b4de6e9dfc929f77205cf",
+    "USER.md": "8873ec60b7de0c6fdfc2cc4aa566e5b5c8240140fe26c562075961e0b9cc0f09",
+    "docs/adr/0014-member-notifications-and-email-change-carryover.md": "c3535c6a006591ba175f32c57be10824e658cae72c3a3c2cc2791538777f9fb5",
+    "docs/adr/0055-verified-email-changes.md": "655f65b0fa233e89bff32b7c059def80416df92fc34f5411e112e6682e0b49fa",
+    "docs/design-system/imladris/production-contract.json": "8ae5cb03adfe3cc267b32dd8d3fdaa7ec16908e22f1b4934248c6633f1691233",
+    "docs/runbooks/email_changes.md": "250a1fad366d6a9c2eb34b3a5bc236baf71a10129f5c7e3cbbc3a6f0261dbf08",
+    "resources/imladris/manifest.json": "0956db1a7ec1c770867e1170fbbc4475416bb8a5a206f62e31d994115f2f3779",
+    "src/Core/FeatureFlags.php": "e1bc272a5027869e260385f6755a1f82415cf57bcfb279f485d9ba3c84fc94f8",
+    "tests/Integration/Admin/AppAdminFeatureToggleTest.php": "7d8488700a6bf96566b734b27cd591e903e638ebf578aa710bd01c79fcd1dd05",
+    "tests/Integration/Admin/AppAdminFeaturesTest.php": "ad0f3afd9b95eb52cb6054ae767436356ee1569e47eb257a9f9ca68da953d9fc",
+    "tests/Integration/Core/AppEmailChangeTest.php": "c781de8080da1b737089ff41460c3a17e69ef728459d31b1450257d5b28dd024",
+    "tests/Integration/Core/AppFeatureFlagTest.php": "0f97b4d2c1bbbe62d51309c2ff06c15ce3db40b0ff77674cae9a011b12e3b100",
+    "tests/browser/email-change-fixture.php": "f85a5402d46713971a36b293946d142d6c211a6c3171f2bb4e975c16ecc8c29a",
+    "tests/browser/email-change.spec.ts": "3f85531ed37f530555447f9cfd996072f7811ca4c186478f8f2e1853121f7284"
+  }
+}

@@ -54,7 +54,7 @@ if ($command === 'reset') {
     }
     $features = $settings->get('features', []);
     $features = is_array($features) ? $features : [];
-    $features['email_change'] = true;
+    unset($features['email_change']);
     $features['passkeys'] = true;
     $features['oauth'] = true;
     $settings->set('features', $features);
@@ -100,8 +100,10 @@ if ($command === 'issue' || $command === 'foreign') {
 }
 
 $user = $users->find((int) $user['id']);
+$features = $settings->get('features', []);
 $pending = $db->fetch("SELECT new_email, expires_at FROM verifications WHERE user_id = ? AND type = 'email_change' AND used_at IS NULL AND expires_at > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 1", [$user['id']]);
 echo json_encode($extra + [
+    'email_change_override' => $features['email_change'] ?? 'absent',
     'email' => $user['email'], 'verified' => $user['email_verified_at'] !== null, 'pending' => $pending,
     'active_sessions' => (int) $db->fetchValue('SELECT COUNT(*) FROM sessions WHERE user_id = ? AND revoked_at IS NULL AND expires_at > UTC_TIMESTAMP()', [$user['id']]),
     'security_notices' => (int) $db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE user_id = ? AND kind = 'system' AND email = 'email-change@retro.test'", [$user['id']]),

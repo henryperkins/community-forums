@@ -1,20 +1,23 @@
 # Verified email changes
 
-`email_change` is available and **defaults off**. It adds the Change email address
+`email_change` is available and **defaults on** (owner-approved graduation,
+2026-11-01). It adds the Change email address
 link under Settings → Account and gates every new route and the service. It is
 independent of the notification `email` flag. USER §3.2 and ADR 0055 define the
 behavior; ADR 0014 retains the other notification carryovers.
 
-## Enable and roll back
+## Availability and rollback
 
-Before enabling, configure a real sender and check its domain readiness using
+Configure a real sender and check its domain readiness using
 the existing email operations runbook/console. A request fails with a usable
 error while transport is unconfigured or domain checks block sending. Array
 mail captures prove local behavior only.
 
-In `/admin/features`, find **Verified email changes** (`email_change`), choose
-Enable, review the consequences and confirm. This is an ordinary reversible
-feature control. A targeted `settings.features` override is also supported under
+Fresh installations and sites without an explicit override inherit the enabled
+default. In `/admin/features`, find **Verified email changes** (`email_change`)
+to turn it off or back on through the existing confirmation. Existing explicit
+off overrides remain off; removing the override restores the enabled default.
+A targeted `settings.features` override is also supported under
 [operations §2](operations.md#2-feature-flag-rollback); preserve other overrides.
 OAuth-only members need an enabled, configured provider already connected to
 their account. Passkeys need the existing `passkeys` flag, HTTPS and matching RP
@@ -78,5 +81,7 @@ deployed processes.
 
 Qualification and deployment references are in the
 [evidence index](../evidence/email-change-2026-11-01/README.md). Local fixtures use
-throwaway accounts and synthetic mail; production default-off proof does not
-claim a real member contact change or recipient mailbox receipt.
+throwaway accounts and synthetic mail. The later
+[default-on graduation](../evidence/email-change-default-on-2026-11-01/README.md)
+adds no-override and rollback proof. Passive production availability checks do
+not claim a real member contact change or recipient mailbox receipt.

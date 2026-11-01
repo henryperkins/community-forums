@@ -2,6 +2,18 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-01] - Verified email changes default-on
+
+- Enable `email_change` by default after owner approval. Fresh installations and
+  sites without an explicit override get the Change email address entry under
+  Account settings; existing explicit-off overrides still hide the flow.
+- Preserve the guarded rollback control, authentication, token and delivery
+  protections. Update the flag inventories and operator/member docs; no migration
+  or new asset version is required.
+- Carry the verified email-change release's asset-retention pin and deployment
+  records (`ad4d7ae6`). Qualification:
+  `docs/evidence/email-change-default-on-2026-11-01/README.md`.
+
 ## [2026-11-01] - Verified email changes
 
 - Add a separate email-change form under Account settings, available through the

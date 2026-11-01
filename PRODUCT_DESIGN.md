@@ -339,7 +339,7 @@ Completing this repair does not mark those larger requirements complete.
 
 | Feature | Priority | Status | Notes |
 |---|---|---|---|
-| Account settings (profile basics + password) | P0 | Available | `/settings/account` edits profile basics; `/settings/security` changes password. Password recovery is available; verified email changes are an operator opt-in behind default-off `email_change` (ADR 0055). Username changes remain deferred (ADR 0035). |
+| Account settings (profile basics + password) | P0 | Available | `/settings/account` edits profile basics; `/settings/security` changes password. Password recovery and verified email changes are available; `email_change` defaults on and is independently reversible (ADR 0055). Username changes remain deferred (ADR 0035). |
 | Notification preferences | P1 | Planned | Per-type toggles, email digest opt-in. |
 | Display preferences | P2 | Planned | Density, theme (incl. retro skin). |
 

@@ -1,0 +1,2098 @@
+[WebServer] [Sun Nov  1 01:30:52 2026] PHP 8.4.27 Development Server (http://localhost:8057) started
+[WebServer] [Sun Nov  1 01:30:52 2026] 127.0.0.1:34246 Accepted
+[WebServer] [Sun Nov  1 01:30:52 2026] 127.0.0.1:34246 Closing
+
+Running 10 tests using 1 worker
+
+(node:3237575) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34258 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34258 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34266 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34278 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34286 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34292 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34266 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34278 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34286 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34292 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34266 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34286 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34292 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34278 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34300 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34308 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34300 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34308 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34300 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34308 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34322 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34326 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34322 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34326 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34322 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34326 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34330 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34330 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34346 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34346 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34352 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34354 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34370 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34386 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34352 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34354 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34370 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34386 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34352 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34370 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34386 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34354 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34402 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34412 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34422 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34402 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34412 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34422 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34402 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34412 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34422 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34428 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34444 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34428 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34444 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34446 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34452 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34466 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34478 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34446 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34452 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34466 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34478 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34446 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34452 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34466 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34478 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34492 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34492 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34506 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34516 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34518 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34522 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34506 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34516 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34518 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34522 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34506 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34518 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34522 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34516 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34534 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34546 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34552 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34534 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34546 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34552 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34534 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34546 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34552 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34564 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34570 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34564 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34570 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34574 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34578 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34582 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34594 Accepted
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34574 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34578 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34582 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34594 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34574 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34578 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34582 Closing
+[WebServer] [Sun Nov  1 01:30:53 2026] 127.0.0.1:34594 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34600 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34600 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34614 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34624 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34632 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34634 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34614 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34624 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34632 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34634 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34614 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34632 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34634 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34624 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34640 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34644 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34648 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34640 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34644 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34648 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34640 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34644 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34648 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34650 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34658 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34650 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34658 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34670 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34680 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34684 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34692 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34670 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34680 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34684 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34692 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34670 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34680 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34684 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34692 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34700 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34700 [200]: GET /assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34700 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34710 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34710 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34714 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34728 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34714 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34728 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34714 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34728 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34732 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34738 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34744 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34752 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34732 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34738 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34744 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34752 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34732 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34738 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34744 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34752 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34768 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34776 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34786 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34790 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34794 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34798 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34768 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34776 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34786 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34790 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34794 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34798 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34808 Accepted
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34768 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34776 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34786 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34790 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34794 Closing
+[WebServer] [Sun Nov  1 01:30:54 2026] 127.0.0.1:34808 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34814 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34814 [200]: GET /assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34814 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34822 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34822 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34826 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34826 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34828 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34844 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34858 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34868 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34828 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34844 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34858 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34868 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34828 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34858 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34868 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34844 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34876 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34880 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34884 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34876 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34880 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34884 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34876 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34880 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34884 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34900 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34904 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34900 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34904 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34908 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34922 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34932 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34944 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34946 Accepted
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34908 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34922 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34932 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34944 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34946 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34908 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34922 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34932 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34944 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34946 Closing
+[WebServer] [Sun Nov  1 01:30:55 2026] 127.0.0.1:34956 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34956 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34962 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34962 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34968 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34978 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34988 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35000 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34968 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34978 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34988 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35000 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34968 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34988 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35000 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:34978 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35004 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35016 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35028 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35004 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35016 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35028 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35004 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35016 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35028 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35040 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35054 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35040 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35054 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35064 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35068 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35074 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35080 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35064 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35068 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35074 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35080 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35064 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35068 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35074 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35080 Closing
+  ✓   1 [desktop] › email-change.spec.ts:67:5 › validation preserves the candidate, pending keeps the old contact, and cancel retires it (2.7s)
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35082 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35082 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35084 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35090 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35094 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35102 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35084 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35090 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35094 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35102 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35084 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35094 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35102 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35090 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35114 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35122 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35114 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35122 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35114 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35122 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35134 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35144 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35134 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35144 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35134 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35144 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35146 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35146 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35158 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35158 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35170 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35182 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35170 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35194 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35210 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35170 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35182 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35194 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35210 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35194 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35210 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35182 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35226 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35236 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35238 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35226 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35226 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35236 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35236 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35238 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35238 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35248 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35260 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35248 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35260 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35264 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35266 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35276 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35290 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35264 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35266 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35276 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35290 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35264 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35266 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35276 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35290 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35294 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35294 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35302 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35310 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35320 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35326 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35302 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35310 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35320 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35326 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35302 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35320 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35326 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35310 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35342 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35350 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35342 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35350 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35342 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35350 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35366 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35380 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35366 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35380 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35366 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35380 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35384 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35384 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35388 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35388 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35396 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35408 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35416 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35426 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35396 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35408 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35416 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35426 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35396 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35416 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35426 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35408 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35438 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35452 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35466 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35438 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35452 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35466 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35438 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35452 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35466 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35478 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35480 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35478 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35480 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35486 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35488 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35502 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35510 Accepted
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35486 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35488 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35502 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35510 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35486 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35488 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35502 Closing
+[WebServer] [Sun Nov  1 01:30:56 2026] 127.0.0.1:35510 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35520 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35520 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35530 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35540 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35544 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35554 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35530 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35540 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35544 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35554 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35530 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35544 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35554 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35540 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35562 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35564 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35576 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35562 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35564 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35576 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35562 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35564 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35576 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35586 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35600 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35586 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35600 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35604 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35612 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35614 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35630 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35632 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35604 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35612 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35614 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35630 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35632 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35604 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35612 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35614 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35630 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35632 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35648 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35648 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35660 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35674 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35680 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35692 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35660 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35674 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35680 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35692 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35660 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35680 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35692 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35674 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35694 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35696 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35698 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35694 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35696 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35698 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35694 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35696 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35698 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35712 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35714 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35712 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35714 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35722 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35726 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35734 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35736 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35738 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35722 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35726 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35734 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35736 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35738 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35722 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35726 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35734 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35736 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35738 Closing
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35750 Accepted
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35750 [200]: GET /assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2
+[WebServer] [Sun Nov  1 01:30:57 2026] 127.0.0.1:35750 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35764 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35764 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35778 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35778 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35784 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35796 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35804 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35816 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35784 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35796 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35804 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35784 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35804 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35796 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35816 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35816 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35822 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35834 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35840 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35822 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35834 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35840 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35822 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35834 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35840 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35842 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35858 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35842 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35858 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35860 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35870 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35876 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35890 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35860 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35870 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35876 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35860 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35870 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35876 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35890 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35890 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35896 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35896 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35900 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35900 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35910 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35920 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35932 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35946 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35910 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35920 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35932 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35946 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35910 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35932 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35946 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35920 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35956 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35972 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35956 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35972 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35956 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35972 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35980 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35984 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35980 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35984 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35980 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35984 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35986 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35986 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35992 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35998 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36000 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36012 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35992 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35998 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36000 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36012 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35992 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36000 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36012 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:35998 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36028 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36032 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36046 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36028 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36032 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36046 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36028 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36032 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36046 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36062 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36072 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36062 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36072 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36078 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36090 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36094 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36096 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36078 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36090 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36094 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36078 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36090 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36094 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36096 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36096 Closing
+  ✓   2 [desktop] › email-change.spec.ts:98:5 › owner previews without mutation, confirms with POST, and signs out another session (2.3s)
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36104 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36104 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36110 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36120 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36124 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36110 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36120 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36110 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36120 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36124 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36124 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36140 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36142 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36140 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36142 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36140 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36142 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36150 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36150 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36152 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36152 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36154 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36156 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36160 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36154 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36156 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36160 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36154 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36160 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36156 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36166 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36168 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36178 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36182 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36166 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36168 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36178 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36182 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36166 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36168 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36178 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36182 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36194 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36194 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36198 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36208 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36222 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36198 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36208 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36222 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36198 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36222 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36208 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36232 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36242 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36248 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36254 Accepted
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36232 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36242 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36248 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36254 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36232 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36242 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36248 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36254 Closing
+[WebServer] [Sun Nov  1 01:30:58 2026] 127.0.0.1:36258 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36258 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36266 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36266 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36268 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36276 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36278 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36268 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36276 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36278 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36268 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36278 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36276 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36286 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36302 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36312 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36326 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36332 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36286 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36302 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36312 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36326 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36332 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36286 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36302 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36312 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36326 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:36332 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53058 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53058 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53062 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53068 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53078 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53062 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53068 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53078 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53062 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53078 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53068 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53082 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53088 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53098 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53110 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53114 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53082 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53088 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53098 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53110 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53114 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53082 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53088 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53098 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53110 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53114 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53120 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53120 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53132 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53132 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53134 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53146 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53160 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53134 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53146 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53160 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53134 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53160 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53146 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53168 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53184 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53200 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53202 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53168 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53184 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53200 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53202 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53168 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53184 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53200 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53202 Closing
+  ✓   3 [desktop] › email-change.spec.ts:158:5 › native forms complete without JavaScript, including at 320px (1.3s)
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53204 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53204 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53218 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53220 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53222 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53226 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53218 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53220 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53218 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53222 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53222 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53220 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53228 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53244 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53226 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53226 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53228 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53244 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53228 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53244 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53246 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53248 Accepted
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53246 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53248 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53246 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53248 Closing
+[WebServer] [Sun Nov  1 01:30:59 2026] 127.0.0.1:53256 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53256 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53260 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53260 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53274 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53288 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53294 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53308 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53274 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53288 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53294 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53308 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53274 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53294 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53308 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53288 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53322 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53334 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53348 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53322 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53334 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53348 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53322 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53334 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53348 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53358 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53360 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53358 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53360 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53372 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53382 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53388 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53402 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53372 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53382 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53388 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53402 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53372 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53382 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53388 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53402 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53414 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53414 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53424 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53438 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53450 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53456 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53424 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53438 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53450 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53456 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53424 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53450 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53456 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53438 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53468 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53470 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53482 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53468 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53470 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53482 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53468 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53470 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53482 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53494 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53508 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53494 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53508 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53514 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53530 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53542 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53554 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53514 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53530 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53542 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53554 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53514 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53530 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53542 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53554 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53558 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53558 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53562 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53576 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53562 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53576 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53562 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53576 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53588 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53600 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53606 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53610 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53588 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53600 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53606 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53610 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53588 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53600 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53606 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53610 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53626 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53626 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53638 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53648 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53650 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53654 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53664 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53638 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53648 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53650 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53654 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53664 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53638 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53648 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53650 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53654 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53664 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53666 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53666 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53674 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53690 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53674 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53690 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53674 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53690 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53696 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53708 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53724 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53734 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53696 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53708 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53724 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53734 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53696 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53708 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53724 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53734 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53744 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53744 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53760 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53772 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53784 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53798 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53760 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53772 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53784 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53760 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53772 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53784 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53798 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53802 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53802 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53798 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53802 Closing
+  ✓   4 [desktop] › email-change.spec.ts:182:5 › rolling the subsystem back hides the entry and makes pending links unavailable (983ms)
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53808 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53808 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53814 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53818 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53820 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53828 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53814 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53818 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53820 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53828 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53814 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53820 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53828 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53818 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53842 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53850 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53842 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53850 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53842 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53850 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53860 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53864 Accepted
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53860 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53864 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53860 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53864 Closing
+[WebServer] [Sun Nov  1 01:31:00 2026] 127.0.0.1:53866 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53866 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53880 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53880 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53884 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53900 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53906 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53920 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53884 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53900 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53906 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53920 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53884 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53906 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53920 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53900 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53928 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53940 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53946 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53928 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53928 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53940 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53946 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53940 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53946 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53958 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53962 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53958 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53962 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53972 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53984 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53990 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53998 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54008 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53972 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53984 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53990 [200]: GET /assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53972 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53984 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53990 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53998 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54008 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:53998 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54008 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54024 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54024 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54036 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54038 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54046 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54060 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54036 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54038 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54046 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54060 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54036 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54046 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54060 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54038 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54066 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54078 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54086 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54066 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54078 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54086 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54066 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54078 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54086 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54092 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54092 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54100 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54112 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54126 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54136 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54138 Accepted
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54100 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54112 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54126 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54136 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54138 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54100 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54112 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54126 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54136 Closing
+[WebServer] [Sun Nov  1 01:31:01 2026] 127.0.0.1:54138 Closing
+[WebServer] [Sun Nov  1 01:31:02 2026] 127.0.0.1:54146 Accepted
+[WebServer] [Sun Nov  1 01:31:02 2026] 127.0.0.1:54146 [200]: GET /assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2
+[WebServer] [Sun Nov  1 01:31:02 2026] 127.0.0.1:54146 Closing
+  ✓   5 [desktop] › email-change.spec.ts:272:5 › the operator catalog exposes the guarded rollback control and its consequences (2.1s)
+(node:3238065) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54156 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54156 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54166 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54170 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54180 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54196 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54166 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54170 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54180 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54196 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54166 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54180 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54196 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54170 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54202 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54208 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54202 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54208 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54202 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54208 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54218 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54220 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54218 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54220 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54218 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54220 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54226 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54226 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54234 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54234 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54238 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54248 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54256 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54264 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54238 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54248 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54256 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54264 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54238 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54256 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54264 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54248 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54276 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54284 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54300 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54276 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54284 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54276 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54300 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54284 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54300 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54304 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54320 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54304 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54320 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54332 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54342 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54332 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54348 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54342 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54364 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54348 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54332 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54364 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54342 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54348 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54364 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54366 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54366 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54376 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54388 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54390 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54404 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54376 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54388 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54390 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54404 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54376 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54390 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54404 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54388 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54418 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54430 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54434 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54418 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54430 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54434 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54418 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54430 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54434 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54436 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54442 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54436 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54442 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54452 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54466 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54452 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54472 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54466 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54480 Accepted
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54472 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54452 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54480 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54466 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54472 Closing
+[WebServer] [Sun Nov  1 01:31:03 2026] 127.0.0.1:54480 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54494 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54494 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54510 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54514 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54520 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54536 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54510 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54514 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54520 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54536 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54510 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54520 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54536 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54514 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54538 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54554 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54564 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54538 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54554 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54564 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54538 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54554 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54564 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54580 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54594 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54580 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54594 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54608 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54622 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54608 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54630 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54622 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54632 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54630 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54608 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54632 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54622 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54630 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54632 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54646 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54646 [200]: GET /assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54646 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54662 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54662 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54664 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54670 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54664 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54670 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54674 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54664 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54670 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54678 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54682 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54698 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54674 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54678 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54682 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54698 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54674 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54678 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54682 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54698 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54702 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54716 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54718 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54732 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54746 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54702 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54716 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54718 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54732 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54746 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54702 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54716 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54718 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54732 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54746 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54748 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54758 Accepted
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54748 Closing
+[WebServer] [Sun Nov  1 01:31:04 2026] 127.0.0.1:54758 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54760 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54760 [200]: GET /assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54760 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54776 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54776 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54786 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54786 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54796 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54800 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54816 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54832 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54796 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54800 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54816 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54832 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54796 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54816 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54832 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54800 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54840 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54856 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54868 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54840 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54856 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54868 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54840 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54856 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54868 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54876 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54892 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54876 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54902 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54892 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54904 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54902 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54920 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54904 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54934 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54920 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54936 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54902 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54934 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54904 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54936 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54920 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54934 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54936 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54940 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54940 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54954 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54954 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54964 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54970 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54976 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54992 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54964 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54970 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54976 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54992 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54964 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54976 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54992 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:54970 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55004 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55018 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55034 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55004 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55018 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55034 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55004 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55018 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55034 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55044 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55046 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55044 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55060 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55046 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55068 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55060 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55076 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55068 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55090 Accepted
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55076 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55060 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55090 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55068 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55076 Closing
+[WebServer] [Sun Nov  1 01:31:05 2026] 127.0.0.1:55090 Closing
+  ✓   6 [mobile] › email-change.spec.ts:67:5 › validation preserves the candidate, pending keeps the old contact, and cancel retires it (2.6s)
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55098 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55098 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55108 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55122 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55138 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55140 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55108 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55122 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55138 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55140 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55108 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55138 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55140 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55122 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55148 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55162 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55148 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55162 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55148 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55162 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55166 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55170 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55166 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55170 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55166 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55170 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55182 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55182 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55196 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55196 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55200 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55216 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55224 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55230 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55200 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55216 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55224 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55230 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55200 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55224 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55230 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55216 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55240 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55254 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55270 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55240 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55254 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55240 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55254 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55270 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55270 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55276 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55288 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55276 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55288 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55304 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55318 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55304 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55334 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55318 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55348 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55334 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55304 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55348 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55318 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55334 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55348 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55360 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55360 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55368 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55382 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55398 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55410 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55368 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55382 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55398 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55410 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55368 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55398 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55410 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55382 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55416 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55418 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55416 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55418 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55416 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55418 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55434 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55446 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55434 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55446 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55434 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55446 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55452 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55452 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55464 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55464 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55478 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55486 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55492 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55508 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55478 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55486 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55492 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55508 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55478 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55492 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55508 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55486 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55518 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55524 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55532 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55518 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55518 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55524 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55524 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55532 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55532 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55548 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55558 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55548 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55558 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55560 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55562 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55560 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55574 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55562 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55578 Accepted
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55574 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55560 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55578 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55562 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55574 Closing
+[WebServer] [Sun Nov  1 01:31:06 2026] 127.0.0.1:55578 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55592 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55592 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55598 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55602 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55612 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55616 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55598 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55602 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55612 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55616 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55598 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55612 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55616 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55602 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55618 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55634 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55646 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55618 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55634 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55646 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55618 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55634 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55646 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55656 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55666 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55656 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55676 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55666 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55690 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55676 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55700 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55690 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55712 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55700 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55720 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55676 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55712 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55690 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55720 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55700 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55712 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55720 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55728 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55728 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55736 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55742 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55748 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55758 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55736 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55742 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55748 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55758 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55736 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55748 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55758 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55742 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55760 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55766 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55772 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55760 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55766 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55772 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55760 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55766 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55772 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55780 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55796 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55780 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55802 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55796 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55814 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55802 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55820 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55814 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55830 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55820 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55844 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55802 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55830 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55814 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55844 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55820 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55830 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55844 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55856 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55856 [200]: GET /assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55856 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55858 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55858 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55864 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55864 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55870 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55884 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55896 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55898 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55870 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55884 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55896 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55870 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55896 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55884 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55898 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55898 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55914 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55918 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55930 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55914 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55918 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55930 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55914 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55918 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55930 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55938 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55940 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55938 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55940 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55950 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55958 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55972 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55986 Accepted
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55950 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55958 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55972 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55950 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55958 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55972 Closing
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55986 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:07 2026] 127.0.0.1:55986 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:55994 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:55994 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56006 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56006 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56016 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56020 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56022 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56034 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56016 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56020 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56022 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56016 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56022 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56020 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56034 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56034 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56044 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56052 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56044 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56052 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56044 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56052 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56062 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56074 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56062 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56074 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56062 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56074 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56086 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56086 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56100 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56116 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56124 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56140 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56100 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56116 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56124 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56100 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56124 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56116 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56140 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56140 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56152 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56154 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56160 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56152 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56154 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56152 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56154 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56160 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56160 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56174 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56186 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56174 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56190 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56186 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56194 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56190 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56202 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56194 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56206 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56202 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56190 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56206 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56194 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56202 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56206 Closing
+  ✓   7 [mobile] › email-change.spec.ts:98:5 › owner previews without mutation, confirms with POST, and signs out another session (2.3s)
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56208 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56208 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56222 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56238 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56250 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56222 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56238 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56250 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56222 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56250 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56238 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56256 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56256 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56256 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56268 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56268 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56268 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56278 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56278 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56288 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56288 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56302 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56312 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56326 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56302 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56312 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56326 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56302 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56326 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56312 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56328 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56344 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56348 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56364 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56328 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56344 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56348 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56364 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56328 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56344 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56348 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56364 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56380 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56380 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56394 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56400 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56404 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56394 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56400 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56404 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56394 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56404 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56400 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56410 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56420 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56428 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56432 Accepted
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56410 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56420 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56428 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56432 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56410 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56420 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56428 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56432 Closing
+[WebServer] [Sun Nov  1 01:31:08 2026] 127.0.0.1:56440 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56440 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56452 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56452 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56456 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56462 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56474 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56456 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56462 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56474 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56456 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56474 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56462 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56488 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56498 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56504 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56510 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56512 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56488 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56498 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56504 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56510 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56512 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56488 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56498 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56504 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56510 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56512 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56652 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56652 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56660 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56666 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56672 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56660 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56666 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56672 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56660 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56672 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56666 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56682 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56688 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56700 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56704 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56706 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56682 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56688 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56700 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56704 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56706 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56682 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56688 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56700 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56704 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56706 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56712 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56712 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56722 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56722 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56728 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56742 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56744 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56728 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56742 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56744 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56728 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56744 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56742 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56758 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56764 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56776 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56780 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56758 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56764 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56776 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56780 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56758 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56764 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56776 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56780 Closing
+  ✓   8 [mobile] › email-change.spec.ts:158:5 › native forms complete without JavaScript, including at 320px (1.4s)
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56784 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56784 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56790 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56796 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56800 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56816 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56790 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56796 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56800 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56826 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56816 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56832 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56826 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56790 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56800 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56816 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56826 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56796 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56832 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56832 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56834 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56838 Accepted
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56834 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56838 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56834 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56838 Closing
+[WebServer] [Sun Nov  1 01:31:09 2026] 127.0.0.1:56840 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56840 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56850 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56850 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56864 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56870 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56874 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56888 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56864 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56870 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56874 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56888 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56864 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56874 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56888 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56870 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56898 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56914 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56926 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56898 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56914 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56926 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56898 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56914 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56926 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56942 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56952 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56942 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56952 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56954 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56966 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56954 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56982 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56966 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56990 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56982 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56954 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56990 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56966 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56982 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:56990 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57006 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57006 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57012 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57014 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57022 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57030 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57012 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57014 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57022 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57030 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57012 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57022 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57030 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57014 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57042 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57046 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57056 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57042 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57046 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57056 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57042 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57046 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57056 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57070 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57082 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57070 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57082 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57086 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57092 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57086 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57100 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57092 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57114 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57100 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57086 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57114 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57092 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57100 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57114 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57120 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57120 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57134 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57142 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57134 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57134 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57142 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57142 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57154 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57162 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57172 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57174 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57154 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57162 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57172 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57174 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57154 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57162 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57172 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57174 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57180 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57180 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57186 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57194 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57186 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57196 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57194 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57206 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57196 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57186 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57206 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57194 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57196 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57206 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57214 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57214 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57222 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57226 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57222 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57226 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57230 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57222 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57226 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57244 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57258 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57266 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57230 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57244 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57258 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57266 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57230 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57244 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57258 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57266 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57282 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57282 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57284 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57292 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57284 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57294 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57292 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57298 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57294 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57284 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57298 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57292 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57294 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57298 Closing
+  ✓   9 [mobile] › email-change.spec.ts:182:5 › rolling the subsystem back hides the entry and makes pending links unavailable (931ms)
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57300 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57300 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57304 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57314 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57330 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57338 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57304 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57314 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57330 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57338 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57304 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57330 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57338 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57314 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57352 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57356 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57352 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57356 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57352 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57356 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57360 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57364 Accepted
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57360 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57364 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57360 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57364 Closing
+[WebServer] [Sun Nov  1 01:31:10 2026] 127.0.0.1:57378 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57378 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57380 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57380 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57388 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57398 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57410 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57418 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57388 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57398 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57410 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57388 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57410 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57398 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57434 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57418 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57418 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57436 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57446 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57434 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57434 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57436 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57446 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57436 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57446 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57448 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57464 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57448 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57464 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57466 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57476 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57466 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57486 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57476 [200]: GET /assets/dist/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57498 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57508 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57466 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57476 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57486 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57486 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57498 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57508 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57498 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57508 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57512 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57512 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57514 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57524 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57540 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57552 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57514 [200]: GET /assets/dist/imladris-style-DmYWEV0N.css
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57524 [200]: GET /assets/dist/app-style-BQrKPQLm.css
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57540 [200]: GET /assets/dist/app-e5669eff1f842115.js
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57514 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57540 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57524 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57552 [200]: GET /assets/dist/eb-garamond-latin-400-normal-DSJrtJSV.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57552 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57558 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57566 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57568 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57558 [200]: GET /assets/dist/composer-c1ff478070e3a1d8.js
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57566 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57568 [200]: GET /assets/dist/tour-f068bdb2d74e6d21.js
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57558 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57566 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57568 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57578 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57578 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57592 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57596 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57606 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57614 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57618 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57592 [200]: GET /assets/dist/cormorant-garamond-latin-600-normal-Co1r35X9.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57596 [200]: GET /assets/dist/eb-garamond-latin-600-normal-CdfBH7_K.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57606 [200]: GET /assets/dist/marcellus-latin-400-normal-86dSXJnk.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57592 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57596 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57606 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57614 [200]: GET /assets/dist/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57618 [200]: GET /assets/dist/jetbrains-mono-latin-400-normal-V6pRDFza.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57614 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57618 Closing
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57634 Accepted
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57634 [200]: GET /assets/dist/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2
+[WebServer] [Sun Nov  1 01:31:11 2026] 127.0.0.1:57634 Closing
+  ✓  10 [mobile] › email-change.spec.ts:272:5 › the operator catalog exposes the guarded rollback control and its consequences (2.1s)
+
+  10 passed (20.8s)

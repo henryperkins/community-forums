@@ -1,0 +1,25 @@
+{
+  "checked_at": "2026-11-01T01:32:51.537032+00:00",
+  "scope": "Passive pre-publication availability baseline; no member or settings changes",
+  "pages": [
+    {
+      "path": "/healthz",
+      "status": 200,
+      "location": null,
+      "health": {
+        "status": "ok",
+        "database": "ok"
+      }
+    },
+    {
+      "path": "/settings/account/email",
+      "status": 404,
+      "location": null
+    },
+    {
+      "path": "/settings/account/email/confirm",
+      "status": 404,
+      "location": null
+    }
+  ]
+}

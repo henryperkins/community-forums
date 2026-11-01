@@ -1,7 +1,7 @@
 # ADR 0055 - Verified email changes
 
 **Date:** 2026-11-01
-**Status:** Accepted; available behind a default-off operator flag.
+**Status:** Accepted; default-on after owner-approved graduation on 2026-11-01.
 
 ## Context
 
@@ -55,7 +55,8 @@ including when an owner retains and reuses a signed start intent with fresh code
 
 ## Consequences and boundaries
 
-- `email_change` defaults off and has a guarded operator enable/disable control.
+- `email_change` defaults on and has a guarded operator enable/disable control.
+  Existing explicit off overrides remain effective.
   Rolling it back hides entry points and rejects routes/services, retaining
   completed changes and original pending-link expiries. Queued security notices
   continue to use the existing worker.
@@ -72,3 +73,18 @@ including when an owner retains and reuses a signed start intent with fresh code
 
 Implementation evidence: [2026-11-01 qualification](../evidence/email-change-2026-11-01/README.md).
 Operations: [email changes](../runbooks/email_changes.md).
+
+## 2026-11-01 default-on graduation
+
+The owner approved moving the verified subsystem from its initial default-off
+posture to default-on after implementation and deployment qualification. Fresh
+installations and existing sites without an `email_change` override now expose
+the account entry and flow. Explicit off overrides still hide the entry and
+reject the routes/service; removing that override resumes the code default.
+There is no migration, bulk settings rewrite, change to authentication or token
+semantics, or change to sending-domain/address-suppression rules.
+
+The inventory now has 52 default-on and six default-dark flags. The
+[graduation evidence](../evidence/email-change-default-on-2026-11-01/README.md)
+covers no-override availability, explicit-off rollback/restoration, focused
+browser checks and the ordinary release contract.

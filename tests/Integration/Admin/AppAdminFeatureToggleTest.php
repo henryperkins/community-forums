@@ -36,8 +36,8 @@ final class AppAdminFeatureToggleTest extends TestCase
         // Every declared flag still parses as an inventory row, now anchored.
         preg_match_all('/<tr id="flag-([a-z0-9_]+)">\s*<td class="features-flag-cell">\s*<code>\1<\/code>/', $body, $rows);
         self::assertCount(58, $rows[1]);
-        // Default-on flags offer Turn off. Verified email changes can be opted
-        // into; the six unavailable flags remain off and locked.
+        // Default-on flags offer Turn off; the six unavailable flags remain
+        // off and locked.
         self::assertSame(52, substr_count($body, '<details class="features-flag-toggle" name="features-flag-confirm">'));
         self::assertSame(52, preg_match_all('~<form method="post" action="/admin/features/[a-z0-9_]+" class="inline-form">\s*<input type="hidden" name="_token" value="[0-9a-f]{64}">~', $body));
         self::assertSame(6, substr_count($body, 'features-flag-locked'));

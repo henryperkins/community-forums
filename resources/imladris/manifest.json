@@ -3,7 +3,7 @@
     "inspected_commit": "4efe4e33db6475ce9c59190ba82c72cbd7d4b868",
     "design_contract": {
         "source": "docs/design-system/imladris/production-contract.json",
-        "sha256": "1680fa804f1353aeb936db231f118cfcf93549a32e77fd4c04b648074342fe74"
+        "sha256": "8ae5cb03adfe3cc267b32dd8d3fdaa7ec16908e22f1b4934248c6633f1691233"
     },
     "css_sources": [
         "tokens/fonts.css",

@@ -14,6 +14,7 @@ const disposableDatabase = process.env.APP_ENV === 'test'
 test.skip(!disposableDatabase, 'Select the dedicated email-change database in APP_ENV=test; this spec never mutates a shared evidence DB.');
 
 type State = {
+  email_change_override: boolean | 'absent';
   email: string; verified: boolean; token?: string; pending: { new_email: string; expires_at: string } | null;
   active_sessions: number; security_notices: number;
 };
@@ -64,6 +65,7 @@ test.beforeEach(() => { if (disposableDatabase) fixture('reset'); });
 test.afterAll(() => { if (disposableDatabase) fixture('reset'); });
 
 test('validation preserves the candidate, pending keeps the old contact, and cancel retires it', async ({ page }, info) => {
+  expect(fixture().email_change_override).toBe('absent');
   await login(page);
   await page.goto('/settings/account');
   await page.getByRole('link', { name: 'Change email address', exact: true }).click();
@@ -267,8 +269,8 @@ test('provider continuation and return use native navigation and a same-site POS
   await shot(page, info, 'provider-return-handoff');
 });
 
-test('the operator catalog exposes the guarded enable control and its consequences', async ({ page }, info) => {
-  fixture('dark');
+test('the operator catalog exposes the guarded rollback control and its consequences', async ({ page }, info) => {
+  expect(fixture().email_change_override).toBe('absent');
   await login(page, 'admin@retro.test');
   await page.goto('/admin/features');
   const row = page.locator('#flag-email_change');
@@ -276,10 +278,10 @@ test('the operator catalog exposes the guarded enable control and its consequenc
   const toggle = row.locator('details.features-flag-toggle');
   await toggle.locator('summary').click();
   await expect(toggle).toContainText('Verified email changes');
-  await expect(toggle).toContainText('the address changes only after they verify the new inbox');
-  await expect(toggle).toContainText('Configure a working sender first');
-  await expect(toggle.getByRole('button', { name: 'Turn on email_change now', exact: true })).toBeVisible();
-  await expect(toggle.locator('input[name="enabled"]')).toHaveValue('1');
+  await expect(toggle).toContainText('completed email changes remain in place');
+  await expect(toggle).toContainText('Pending links cannot be used while it is off');
+  await expect(toggle.getByRole('button', { name: 'Turn off email_change now', exact: true })).toBeVisible();
+  await expect(toggle.locator('input[name="enabled"]')).toHaveValue('0');
   await expect(toggle.locator('input[name="_token"]')).not.toHaveValue('');
   await noOverflow(page);
   await accessible(page, '.admin-pane');
@@ -287,5 +289,5 @@ test('the operator catalog exposes the guarded enable control and its consequenc
   // capture the visible control rather than producing the entire long ledger.
   const directory = path.join(evidence, browserName, info.project.name);
   mkdirSync(directory, { recursive: true });
-  await row.locator('td').first().screenshot({ path: path.join(directory, 'operator-enable-control.png'), animations: 'disabled' });
+  await row.locator('td').first().screenshot({ path: path.join(directory, 'operator-rollback-control.png'), animations: 'disabled' });
 });
