@@ -1,0 +1,36 @@
+{
+  "chromium": {
+    "cases": [
+      "✓  1 [desktop] › compose-destination.spec.ts:63:9 › with JavaScript › shared creation keeps a numeric board slug as the posting destination (723ms)",
+      "✓  2 [desktop] › compose-destination.spec.ts:39:11 › without JavaScript › server-rendered anonymity follows the selected board without JavaScript (286ms)",
+      "✓  3 [desktop] › compose-destination.spec.ts:63:9 › without JavaScript › shared creation keeps a numeric board slug as the posting destination (284ms)",
+      "✓  4 [desktop] › member-surfaces.spec.ts:251:5 › compose destination picker, select, anonymity, and draft status stay synchronized (956ms)",
+      "✓  5 [mobile] › compose-destination.spec.ts:63:9 › with JavaScript › shared creation keeps a numeric board slug as the posting destination (749ms)",
+      "✓  6 [mobile] › compose-destination.spec.ts:39:11 › without JavaScript › server-rendered anonymity follows the selected board without JavaScript (347ms)",
+      "✓  7 [mobile] › compose-destination.spec.ts:63:9 › without JavaScript › shared creation keeps a numeric board slug as the posting destination (301ms)",
+      "✓  8 [mobile] › member-surfaces.spec.ts:251:5 › compose destination picker, select, anonymity, and draft status stay synchronized (1.1s)",
+      "✓  1 [desktop] › compose-destination.spec.ts:39:11 › without JavaScript › server-rendered anonymity follows the selected board without JavaScript (793ms)",
+      "✓  2 [mobile] › compose-destination.spec.ts:39:11 › without JavaScript › server-rendered anonymity follows the selected board without JavaScript (825ms)"
+    ],
+    "initial_cases_passed": 8,
+    "affected_no_js_cases_repeated_after_capture_change": 2,
+    "unique_cases": 8
+  },
+  "webkit": {
+    "cases": [
+      "✓  1 [desktop] › compose-destination.spec.ts:63:9 › with JavaScript › shared creation keeps a numeric board slug as the posting destination (1.5s)",
+      "✓  2 [desktop] › compose-destination.spec.ts:39:11 › without JavaScript › server-rendered anonymity follows the selected board without JavaScript (842ms)",
+      "✓  3 [desktop] › compose-destination.spec.ts:63:9 › without JavaScript › shared creation keeps a numeric board slug as the posting destination (979ms)",
+      "✓  4 [desktop] › member-surfaces.spec.ts:251:5 › compose destination picker, select, anonymity, and draft status stay synchronized (1.9s)",
+      "✓  5 [mobile] › compose-destination.spec.ts:63:9 › with JavaScript › shared creation keeps a numeric board slug as the posting destination (1.6s)",
+      "✓  6 [mobile] › compose-destination.spec.ts:39:11 › without JavaScript › server-rendered anonymity follows the selected board without JavaScript (846ms)",
+      "✓  7 [mobile] › compose-destination.spec.ts:63:9 › without JavaScript › shared creation keeps a numeric board slug as the posting destination (1.0s)",
+      "✓  8 [mobile] › member-surfaces.spec.ts:251:5 › compose destination picker, select, anonymity, and draft status stay synchronized (2.0s)",
+      "✓  1 [desktop] › compose-destination.spec.ts:39:11 › without JavaScript › server-rendered anonymity follows the selected board without JavaScript (1.4s)",
+      "✓  2 [mobile] › compose-destination.spec.ts:39:11 › without JavaScript › server-rendered anonymity follows the selected board without JavaScript (1.5s)"
+    ],
+    "initial_cases_passed": 8,
+    "affected_no_js_cases_repeated_after_capture_change": 2,
+    "unique_cases": 8
+  }
+}

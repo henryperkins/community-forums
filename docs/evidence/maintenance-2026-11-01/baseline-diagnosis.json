@@ -1,0 +1,23 @@
+{
+  "shipped_base": "12fe5c91dd42204579f03790d85bb39fda92e219",
+  "candidate_base": "a75eee98c11d061f89451b4adc336b0dbd16b7c4",
+  "original_failure": {
+    "file": "tests/browser/member-surfaces.spec.ts",
+    "line": 308,
+    "projects": [
+      "desktop",
+      "mobile"
+    ],
+    "expected": "Anonymous hidden after navigating to Feedback",
+    "actual": "Anonymous visible"
+  },
+  "runtime_diagnostic_after_navigation": {
+    "path": "/compose?board=general",
+    "selected_board": "General",
+    "allow_anonymous": true,
+    "anonymous_hidden": false,
+    "restored_title": "A draft title"
+  },
+  "cause": "The saved new-topic draft restores General before the anonymity assertion. The test must explicitly discard it before asserting a fresh Feedback form.",
+  "production_source_changes": false
+}

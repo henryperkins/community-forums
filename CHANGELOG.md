@@ -2,6 +2,22 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-01] - Dependency security and composer qualification
+
+- Update Wrangler to 4.153.0 and its pinned Miniflare/Undici dependencies
+  (Undici 7.30.1), and resolve Zod to 4.6.7 within the existing parent ranges.
+  The root npm audit reports zero vulnerabilities.
+- Correct the composer destination test to account for the saved draft restoring
+  its original board. Verify fresh-board anonymity separately after discarding
+  the draft, including disabled and cleared choices when changing destinations,
+  and server-rendered forms without JavaScript in Chromium and WebKit.
+- Align the abandoned-request concurrency fixture's budget reservation with its
+  recorded request date, so qualification respects UTC budget rollover just
+  after midnight. Application behavior is unchanged by both test corrections.
+- Carry the verified curated-styles release's asset retention pin and production
+  receipts (`a75eee98`) with this maintenance release. Local qualification:
+  `docs/evidence/maintenance-2026-11-01/README.md`.
+
 ## [2026-10-31] - Curated style presets
 
 - Add style presets that set surfaces, sidebar treatment, heading type and

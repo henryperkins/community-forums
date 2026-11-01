@@ -295,14 +295,17 @@ final class ThreadIntelligenceConcurrencyTest extends TestCase
         $seed = $this->seedDueThread();
         $config = ThreadIntelligenceConfig::fromArray(['api_key' => 'sk-test-thread-intelligence']);
         $budget = new ThreadIntelligenceBudget($this->db, $config);
-        $reservation = $budget->reserve($this->now());
+        // The reservation belongs to the recorded request's UTC window, which
+        // can be yesterday when this test runs just after midnight.
+        $requestedAt = $this->now()->modify('-11 minutes');
+        $reservation = $budget->reserve($requestedAt);
         self::assertTrue($reservation['reserved']);
         $generations = new ThreadIntelligenceGenerationRepository($this->db);
         $generationId = $generations->start(['thread_id' => $seed['thread_id'], 'trigger_code' => 'post_created']);
         $generations->recordRequest($generationId, str_repeat('a', 64), $seed['post_ids'], [], str_repeat('b', 64), 500);
         $this->db->run(
             'UPDATE thread_intelligence_generations SET requested_at = ? WHERE id = ?',
-            [$this->now()->modify('-11 minutes')->format('Y-m-d H:i:s'), $generationId],
+            [$requestedAt->format('Y-m-d H:i:s'), $generationId],
         );
         $this->db->run(
             "UPDATE thread_intelligence_jobs SET state = 'idle', due_at = NULL, lease_token = NULL, lease_expires_at = NULL WHERE thread_id = ?",
@@ -317,9 +320,11 @@ final class ThreadIntelligenceConcurrencyTest extends TestCase
         $row = $this->db->fetch('SELECT status,failure_code FROM thread_intelligence_generations WHERE id = ?', [$generationId]);
         self::assertSame('failed', $row['status']);
         self::assertSame('worker_interrupted', $row['failure_code']);
-        $status = $bundle['budget']->status($this->now());
+        $now = $this->now();
+        $status = $bundle['budget']->status($now);
         self::assertSame(0, $status['reserved_calls']);
-        self::assertSame(1, $status['used_calls']);
+        self::assertSame($requestedAt->format('Y-m-d') === $now->format('Y-m-d') ? 1 : 0, $status['used_calls']);
+        self::assertSame(0, $provider->calls);
     }
 
     public function test_older_heartbeat_run_id_cannot_overwrite_a_newer_run(): void

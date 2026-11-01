@@ -1,0 +1,8 @@
+{
+  "package.json": "ae39dff4ff2eb42d4e1f29639c2d161064dcfaa93107d4de798d7d39e170d32a",
+  "package-lock.json": "fb3e3ba870682078744915869f2f6fcf9c71581691a6d5312a83ea94ea828ffe",
+  "tests/browser/member-surfaces.spec.ts": "deeb55c1f76d17885ff75e13f22dabffd88a0a4604fc41a09efcaacc3c5fced4",
+  "tests/browser/compose-destination.spec.ts": "7f34b9438268b733e40e5a8f1667108b547db0de1044e246f6760d0a2b115be8",
+  "tests/Integration/ThreadIntelligence/ThreadIntelligenceConcurrencyTest.php": "b24eb71b3990c7ecd58fe48201fa46f4f44a6b85f99c336424022ee74a27424b",
+  "config/assets.json": "e9c9fbfe2e1c3222044e256172f4624dfb1aa60dd02045e4a6f1b09c03a1ec9b"
+}

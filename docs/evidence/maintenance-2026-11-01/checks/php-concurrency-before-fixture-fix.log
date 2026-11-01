@@ -1,0 +1,18 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/community-forums/.claude/worktrees/branding/phpunit.xml
+
+....F.                                                              6 / 6 (100%)
+
+Time: 00:02.503, Memory: 8.00 MB
+
+There was 1 failure:
+
+1) Tests\Integration\ThreadIntelligence\ThreadIntelligenceConcurrencyTest::test_abandoned_reserved_generation_is_settled_and_completed_after_owning_job_revalidation
+Failed asserting that 1 is identical to 0.
+
+/home/ubuntu/community-forums/.claude/worktrees/branding/tests/Integration/ThreadIntelligence/ThreadIntelligenceConcurrencyTest.php:321
+
+FAILURES!
+Tests: 6, Assertions: 24, Failures: 1.
