@@ -15,6 +15,7 @@ const memberSurfaceReferences = path.join(
   'member-surfaces',
   'screenshots',
 );
+test.use({ browserName: process.env.E2E_LAYOUT_BROWSER === 'webkit' ? 'webkit' : 'chromium' });
 
 const visualSurfaces = [
   { name: '01-board-index', route: '/?sort=unanswered&peek=3', width: 924, heading: 'Every board in the valley' },
@@ -257,6 +258,9 @@ test('compose destination picker, select, anonymity, and draft status stay synch
     await expect(richEditor).toBeVisible();
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
   }
+  const anonymous = page.locator('input[name="is_anonymous"]');
+  await expect(anonymous).toBeEnabled();
+  await anonymous.check();
 
   if (info.project.name === 'desktop') {
     await expect(page.locator('[data-compose-board-disabled="announcements"]')).toBeVisible();
@@ -272,6 +276,10 @@ test('compose destination picker, select, anonymity, and draft status stay synch
   await expect(page.locator('[data-compose-board-picker="feedback"] .board-rail-note')).toHaveText('posting here');
   await expect(page.locator('[data-compose-board-picker="general"] .board-rail-note')).toHaveCount(0);
   await expect(page.locator('[data-compose-board-picker] .board-rail-note')).toHaveCount(1);
+  await expect(page.locator('.composer-anonymous-chip')).toBeHidden();
+  await expect(page.locator('.composer-anonymous-disclosure')).toBeHidden();
+  await expect(anonymous).toBeDisabled();
+  await expect(anonymous).not.toBeChecked();
 
   await page.locator('[data-compose-board-select]').selectOption({ label: 'General' });
   await expect(page).toHaveURL(/\/compose\?board=general$/);
@@ -280,6 +288,8 @@ test('compose destination picker, select, anonymity, and draft status stay synch
   await expect(page.locator('[data-compose-board-picker="feedback"] .board-rail-note')).toHaveCount(0);
   await expect(page.locator('[data-compose-board-picker] .board-rail-note')).toHaveCount(1);
   await expect(page.locator('.composer-anonymous-chip')).toBeVisible();
+  await expect(anonymous).toBeEnabled();
+  await expect(anonymous).not.toBeChecked();
 
   await page.locator('[data-compose-title]').fill('A draft title');
   await expect(page.locator('[data-compose-draft-copy]')).toBeVisible();
@@ -301,13 +311,34 @@ test('compose destination picker, select, anonymity, and draft status stay synch
     expect(anonymityClip.scroll, JSON.stringify(anonymityClip)).toBeLessThanOrEqual(anonymityClip.client);
   }
 
-  // The server must keep the board-dependent anonymity affordance available
-  // when the initial destination does not allow it; changing destinations is
-  // a client-side state change, not a full render.
+  // The shared new-topic draft restores its destination as well as its title.
+  // Its General anonymity state must not be mistaken for Feedback's state.
+  await expect.poll(() => page.evaluate(() => {
+    const saved = localStorage.getItem('rb-draft-state:alice:/threads');
+    return saved ? JSON.parse(saved).fields.title : null;
+  })).toBe('A draft title');
   await page.goto('/compose?board=feedback');
+  await expect(page.locator('[data-compose-board-select] option:checked')).toHaveText('General');
+  await expect(page).toHaveURL(/\/compose\?board=general$/);
+  await expect(page.locator('[data-compose-title]')).toHaveValue('A draft title');
+  await expect(page.locator('.composer-anonymous-chip')).toBeVisible();
+
+  // Discard explicitly before checking the server's fresh Feedback form.
+  await page.getByRole('button', { name: 'Discard draft', exact: true }).click();
+  await expect(page.locator('[data-compose-title]')).toHaveValue('');
+  await page.goto('/compose?board=feedback');
+  await expect(page.locator('[data-compose-board-select] option:checked')).toHaveText('Feedback');
+  await expect(page).toHaveURL(/\/compose\?board=feedback$/);
   await expect(page.locator('.composer-anonymous-chip')).toBeHidden();
+  await expect(page.locator('.composer-anonymous-disclosure')).toBeHidden();
+  await expect(anonymous).toBeDisabled();
+  const outputDir = path.join(memberSurfaceEvidence, info.project.name);
+  fs.mkdirSync(outputDir, { recursive: true });
+  await page.screenshot({ path: path.join(outputDir, 'compose-feedback-anonymity-hidden.png'), fullPage: true, animations: 'disabled' });
   await page.locator('[data-compose-board-select]').selectOption({ label: 'General' });
   await expect(page.locator('.composer-anonymous-chip')).toBeVisible();
+  await expect(anonymous).toBeEnabled();
+  await page.screenshot({ path: path.join(outputDir, 'compose-general-anonymity-enabled.png'), fullPage: true, animations: 'disabled' });
 });
 
 test('mobile viewing controls are a reachable sheet', async ({ page }, info) => {

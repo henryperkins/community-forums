@@ -35,6 +35,34 @@ for (const javaScriptEnabled of [true, false]) {
   test.describe(javaScriptEnabled ? 'with JavaScript' : 'without JavaScript', () => {
     test.use({ javaScriptEnabled });
 
+    if (!javaScriptEnabled) {
+      test('server-rendered anonymity follows the selected board without JavaScript', async ({ page }, info) => {
+        await signIn(page);
+        const dir = path.join(OUT, info.project.name);
+        fs.mkdirSync(dir, { recursive: true });
+        for (const [slug, name, allowed] of [['feedback', 'Feedback', false], ['general', 'General', true]] as const) {
+          const response = await page.goto('/compose?board=' + slug);
+          expect(response?.status()).toBe(200);
+          await expect(page.locator('[data-compose-board-select] option:checked')).toHaveText(name);
+          await expect(page.locator('[data-compose-board-name]')).toHaveText('Posting to ' + name);
+          const anonymous = page.locator('input[name="is_anonymous"]');
+          if (allowed) {
+            await expect(page.locator('.composer-anonymous-chip')).toBeVisible();
+            await expect(page.locator('.composer-anonymous-disclosure')).toBeVisible();
+            await expect(anonymous).toBeEnabled();
+          } else {
+            await expect(page.locator('.composer-anonymous-chip')).toBeHidden();
+            await expect(page.locator('.composer-anonymous-disclosure')).toBeHidden();
+            await expect(anonymous).toBeDisabled();
+          }
+          const submit = page.getByRole('button', { name: 'Create topic', exact: true });
+          await submit.scrollIntoViewIfNeeded();
+          await expect(submit).toBeInViewport();
+          await page.screenshot({ path: path.join(dir, 'anonymity-' + slug + '-no-js.png'), fullPage: true, animations: 'disabled' });
+        }
+      });
+    }
+
     test('shared creation keeps a numeric board slug as the posting destination', async ({ page }, info) => {
       await signIn(page);
       const boardResponse = await page.goto('/c/' + destination.slug);
