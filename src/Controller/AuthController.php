@@ -474,7 +474,11 @@ final class AuthController extends Controller
         if ($verification === null) {
             return $this->view('auth/verify', ['ok' => false], 400);
         }
-        $service->verify($verification);
+        try {
+            $service->verify($verification);
+        } catch (ValidationException) {
+            return $this->view('auth/verify', ['ok' => false], 400);
+        }
         return $this->view('auth/verify', ['ok' => true]);
     }
 

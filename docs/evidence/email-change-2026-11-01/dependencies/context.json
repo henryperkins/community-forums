@@ -1,0 +1,13 @@
+{
+  "repository": "henryperkins/community-forums",
+  "default_branch": "main",
+  "main_sha": "f269c9a0403ba1e6f476779a1240abde2808084b",
+  "patched_lock_commit": "81a4bbaeb770102a4065cf04fe60647d9d63fc66",
+  "patched_lock_commit_time": "2026-11-01T00:11:31Z",
+  "repository_metadata_source": "GitHub plugin get_repo read",
+  "main_ref_source": "GET /repos/henryperkins/community-forums/git/refs/heads/main",
+  "patched_lock_history_source": "git log -3 --format=%H,%cI,%s -- package-lock.json",
+  "refresh_performed": false,
+  "remote_mutations_performed": false,
+  "application_deploy_performed": false
+}

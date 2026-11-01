@@ -8,6 +8,7 @@ Plans in this index are frozen design/implementation records, not a live task bo
 
 | Date | Document | Title | Spec merged in |
 |---|---|---|:--:|
+| 2026-11-01 | [`2026-11-01-verified-email-change.md`](plans/2026-11-01-verified-email-change.md) | Verified email changes, connected-provider confirmation and serialized recovery | [Design](specs/2026-11-01-verified-email-change-design.md), ADR 0055 |
 | 2026-06-28 | [`2026-06-28-api-tokens.md`](plans/2026-06-28-api-tokens.md) | API Tokens (read-only slice) — design spec + implementation plan | ✓ |
 | 2026-06-28 | [`2026-06-28-service-secret-registry.md`](plans/2026-06-28-service-secret-registry.md) | Encrypted Service-Secret Registry | ✓ |
 | 2026-06-28 | [`2026-06-28-webhook-delivery.md`](plans/2026-06-28-webhook-delivery.md) | Webhook Delivery — B2 Sub-project 3 | ✓ |

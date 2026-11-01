@@ -1,0 +1,55 @@
+
+ ⛅️ wrangler 4.153.0
+────────────────────
+[custom build] Running: npm run build
+[custom build]
+[custom build] > build
+[custom build] > node bin/build-assets.mjs
+[custom build]
+[custom build]
+[custom build] vite v8.3.5 building client environment for production...
+[custom build]
+[custom build] transforming...
+[custom build]
+[custom build] ✓ 865 modules transformed.
+[custom build]
+[custom build] rendering chunks...
+[custom build]
+[custom build] computing gzip size...
+[custom build]
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/.vite/manifest.json                                   5.13 kB │ gzip:   0.72 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/marcellus-latin-400-normal-86dSXJnk.woff2            14.55 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/jetbrains-mono-latin-400-normal-V6pRDFza.woff2       21.16 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/eb-garamond-latin-400-normal-DSJrtJSV.woff2          21.70 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2       21.83 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/jetbrains-mono-latin-600-normal-C8RAYTDA.woff2       21.86 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/eb-garamond-latin-400-italic-KGnr19QW.woff2          22.17 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/cormorant-garamond-latin-700-normal-DajfzrDU.woff2   22.34 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/cormorant-garamond-latin-400-normal-B-1hWBU7.woff2   22.87 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/eb-garamond-latin-500-normal-LNvnJ-zC.woff2          23.01 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/eb-garamond-latin-600-normal-CdfBH7_K.woff2          23.11 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/cormorant-garamond-latin-500-normal-BsRWmXhO.woff2   23.31 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/cormorant-garamond-latin-600-normal-Co1r35X9.woff2   23.39 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/eb-garamond-latin-500-italic-DW_HNewX.woff2          23.61 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/cormorant-garamond-latin-400-italic-Dc_OZ8oc.woff2   23.66 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/cormorant-garamond-latin-500-italic-Y14P-dkT.woff2   23.92 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/wysiwyg-composer-BRAFF38E.css                         1.12 kB │ gzip:   0.49 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/imladris-style-DmYWEV0N.css                         107.51 kB │ gzip:  18.51 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/app-style-BQrKPQLm.css                              470.63 kB │ gzip:  72.91 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/wysiwyg-composer-XlKwRXnh.js                          1.66 kB │ gzip:   0.88 kB
+[custom build] ../../../../../../tmp/retroboards-assets-yyYxg4/milkdown-adapter-DXUybFX0.js                        467.21 kB │ gzip: 140.26 kB
+[custom build]
+[custom build]
+[custom build] ✓ built in 319ms
+[custom build]
+[custom build] Built 30 delivery files; staged 57 public assets for Workers.
+[custom build]
+✨ Read 62 files from the assets directory /home/ubuntu/.codex/worktrees/6033/community-forums/.build/static
+Total Upload: 31.74 KiB / gzip: 6.47 KiB
+Your Worker has access to the following bindings:
+Binding                                                          Resource
+env.ASSETS                                                       Assets
+env.ORIGIN_URL ("https://retroboards-616731728350.us-e...")      Environment Variable
+env.APP_URL ("https://forum.candidary.online")                   Environment Variable
+
+--dry-run: exiting now.

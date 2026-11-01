@@ -64,6 +64,7 @@ final class AccountController extends Controller
             'avatar_message' => $data['avatar_message'] ?? '',
             'email' => $row['email'] ?? '',
             'email_verified' => ($row['email_verified_at'] ?? null) !== null,
+            'email_change_enabled' => $flags->enabled('email_change'),
             'profile_media' => $flags->enabled('profile_media'),
             'custom_profile_fields' => $customEnabled,
         ], $status);

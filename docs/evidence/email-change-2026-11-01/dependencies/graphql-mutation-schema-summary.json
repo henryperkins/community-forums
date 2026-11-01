@@ -1,0 +1,17 @@
+{
+  "collected_at": "2026-11-01T00:27:09.462835+00:00",
+  "source": "GitHub GraphQL live Mutation schema introspection",
+  "query": "query { __type(name: \"Mutation\") { name fields { name description } } }",
+  "total_mutation_count": 262,
+  "relevant_mutations": [
+    {
+      "name": "dismissRepositoryVulnerabilityAlert",
+      "description": "Dismisses the Dependabot alert."
+    },
+    {
+      "name": "updateEnterpriseMembersCanViewDependencyInsightsSetting",
+      "description": "Sets the members can view dependency insights for an enterprise."
+    }
+  ],
+  "all_refresh_named_mutations": []
+}

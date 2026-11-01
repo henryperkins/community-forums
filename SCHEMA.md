@@ -565,7 +565,7 @@ CREATE TABLE verifications (
   user_id    BIGINT UNSIGNED NOT NULL,
   type       ENUM('email_verify','email_change','password_reset') NOT NULL,
   token_hash CHAR(64)        NOT NULL,
-  new_email  VARCHAR(255)    NULL,                          -- for email_change
+  new_email  VARCHAR(255)    NULL,                          -- change target, or issuance contact for new reset/verify tokens; NULL legacy rows
   created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expires_at DATETIME        NOT NULL,
   used_at    DATETIME        NULL,

@@ -33,7 +33,7 @@ final class AdminFeatureController extends Controller
     /** @var array<string,list<string>> */
     private const GROUPS = [
         'Phase 2 / Base' => [
-            'engagement', 'notifications', 'email', 'mentions', 'search', 'dms',
+            'engagement', 'notifications', 'email', 'email_change', 'mentions', 'search', 'dms',
             'moderation_queue', 'community', 'oauth', 'presence', 'announcements',
         ],
         'Phase 3 / Composer and Trust' => [

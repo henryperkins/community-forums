@@ -267,7 +267,7 @@
     }
 
     function bindRevokeForms() {
-        document.querySelectorAll('[data-passkey-revoke-form]').forEach(function (form) {
+        document.querySelectorAll('[data-passkey-revoke-form], [data-passkey-stepup-form]').forEach(function (form) {
             var stepBtn = form.querySelector('[data-passkey-stepup-btn]');
             var needsStepUp = form.querySelector('[data-passkey-needs-stepup]');
             if (!stepBtn) {
@@ -280,6 +280,9 @@
             }
 
             stepBtn.addEventListener('click', function () {
+                if (form.hasAttribute('data-passkey-stepup-form') && !form.reportValidity()) {
+                    return;
+                }
                 if (!claim(stepBtn)) {
                     return;
                 }
@@ -287,7 +290,7 @@
                 var stepErr = form.querySelector('[data-passkey-revoke-error]');
                 clear(stepErr);
                 var panel = document.querySelector('[data-passkey-add-form]');
-                var stepUpUrl = panel ? panel.getAttribute('data-stepup-url') : '';
+                var stepUpUrl = form.getAttribute('data-stepup-url') || (panel ? panel.getAttribute('data-stepup-url') : '');
                 post(stepUpUrl, {}, form)
                     .then(function (json) {
                         if (!json.ok) {
@@ -306,7 +309,11 @@
                             needsStepUp.disabled = false;
                         }
 
-                        form.submit();
+                        if (form.hasAttribute('data-passkey-stepup-form')) {
+                            form.requestSubmit();
+                        } else {
+                            form.submit();
+                        }
                     })
                     .catch(function (err) {
                         release(stepBtn);

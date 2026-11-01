@@ -198,6 +198,7 @@ use App\Service\EmailOpsService;
 use App\Service\Extension\BubblewrapSandboxAdapter;
 use App\Service\Extension\ExtensionSandbox;
 use App\Service\EmailVerificationService;
+use App\Service\EmailChangeService;
 use App\Service\PasswordResetService;
 use App\Service\BadgeRuleService;
 use App\Service\AuditQueryService;
@@ -1869,6 +1870,7 @@ final class App
             $c->get(FirstPartyHookRegistry::class),
         ));
         $c->bind(PasswordResetService::class, fn (Container $c) => new PasswordResetService(
+            $c->get(Database::class),
             $c->get(UserRepository::class),
             $c->get(VerificationRepository::class),
             $c->get(SessionRepository::class),
@@ -1878,6 +1880,7 @@ final class App
             $c->get(SettingRepository::class),
         ));
         $c->bind(EmailVerificationService::class, fn (Container $c) => new EmailVerificationService(
+            $c->get(Database::class),
             $c->get(UserRepository::class),
             $c->get(VerificationRepository::class),
             $c->get(BadgeService::class),
@@ -1895,6 +1898,23 @@ final class App
             $c->get(UserPreferenceRepository::class),
             $c->get(FeatureFlags::class),
             $c->get(UserProfileFieldRepository::class),
+        ));
+        $c->bind(EmailChangeService::class, fn (Container $c) => new EmailChangeService(
+            $c->get(Database::class),
+            $c->get(UserRepository::class),
+            $c->get(VerificationRepository::class),
+            $c->get(SessionRepository::class),
+            $c->get(EmailDeliveryRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(Mailer::class),
+            $config,
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(FeatureFlags::class),
+            $c->get(OAuthIdentityRepository::class),
+            $c->get(FeatureFlags::class)->enabled('passkeys') ? $c->get(PasskeyService::class) : null,
+            $c->get(EmailDomainVerifier::class),
+            $c->get(SettingRepository::class),
         ));
         $c->bind(ProtectedOwnerRepository::class, fn (Container $c) => new ProtectedOwnerRepository(
             $c->get(Database::class),
@@ -2556,6 +2576,12 @@ final class App
         $r->get('/settings', [AccountController::class, 'index']);
         $r->get('/settings/account', [AccountController::class, 'accountForm']);
         $r->post('/settings/account', [AccountController::class, 'updateAccount']);
+        $r->get('/settings/account/email', [\App\Controller\EmailChangeController::class, 'form']);
+        $r->post('/settings/account/email', [\App\Controller\EmailChangeController::class, 'requestChange']);
+        $r->post('/settings/account/email/cancel', [\App\Controller\EmailChangeController::class, 'cancel']);
+        $r->get('/settings/account/email/confirm', [\App\Controller\EmailChangeController::class, 'confirmation']);
+        $r->post('/settings/account/email/confirm', [\App\Controller\EmailChangeController::class, 'confirm']);
+        $r->post('/settings/account/email/oauth/{provider}', [OAuthController::class, 'startEmailChange']);
         $r->post('/settings/account/export', [AccountController::class, 'exportAccount']);
         $r->get('/settings/account/lifecycle', [AccountController::class, 'lifecycleForm']);
         $r->post('/settings/account/deactivate', [AccountController::class, 'deactivate']);

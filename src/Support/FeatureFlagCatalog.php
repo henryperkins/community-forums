@@ -35,9 +35,16 @@ final class FeatureFlagCatalog
         'email' => [
             'label' => 'Notification email',
             'on' => 'Members get instant notification emails and daily digests, and admins get the Email delivery console.',
-            'off' => 'Notification emails, daily digests, announcement emails and the Email delivery console stop; password reset and verification emails still send.',
+            'off' => 'Notification emails, daily digests, announcement emails and the Email delivery console stop; password reset, verification and email-change security notices still send.',
             'warn_on' => 'Nothing is sent until a sender is configured and the sending domain passes its checks.',
             'warn_off' => 'If worker:email and worker:digest keep running, queued emails are marked suppressed and due digests are skipped for good; pause those jobs to hold mail instead.',
+        ],
+        'email_change' => [
+            'label' => 'Verified email changes',
+            'on' => 'Members can request a new contact address from Account settings after confirming with a current password, passkey or connected sign-in provider; the address changes only after they verify the new inbox.',
+            'off' => 'The change-email entry and routes disappear; completed email changes remain in place and pending links keep their original expiry.',
+            'warn_on' => 'Configure a working sender first. Changes send a verification email to the new address and queue a security notice to the old one; other sessions are signed out after confirmation.',
+            'warn_off' => 'Pending links cannot be used while it is off. Security notices already queued still run, subject to sending-domain and address suppression checks.',
         ],
         'mentions' => [
             'label' => 'Mentions',

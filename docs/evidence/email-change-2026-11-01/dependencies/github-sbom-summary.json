@@ -1,0 +1,113 @@
+{
+  "collected_at": "2026-11-01T00:26:32.851747+00:00",
+  "endpoint": "https://api.github.com/repos/henryperkins/community-forums/dependency-graph/sbom",
+  "response_headers": {
+    "status": "HTTP/2.0 200 OK",
+    "date": "Sun, 01 Nov 2026 00:26:32 GMT",
+    "etag": "W/\"f1be9eff9aa12cc0ebeb1448bee6f773df834e819d4735da9c361f07068207f7\"",
+    "x-github-api-version-selected": "2022-11-28",
+    "x-github-request-id": "B944:2C5B8:2494F9F:7925099:6AE68738"
+  },
+  "data": {
+    "spdxVersion": "SPDX-2.3",
+    "creationInfo": {
+      "creators": [
+        "Tool: protobom-v0.0.0-20261030172419-44d7ffae7eee+dirty",
+        "Tool: GitHub.com-Dependency-Graph"
+      ],
+      "created": "2026-11-01T00:26:32Z"
+    },
+    "matching_packages": [
+      {
+        "name": "miniflare",
+        "SPDXID": "SPDXRef-npm-miniflare-5.20261023.0-beta-2f5c0b",
+        "versionInfo": "5.20261023.0-beta",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "MIT",
+        "externalRefs": [
+          {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": "pkg:npm/miniflare@5.20261023.0-beta"
+          }
+        ]
+      },
+      {
+        "name": "@neon/env",
+        "SPDXID": "SPDXRef-npm-neon-env-1.4.3-c90ae5",
+        "versionInfo": "1.4.3",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "Apache-2.0",
+        "externalRefs": [
+          {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": "pkg:npm/%40neon/env@1.4.3"
+          }
+        ]
+      },
+      {
+        "name": "wrangler",
+        "SPDXID": "SPDXRef-npm-wrangler-4.153.0-ef62e5",
+        "versionInfo": "4.153.0",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "MIT OR Apache-2.0",
+        "externalRefs": [
+          {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": "pkg:npm/wrangler@4.153.0"
+          }
+        ]
+      },
+      {
+        "name": "@neon/config",
+        "SPDXID": "SPDXRef-npm-neon-config-1.7.2-ed7808",
+        "versionInfo": "1.7.2",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "Apache-2.0",
+        "externalRefs": [
+          {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": "pkg:npm/%40neon/config@1.7.2"
+          }
+        ]
+      },
+      {
+        "name": "zod",
+        "SPDXID": "SPDXRef-npm-zod-4.6.7-ed4163",
+        "versionInfo": "4.6.7",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "MIT",
+        "externalRefs": [
+          {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": "pkg:npm/zod@4.6.7"
+          }
+        ]
+      },
+      {
+        "name": "undici",
+        "SPDXID": "SPDXRef-npm-undici-7.30.1-816fa0",
+        "versionInfo": "7.30.1",
+        "downloadLocation": "NOASSERTION",
+        "filesAnalyzed": false,
+        "licenseConcluded": "MIT",
+        "externalRefs": [
+          {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": "pkg:npm/undici@7.30.1"
+          }
+        ]
+      }
+    ]
+  }
+}

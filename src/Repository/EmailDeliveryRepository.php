@@ -69,6 +69,17 @@ final class EmailDeliveryRepository
         $this->db->run("UPDATE email_deliveries SET status = 'suppressed', error = ?, next_attempt_at = NULL, sent_at = NULL, message_id = NULL WHERE id = ?", [$reason, $id]);
     }
 
+    /** Retire ordinary pending mail when this contact is replaced; preserve security notices and tests. */
+    public function suppressQueuedForPreviousEmail(int $userId, string $email): int
+    {
+        return $this->db->run(
+            "UPDATE email_deliveries SET status = 'suppressed', error = 'recipient_email_changed', next_attempt_at = NULL
+             WHERE user_id = ? AND email = ? AND status = 'queued' AND kind <> 'test'
+               AND NOT (kind = 'system' AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(payload, '$.type')), '') = 'email_changed')",
+            [$userId, $email],
+        )->rowCount();
+    }
+
     /**
      * Try to become the sole outbox drainer. Uses a connection-scoped MySQL
      * advisory lock (auto-released when the connection closes) so two concurrent

@@ -17,8 +17,8 @@ final class AppAdminFeaturesTest extends TestCase
 
         $this->assertStatus(200, $page);
         self::assertSame(['link_previews'], $this->inventoryFlags($page->body()));
-        self::assertStringContainsString('Showing 1 of 57 declared flags', $page->body());
-        self::assertStringContainsString('57 declared flags', $page->body());
+        self::assertStringContainsString('Showing 1 of 58 declared flags', $page->body());
+        self::assertStringContainsString('58 declared flags', $page->body());
         self::assertStringContainsString('name="q"', $page->body());
     }
 
@@ -57,10 +57,10 @@ final class AppAdminFeaturesTest extends TestCase
         $this->actingAs($this->makeAdmin());
 
         $off = $this->get('/admin/features', ['q' => 'email', 'state' => 'off']);
-        self::assertSame(['email'], $this->inventoryFlags($off->body()));
+        self::assertSame(['email', 'email_change'], $this->inventoryFlags($off->body()));
         $on = $this->get('/admin/features', ['q' => 'email', 'state' => 'on']);
         self::assertSame([], $this->inventoryFlags($on->body()));
-        self::assertStringContainsString('Showing 0 of 57 declared flags', $on->body());
+        self::assertStringContainsString('Showing 0 of 58 declared flags', $on->body());
     }
 
     public function test_malformed_filter_shapes_do_not_break_the_inventory(): void
@@ -70,9 +70,9 @@ final class AppAdminFeaturesTest extends TestCase
         $page = $this->get('/admin/features', ['q' => ['email'], 'readiness' => ['reserved'], 'state' => ['off']]);
 
         $this->assertStatus(200, $page);
-        self::assertCount(57, $this->inventoryFlags($page->body()));
+        self::assertCount(58, $this->inventoryFlags($page->body()));
         $unknown = $this->get('/admin/features', ['readiness' => 'unknown', 'state' => 'invalid']);
-        self::assertCount(57, $this->inventoryFlags($unknown->body()));
+        self::assertCount(58, $this->inventoryFlags($unknown->body()));
     }
 
     /** @return list<string> */
@@ -101,9 +101,9 @@ final class AppAdminFeaturesTest extends TestCase
 
         $this->assertStatus(200, $page);
         self::assertStringContainsString('Feature flags', $page->body());
-        self::assertStringContainsString('57 declared', $page->body());
+        self::assertStringContainsString('58 declared', $page->body());
         self::assertStringContainsString('51 default-on', $page->body());
-        self::assertStringContainsString('6 default-dark', $page->body());
+        self::assertStringContainsString('7 default-dark', $page->body());
         self::assertStringContainsString('<code>server_extensions</code>', $page->body());
         self::assertStringContainsString('Phase 5 Gate B', $page->body());
         self::assertStringContainsString('Effective on', $page->body());

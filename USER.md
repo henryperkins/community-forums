@@ -146,14 +146,19 @@ A `/settings` area with a left-nav (mirrors the admin Console pattern, ADMIN.md 
 | **Email** | Change requires verifying the **new** address before it becomes active; the old address is notified of the change (security). |
 | Avatar / Signature / Bio | Editable here or on the profile (§5); same data. |
 
-**Completion boundary (2026-09-25).** Settings → Account edits display name,
-pronouns, location, website, bio, signature and avatar; the **Username** and
-**Email** rows above are target behaviour, not shipped. Username change is an
+**Completion boundary (2026-11-01).** Settings → Account edits display name,
+pronouns, location, website, bio, signature and avatar. Username change is an
 open requirement in [ADR 0035](docs/adr/0035-member-settings-completion-carryovers.md):
 the `username_history` table and the `/u/{old}` 301 lookup exist, but nothing
-renames an account or writes that history. The email field is shown read-only;
-the verified email-change flow is a carryover in
-[ADR 0014](docs/adr/0014-member-notifications-and-email-change-carryover.md).
+renames an account or writes that history. Verified email changes are available
+behind the default-off `email_change` flag. When enabled, Account settings links
+to a separate form requiring a current password, passkey or already-connected
+provider, followed by confirmation in the new inbox. The old address remains
+active until the owner submits confirmation; other sessions and outstanding
+recovery links are then revoked and a security notice is queued to the old
+address. Opening a link alone does not change the contact. See
+[ADR 0055](docs/adr/0055-verified-email-changes.md) and the
+[operator runbook](docs/runbooks/email_changes.md).
 
 ### 3.3 Security
 
@@ -475,7 +480,7 @@ A first-run interactive tour helps newcomers learn the Slack/email-style layout 
 3. **Sign in with GitHub.** GitHub consent (`user:email`) → fetch primary email → if **unverified**, treat as unverified (prompt to verify before privileged actions) → log in/create.
 4. **Link a second provider.** Settings → Connections → "Add Google/Apple/GitHub" → provider flow → identity attached to current account.
 5. **Email collision.** A provider's verified email matches an existing local account → we **offer** to link, requiring the user to log into that account (never auto-merge) → identities joined.
-6. **Change email** *(target — carryover in ADR 0014; the Account email field is read-only today)*. Settings → Account → new email → verification sent to the **new** address → confirm → switch; old address notified.
+6. **Change email** *(available when `email_change` is enabled; default off)*. Settings → Account → Change email address → current password/passkey/connected provider → verification sent to the **new** address → signed-in owner confirms with POST → switch; old-address security notice queued. Links expire after one hour by default and can be replaced or cancelled; recovery and other sessions are invalidated on success.
 7. **Set a password (OAuth-only).** Settings → Security → "Set password" → now email/password is an available method; unlink rules updated.
 8. **Upload an avatar.** Profile/Settings → upload → crop square → save → resized/stored; fallback chain updated; reportable thereafter.
 9. **Edit signature.** Settings/Profile → edit (sanitised, capped) → save; **new accounts** see "available after N posts."
@@ -543,7 +548,7 @@ CREATE TABLE verifications (
   user_id    BIGINT UNSIGNED NOT NULL,
   type       ENUM('email_verify','email_change','password_reset') NOT NULL,
   token_hash CHAR(64)        NOT NULL,                  -- store only the hash
-  new_email  VARCHAR(255)    NULL,                      -- for email_change
+  new_email  VARCHAR(255)    NULL,                      -- target for email_change; issuance contact for new reset/verify rows (NULL legacy)
   created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expires_at DATETIME        NOT NULL,
   used_at    DATETIME        NULL,

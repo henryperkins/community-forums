@@ -1,0 +1,44 @@
+{
+  "collected_at": "2026-11-01T00:26:32.570494+00:00",
+  "endpoint": "https://api.github.com/repos/henryperkins/community-forums/dependabot/alerts/60",
+  "response_headers": {
+    "status": "HTTP/2.0 200 OK",
+    "date": "Sun, 01 Nov 2026 00:26:32 GMT",
+    "etag": "W/\"472af6c6adda9c96a8e4175a7c3c7c8f39d8338bad99ba8a86ab880c6d7d49da\"",
+    "x-github-api-version-selected": "2022-11-28",
+    "x-github-request-id": "B946:348BD5:253AC3E:7B62130:6AE68738"
+  },
+  "data": {
+    "number": 60,
+    "state": "open",
+    "dependency": {
+      "package": {
+        "ecosystem": "npm",
+        "name": "zod"
+      },
+      "manifest_path": "package-lock.json",
+      "version_requirement": "4.6.5",
+      "scope": "runtime",
+      "relationship": "transitive"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "npm",
+        "name": "zod"
+      },
+      "severity": "high",
+      "vulnerable_version_range": "< 4.6.6",
+      "first_patched_version": {
+        "identifier": "4.6.6"
+      }
+    },
+    "created_at": "2026-10-23T22:26:00Z",
+    "updated_at": "2026-10-23T22:26:00Z",
+    "fixed_at": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "html_url": "https://github.com/henryperkins/community-forums/security/dependabot/60",
+    "ghsa_id": "GHSA-mrhx-c7xc-m3w5",
+    "advisory_updated_at": "2026-10-23T18:26:52Z"
+  }
+}

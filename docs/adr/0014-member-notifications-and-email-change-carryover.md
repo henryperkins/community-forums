@@ -1,7 +1,8 @@
 # ADR 0014 - Member notification controls and email-change carryover
 
 **Date:** 2026-07-02
-**Status:** Accepted as a deferral and carryover record.
+**Status:** Accepted as a deferral and carryover record; email-change implementation
+superseded by ADR 0055 on 2026-11-01. Notification carryovers remain.
 
 ## Context
 
@@ -58,6 +59,20 @@ records the repair's current verification state. Proposed [ADR 0035](0035-member
 tracks the separate newly identified product gaps.
 
 ## Consequences
+
+### 2026-11-01 email-change completion boundary
+
+The email-change portion is implemented behind the default-off `email_change`
+flag, with its activation, rollback and evidence boundaries in
+[ADR 0055](0055-verified-email-changes.md) and the
+[email-change runbook](../runbooks/email_changes.md). It requires an existing
+password/passkey or exact connected-provider identity, verifies the new inbox
+before switching, queues an old-address security notice, applies abuse limits
+and records an audit event. Confirmation and password recovery share an
+account-first transaction lock so old-contact recovery cannot survive the
+transition. This closes the implementation carryover, while activation remains
+an operator choice. The notification matrix and other controls above remain
+deferred.
 
 - The existing notification page must be described as a partial implementation,
   not as the full USER section 4.6 matrix.

@@ -1,0 +1,152 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.codex/worktrees/6033/community-forums/phpunit.xml
+
+EEEEEEEEEEEEEEEEEEFFF..FF                                         25 / 25 (100%)
+
+Time: 00:00.067, Memory: 6.00 MB
+
+There were 18 errors:
+
+1) Tests\Integration\Service\EmailChangeServiceTest::testPrepareValidatesWithoutIssuingOrChangingContact
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:78
+
+2) Tests\Integration\Service\EmailChangeServiceTest::testIssueStoresOnlyBoundHashAndLeavesOldContactActive
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:91
+
+3) Tests\Integration\Service\EmailChangeServiceTest::testLookupIsReadOnlyAndOnlyTheOwnerCanFindOrConfirm
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:112
+
+4) Tests\Integration\Service\EmailChangeServiceTest::testConfirmationAtomicallySwitchesContactRetiresLinksRevokesOtherSessionsAndQueuesPrivateNotice
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:139
+
+5) Tests\Integration\Service\EmailChangeServiceTest::testConfirmationNeverKeepsAnExpiredOrForeignSession
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:178
+
+6) Tests\Integration\Service\EmailChangeServiceTest::testWrongOrMissingPasswordCannotIssueAndNeverReturnsFactorsAsOldInput
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:187
+
+7) Tests\Integration\Service\EmailChangeServiceTest::testStaleActorPasswordCannotReauthenticateAfterPasswordChanges
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:200
+
+8) Tests\Integration\Service\EmailChangeServiceTest::testOAuthOnlyActorMustReauthenticateAnExactlyLinkedIdentityWithoutIdentityWrites
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:215
+
+9) Tests\Integration\Service\EmailChangeServiceTest::testOAuthReauthenticationRejectsAnotherOwnerSubjectProviderOrRegistryConfiguration
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:231
+
+10) Tests\Integration\Service\EmailChangeServiceTest::testReplacementAndCancellationRetireEarlierLinks
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:243
+
+11) Tests\Integration\Service\EmailChangeServiceTest::testExpiryAndChangedCredentialsOrContactInvalidateIssuedTokens
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:259
+
+12) Tests\Integration\Service\EmailChangeServiceTest::testCollisionAtIssueOrConfirmationUsesGenericUnavailableErrorAndPreservesOldContact
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:282
+
+13) Tests\Integration\Service\EmailChangeServiceTest::testUnconfiguredOrBlockedMailerRejectsPreparationAndDoesNotPretendToSend
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:301
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:67
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:301
+
+14) Tests\Integration\Service\EmailChangeServiceTest::testSendFailureRetiresOnlyTheFailedIssueAndPreservesNewerReplacement
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:328
+
+15) Tests\Integration\Service\EmailChangeServiceTest::testTransportFailureLeavesNoUsableUnseenLink
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:341
+
+16) Tests\Integration\Service\EmailChangeServiceTest::testStaleRestrictedActorCannotIssueCancelOrConfirm
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:350
+
+17) Tests\Integration\Service\EmailChangeServiceTest::testDisabledFeatureRejectsServiceMutationsAndReads
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:366
+
+18) Tests\Integration\Service\EmailChangeServiceTest::testTtlIsClampedAtBothSecurityBoundaries
+Error: Class "App\Service\EmailChangeService" not found
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:49
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/EmailChangeServiceTest.php:379
+
+--
+
+There were 5 failures:
+
+1) Tests\Integration\Worker\EmailChangeNoticeWorkerTest::testSecurityNoticeBypassesPauseAndGlobalEmailSwitchAndHasNoUnsubscribe
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Worker/EmailChangeNoticeWorkerTest.php:42
+
+2) Tests\Integration\Worker\EmailChangeNoticeWorkerTest::testSecurityNoticeSurvivesTransportRetryAndRechecksSuppression
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Worker/EmailChangeNoticeWorkerTest.php:61
+
+3) Tests\Integration\Worker\EmailChangeNoticeWorkerTest::testSuppressedOldAddressNeverReceivesSecurityNotice
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Worker/EmailChangeNoticeWorkerTest.php:77
+
+4) Tests\Integration\Worker\EmailChangeNoticeWorkerTest::testOrdinaryQueuedMailToPreviousContactIsSuppressedButTestsAndCurrentAnnouncementsKeepBehavior
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Worker/EmailChangeNoticeWorkerTest.php:125
+
+5) Tests\Integration\Worker\EmailChangeNoticeWorkerTest::testOrdinaryRetryRechecksContactAfterAddressSwitch
+Failed asserting that 0 is identical to 1.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Worker/EmailChangeNoticeWorkerTest.php:145
+
+ERRORS!
+Tests: 25, Assertions: 13, Errors: 18, Failures: 5.

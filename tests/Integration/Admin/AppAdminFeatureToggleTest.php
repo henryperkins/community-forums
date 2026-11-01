@@ -35,11 +35,11 @@ final class AppAdminFeatureToggleTest extends TestCase
         self::assertStringContainsString('<a href="/admin/audit?action=feature_flag.">audit log</a>', $body);
         // Every declared flag still parses as an inventory row, now anchored.
         preg_match_all('/<tr id="flag-([a-z0-9_]+)">\s*<td class="features-flag-cell">\s*<code>\1<\/code>/', $body, $rows);
-        self::assertCount(57, $rows[1]);
-        // A pristine install: every shipped flag is on and offers Turn off; the
-        // six that have not shipped are off and locked.
-        self::assertSame(51, substr_count($body, '<details class="features-flag-toggle" name="features-flag-confirm">'));
-        self::assertSame(51, preg_match_all('~<form method="post" action="/admin/features/[a-z0-9_]+" class="inline-form">\s*<input type="hidden" name="_token" value="[0-9a-f]{64}">~', $body));
+        self::assertCount(58, $rows[1]);
+        // Default-on flags offer Turn off. Verified email changes can be opted
+        // into; the six unavailable flags remain off and locked.
+        self::assertSame(52, substr_count($body, '<details class="features-flag-toggle" name="features-flag-confirm">'));
+        self::assertSame(52, preg_match_all('~<form method="post" action="/admin/features/[a-z0-9_]+" class="inline-form">\s*<input type="hidden" name="_token" value="[0-9a-f]{64}">~', $body));
         self::assertSame(6, substr_count($body, 'features-flag-locked'));
         self::assertStringNotContainsString('<details class="features-flag-toggle" name="features-flag-confirm" open', $body);
 
@@ -254,7 +254,7 @@ final class AppAdminFeatureToggleTest extends TestCase
         self::assertStringContainsString('Flag changes are locked here until then.', $page);
         self::assertStringNotContainsString('<details class="features-flag-toggle"', $page);
         self::assertStringNotContainsString('action="/admin/features/', $page);
-        self::assertSame(57, substr_count($page, 'Locked until settings.features is repaired.'));
+        self::assertSame(58, substr_count($page, 'Locked until settings.features is repaired.'));
 
         $response = $this->post('/admin/features/uploads', ['enabled' => '0']);
 
@@ -356,7 +356,7 @@ final class AppAdminFeatureToggleTest extends TestCase
         $page = $this->get('/admin/features');
         $this->assertStatus(200, $page);
         self::assertStringNotContainsString('<details class="features-flag-toggle"', $page->body());
-        self::assertSame(57, substr_count($page->body(), 'Locked: your account cannot make changes right now.'));
+        self::assertSame(58, substr_count($page->body(), 'Locked: your account cannot make changes right now.'));
         $this->assertStatus(403, $this->post('/admin/features/uploads', ['enabled' => '0']));
 
         $this->actingAs($this->makeAdmin(['username' => 'toggle-token-admin']));
@@ -423,7 +423,7 @@ final class AppAdminFeatureToggleTest extends TestCase
             'return' => '/admin/features?q=css&readiness=safety_blocked',
         ]);
         $this->assertStatus(422, $refused);
-        self::assertStringContainsString('Showing 1 of 57 declared flags.', $refused->body());
+        self::assertStringContainsString('Showing 1 of 58 declared flags.', $refused->body());
         self::assertStringContainsString('value="safety_blocked" selected', $refused->body());
     }
 

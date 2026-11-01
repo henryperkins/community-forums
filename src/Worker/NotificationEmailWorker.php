@@ -60,14 +60,16 @@ final class NotificationEmailWorker
                 try {
                     $email = (string) $row['email'];
                     $recipient = $this->users->findEntity((int) ($row['user_id'] ?? 0));
+                    $securityNotice = $this->isEmailChangeNotice($row);
                     $reason = match (true) {
                         $recipient === null => 'recipient_missing',
                         $recipient->status() === 'deleted' => 'recipient_deleted',
                         $recipient->status() === 'banned' => 'recipient_banned',
                         !in_array($recipient->status(), ['active', 'suspended', 'deactivated', 'pending_deletion'], true) => 'recipient_ineligible',
-                        $row['kind'] !== 'test' && $this->emailPrefs->pauseAllEmail($recipient->id()) => 'recipient_paused',
+                        $row['kind'] !== 'test' && !$securityNotice && strcasecmp($recipient->email(), $email) !== 0 => 'recipient_email_changed',
+                        $row['kind'] !== 'test' && !$securityNotice && $this->emailPrefs->pauseAllEmail($recipient->id()) => 'recipient_paused',
                         $row['kind'] !== 'test' && $this->suppress->isSuppressed($email) => 'address_suppressed',
-                        $row['kind'] === 'system' && empty($this->visibility->scope($recipient, true)['features']['email']) => 'delivery_disabled',
+                        $row['kind'] === 'system' && !$securityNotice && empty($this->visibility->scope($recipient, true)['features']['email']) => 'delivery_disabled',
                         $row['kind'] === 'digest' && $recipient->toArray()['digest_hour'] === null => 'delivery_disabled',
                         default => null,
                     };
@@ -206,6 +208,19 @@ final class NotificationEmailWorker
     private function renderSystem(array $row): ?array
     {
         $payload = json_decode((string) ($row['payload'] ?? ''), true);
+        if ($this->isEmailChangeNotice($row)) {
+            $name = $this->siteName();
+            $url = rtrim((string) $this->config->get('app.url', ''), '/') . '/settings/security';
+            $message = 'Your account email address was changed. This address is no longer the contact address for your account.';
+            $help = 'If you did not request this change, sign in with an available sign-in method and change your password. Contact the forum operator if you cannot sign in.';
+            return [
+                'subject' => 'Your ' . $name . ' email address was changed',
+                'text' => $name . " account security notice\n\n" . $message . "\n\n" . $help . "\n\n" . $url,
+                'html' => '<p><strong>' . htmlspecialchars($name, ENT_QUOTES) . ' account security notice</strong></p>'
+                    . '<p>' . htmlspecialchars($message, ENT_QUOTES) . '</p><p>' . htmlspecialchars($help, ENT_QUOTES) . '</p>'
+                    . '<p><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">Review account security</a></p>',
+            ];
+        }
         if (!is_array($payload) || ($payload['type'] ?? '') !== 'announcement') {
             return null;
         }
@@ -232,6 +247,16 @@ final class NotificationEmailWorker
             . '<p style="font-size:12px;color:#888"><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
 
         return ['subject' => $subject, 'text' => $text, 'html' => $html];
+    }
+
+    /** Security mail has a narrow, server-owned payload and no member preference CTA. */
+    private function isEmailChangeNotice(array $row): bool
+    {
+        if (($row['kind'] ?? '') !== 'system') {
+            return false;
+        }
+        $payload = json_decode((string) ($row['payload'] ?? ''), true);
+        return is_array($payload) && ($payload['type'] ?? null) === 'email_changed';
     }
 
     private function siteName(): string

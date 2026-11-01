@@ -18,7 +18,11 @@ final class SecurityHeaders
     {
         $response->header('Content-Security-Policy', self::csp($allowGiphy));
         $response->header('X-Content-Type-Options', 'nosniff');
-        $response->header('Referrer-Policy', 'strict-origin-when-cross-origin');
+        // Token-bearing account pages can opt into the stricter policy. Keep
+        // the baseline for all other values, including an accidentally weaker one.
+        if ($response->getHeader('Referrer-Policy') !== 'no-referrer') {
+            $response->header('Referrer-Policy', 'strict-origin-when-cross-origin');
+        }
         $response->header('X-Frame-Options', 'DENY');
         $response->header('Cross-Origin-Opener-Policy', 'same-origin');
         if ($hsts) {

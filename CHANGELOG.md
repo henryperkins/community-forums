@@ -2,6 +2,27 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-01] - Verified email changes
+
+- Add a separate email-change form under Account settings, available through the
+  default-off `email_change` flag and its guarded admin control. Require a current
+  password, passkey or exact connected-provider identity, then verify the new
+  inbox before switching the contact. Pending changes show their expiry and can
+  be replaced or cancelled; opening a confirmation link is read-only.
+- Keep the current session, revoke other sessions and old recovery links, queue
+  an old-address security notice, suppress ordinary queued mail to the previous
+  contact and record a privacy-preserving audit event on confirmation. Apply
+  account and shared-destination limits; preserve address suppression and mail
+  readiness checks.
+- Preserve strict CSP and Lax member cookies with native provider continuation
+  and same-origin POST return steps, including Apple's cross-site POST. Provider
+  confirmation cannot link or provision an identity.
+- Serialize password recovery and registration verification with contact changes
+  under the same account-first lock. Recheck live contact and token state before
+  consuming proof, preserving existing null-address links until expiry or normal
+  invalidation. This closes old-inbox recovery races introduced by mutable email.
+- Qualification: `docs/evidence/email-change-2026-11-01/README.md`.
+
 ## [2026-11-01] - Dependency security and composer qualification
 
 - Update Wrangler to 4.153.0 and its pinned Miniflare/Undici dependencies

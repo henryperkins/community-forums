@@ -32,6 +32,7 @@ final class AppPasswordResetTest extends TestCase
     private function resetService(ArrayMailer $mailer): PasswordResetService
     {
         return new PasswordResetService(
+            $this->db,
             new UserRepository($this->db),
             new \App\Repository\VerificationRepository($this->db),
             new SessionRepository($this->db),

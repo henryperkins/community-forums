@@ -1,0 +1,66 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.codex/worktrees/6033/community-forums/phpunit.xml
+
+FFFFF.FF                                                            8 / 8 (100%)
+
+Time: 00:00.119, Memory: 6.00 MB
+
+There were 7 failures:
+
+1) Tests\Integration\Service\RecoveryEmailChangeRaceTest::testNewRecoveryAndRegistrationLinksRecordTheContactTheyProve
+Failed asserting that null is identical to 'ua84ab2a1@example.test'.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:102
+
+2) Tests\Integration\Service\RecoveryEmailChangeRaceTest::testRegistrationIssueRejectsAnEarlierContactSnapshot
+Failed asserting that 1 is identical to 0.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:112
+
+3) Tests\Integration\Service\RecoveryEmailChangeRaceTest::testResetRejectsAStaleLookupAfterExpiryOrAddressReplacement
+A stale recovery proof must not be applied.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:91
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:125
+
+4) Tests\Integration\Service\RecoveryEmailChangeRaceTest::testRegistrationCompletionRechecksExpiryAndCurrentContact
+A stale recovery proof must not be applied.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:91
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:140
+
+5) Tests\Integration\Service\RecoveryEmailChangeRaceTest::testRegistrationLookupFromBeforeEmailConfirmationCannotBeAppliedAfterIt
+A stale recovery proof must not be applied.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:91
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:157
+
+6) Tests\Integration\Service\RecoveryEmailChangeRaceTest::testResetIssuanceCannotUseAnOldSnapshotAcrossACommittedEmailChange
+A snapshot from the old contact must not receive a newly usable recovery link.
+Failed asserting that 2 is identical to 1.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:218
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:187
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Support/TestCase.php:93
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:180
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:203
+
+7) Tests\Integration\Service\RecoveryEmailChangeRaceTest::testResetCompletionWaitsForTheAccountBeforeConsumingThenRejectsTheConfirmedOldContactLink
+Reset must recheck the token after waiting for email confirmation.
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'rejected'
++'accepted'
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:275
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:187
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Support/TestCase.php:93
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:180
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Service/RecoveryEmailChangeRaceTest.php:226
+
+FAILURES!
+Tests: 8, Assertions: 21, Failures: 7.

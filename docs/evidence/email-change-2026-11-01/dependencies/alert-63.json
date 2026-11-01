@@ -1,0 +1,44 @@
+{
+  "collected_at": "2026-11-01T00:26:32.556484+00:00",
+  "endpoint": "https://api.github.com/repos/henryperkins/community-forums/dependabot/alerts/63",
+  "response_headers": {
+    "status": "HTTP/2.0 200 OK",
+    "date": "Sun, 01 Nov 2026 00:26:32 GMT",
+    "etag": "W/\"3fd49c9837eacd29ddd0bb96b66c7c76c3a9e9b3ee0b77fa0605058b93795fa1\"",
+    "x-github-api-version-selected": "2022-11-28",
+    "x-github-request-id": "B954:2C5B8:2494F9F:792509B:6AE68738"
+  },
+  "data": {
+    "number": 63,
+    "state": "open",
+    "dependency": {
+      "package": {
+        "ecosystem": "npm",
+        "name": "undici"
+      },
+      "manifest_path": "package-lock.json",
+      "version_requirement": "7.29.1",
+      "scope": "development",
+      "relationship": "transitive"
+    },
+    "security_vulnerability": {
+      "package": {
+        "ecosystem": "npm",
+        "name": "undici"
+      },
+      "severity": "high",
+      "vulnerable_version_range": ">= 7.18.0, < 7.30.1",
+      "first_patched_version": {
+        "identifier": "7.30.1"
+      }
+    },
+    "created_at": "2026-10-23T22:26:01Z",
+    "updated_at": "2026-10-23T22:26:01Z",
+    "fixed_at": null,
+    "dismissed_at": null,
+    "dismissed_reason": null,
+    "html_url": "https://github.com/henryperkins/community-forums/security/dependabot/63",
+    "ghsa_id": "GHSA-xjj6-f33q-929c",
+    "advisory_updated_at": "2026-10-23T22:14:32Z"
+  }
+}

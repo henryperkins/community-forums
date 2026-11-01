@@ -1,0 +1,20 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.codex/worktrees/6033/community-forums/phpunit.xml
+
+F                                                                   1 / 1 (100%)
+
+Time: 00:00.091, Memory: 8.00 MB
+
+There was 1 failure:
+
+1) Tests\Integration\Core\AppEmailChangeOAuthTest::test_replaying_a_retained_provider_intent_cannot_bypass_actual_delivery_limits
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 429.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Core/AppEmailChangeOAuthTest.php:183
+
+FAILURES!
+Tests: 1, Assertions: 22, Failures: 1.

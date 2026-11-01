@@ -32,6 +32,7 @@ final class AppEmailVerificationTest extends TestCase
     private function verifyService(ArrayMailer $mailer): EmailVerificationService
     {
         return new EmailVerificationService(
+            $this->db,
             new UserRepository($this->db),
             new VerificationRepository($this->db),
             new BadgeService($this->db, new BadgeRepository($this->db), new UserRepository($this->db)),

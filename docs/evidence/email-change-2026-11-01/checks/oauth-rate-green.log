@@ -1,0 +1,10 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.codex/worktrees/6033/community-forums/phpunit.xml
+
+..........................................                        42 / 42 (100%)
+
+Time: 00:00.416, Memory: 14.00 MB
+
+OK (42 tests, 241 assertions)

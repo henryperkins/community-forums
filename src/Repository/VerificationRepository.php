@@ -43,6 +43,17 @@ final class VerificationRepository
         );
     }
 
+    /** Current read after locking the owner; do not reuse a pre-lock snapshot. @return array<string,mixed>|null */
+    public function findValidForUpdate(string $tokenHash, string $type, int $userId): ?array
+    {
+        return $this->db->fetch(
+            'SELECT * FROM verifications
+             WHERE token_hash = ? AND type = ? AND user_id = ? AND used_at IS NULL AND expires_at > UTC_TIMESTAMP()
+             LIMIT 1 FOR UPDATE',
+            [$tokenHash, $type, $userId],
+        );
+    }
+
     /**
      * Consume a token. Returns the number of rows updated (0 if it was already
      * used) so the caller can treat a single-use race as a failed reset.
@@ -53,6 +64,27 @@ final class VerificationRepository
             'UPDATE verifications SET used_at = UTC_TIMESTAMP() WHERE id = ? AND used_at IS NULL',
             [$id],
         )->rowCount();
+    }
+
+    /** Atomically enforce ownership, expiry and single use at the transition boundary. */
+    public function consumeValid(int $id, int $userId, string $type, string $tokenHash): int
+    {
+        return $this->db->run(
+            'UPDATE verifications SET used_at = UTC_TIMESTAMP()
+             WHERE id = ? AND user_id = ? AND type = ? AND token_hash = ?
+               AND used_at IS NULL AND expires_at > UTC_TIMESTAMP()',
+            [$id, $userId, $type, $tokenHash],
+        )->rowCount();
+    }
+
+    /** @return array<string,mixed>|null */
+    public function findOutstandingForUser(int $userId, string $type): ?array
+    {
+        return $this->db->fetch(
+            'SELECT * FROM verifications WHERE user_id = ? AND type = ?
+             AND used_at IS NULL AND expires_at > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 1',
+            [$userId, $type],
+        );
     }
 
     /** Invalidate every outstanding token of a type for a user (one live link at a time). */

@@ -27,6 +27,7 @@ final class FeatureFlags
         'engagement' => true,        // reactions, stars, per-thread unread (P2-01/P2-02)
         'notifications' => true,     // subscriptions + in-app bell (P2-03)
         'email' => true,             // email worker, instant + daily digest (P2-04)
+        'email_change' => false,     // verified contact-address changes; operator opt-in (ADR 0055)
         'mentions' => true,          // @mentions (P2-05)
         'search' => true,            // MySQL FULLTEXT search (P2-06)
         'dms' => true,               // direct messages (P2-07)

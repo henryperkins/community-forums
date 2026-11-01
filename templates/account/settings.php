@@ -53,9 +53,10 @@
         <section class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Identity</h2>
         <label class="field">
-            <span>Email <span class="muted">(read-only)</span></span>
+            <span>Email<?php if (empty($email_change_enabled)): ?> <span class="muted">(read-only)</span><?php endif; ?></span>
             <input type="email" class="input input-engraved" value="<?= $e($email ?? '') ?>" disabled>
         </label>
+        <?php if (!empty($email_change_enabled)): ?><p class="field-hint"><a href="/settings/account/email">Change email address</a> — confirm the new address separately.</p><?php endif; ?>
         <?php // field_error() emits a <p>, which cannot legally nest inside <label>.
               // Inside .field-grid a bare sibling would claim its own grid cell and
               // break the two-column pairing, so each cell wraps label + error. ?>

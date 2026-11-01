@@ -34,6 +34,19 @@ final class AppFeatureFlagTest extends TestCase
         (new SettingRepository($this->db))->set('features', $flags);
     }
 
+    public function test_email_change_starts_dark_and_rolls_back_its_entry_point(): void
+    {
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($flags->enabled('email_change'));
+        $this->actingAs($this->makeUser());
+        $this->assertStatus(404, $this->get('/settings/account/email'));
+        $this->setFlags(['email_change' => true]);
+        self::assertStringContainsString('href="/settings/account/email"', $this->get('/settings/account')->body());
+        $this->setFlags(['email_change' => false]);
+        $this->assertStatus(404, $this->post('/settings/account/email', ['new_email' => 'new@example.test']));
+        self::assertStringNotContainsString('href="/settings/account/email"', $this->get('/settings/account')->body());
+    }
+
     public function test_invalidate_reloads_live_operator_overrides(): void
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
@@ -249,17 +262,18 @@ final class AppFeatureFlagTest extends TestCase
         }
 
         $defaults = $flags->all();
-        self::assertCount(57, $defaults, 'the declared flag inventory must remain stable during graduation');
+        self::assertCount(58, $defaults, 'the declared inventory includes the default-dark email change subsystem');
         self::assertSame(51, count(array_filter($defaults)), 'fresh and upgraded installs should have 51 default-on flags');
-        self::assertSame(6, count($defaults) - count(array_filter($defaults)), 'fresh and upgraded installs should keep 6 default-dark flags');
+        self::assertSame(7, count($defaults) - count(array_filter($defaults)), 'fresh and upgraded installs should keep 7 default-dark flags');
         self::assertSame([
+            'email_change',
             'custom_css',
             'expanded_files',
             'server_extensions',
             'governance',
             'service_principals',
             'verified_links',
-        ], array_keys(array_filter($defaults, static fn (bool $enabled): bool => !$enabled)), 'only the approved six flags stay default-dark');
+        ], array_keys(array_filter($defaults, static fn (bool $enabled): bool => !$enabled)), 'only the approved seven flags stay default-dark');
 
         $this->setFlags(['capabilities' => false, 'passkeys' => false]);
         $overridden = new FeatureFlags(new SettingRepository($this->db));

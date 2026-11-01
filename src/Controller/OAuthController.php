@@ -13,9 +13,12 @@ use App\Domain\User;
 use App\Repository\IdentityProviderRepository;
 use App\Repository\OAuthIdentityRepository;
 use App\Service\AccountService;
+use App\Service\EmailChangeService;
 use App\Service\MfaService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\OAuthService;
+use App\Service\PasskeyService;
+use App\Service\RateLimitService;
 use Throwable;
 
 /**
@@ -56,6 +59,49 @@ final class OAuthController extends Controller
         return $response;
     }
 
+    /** Start fresh authentication for a contact change; never link or provision an account. */
+    public function startEmailChange(Request $request, array $params): Response
+    {
+        $emailController = new EmailChangeController($this->container);
+        $emailController->gate();
+        $provider = $this->provider((string) ($params['provider'] ?? ''));
+        $user = $this->requireUser();
+        $email = $request->str('new_email');
+        try {
+            $this->container->get(RateLimitService::class)->enforce('email_change_auth', $request, $user);
+            if (!$this->container->get(OAuthIdentityRepository::class)->existsForUserProvider($user->id(), $provider->name())) {
+                throw new ValidationException(['authentication' => 'Use a sign-in provider already connected to your account.']);
+            }
+            $email = $this->container->get(EmailChangeService::class)->prepare($user, $email);
+        } catch (ValidationException $error) {
+            return $emailController->formView($user, $error->errors, $email, 422);
+        } catch (\App\Core\HttpException $error) {
+            if ($error->statusCode() !== 429) { throw $error; }
+            return $emailController->formView($user, ['new_email' => $error->getMessage()], $email, 429);
+        }
+
+        $state = bin2hex(random_bytes(16));
+        $nonce = bin2hex(random_bytes(16));
+        $verifier = $this->base64url(random_bytes(32));
+        try {
+            $url = $provider->authorizeUrl($this->callbackUri($provider->name()), $state,
+                $this->base64url(hash('sha256', $verifier, true)), $nonce);
+        } catch (Throwable) {
+            return $emailController->formView($user, ['authentication' => 'That sign-in option is temporarily unavailable. Please try again shortly.'], $email, 422);
+        }
+        // A native link starts a fresh navigation. Redirecting a POST to the
+        // provider would be blocked by form-action 'self' in some browsers.
+        $response = $this->noindex($this->view('account/email_change_provider', [
+            'provider_label' => $provider->label(), 'authorize_url' => $url, 'new_email' => $email,
+        ]))->header('Cache-Control', 'private, no-store')->header('Referrer-Policy', 'no-referrer');
+        $this->writeStateCookie($response, [
+            'p' => $provider->name(), 'state' => $state, 'verifier' => $verifier, 'nonce' => $nonce, 'link' => false,
+            'email_change' => ['email' => $email, 'user_id' => $user->id(),
+                'session' => PasskeyService::sessionBinding($this->session()), 'expires_at' => time() + self::STATE_TTL],
+        ]);
+        return $response;
+    }
+
     /** Provider callback: verify state, exchange the code, resolve the account. */
     public function callback(Request $request, array $params): Response
     {
@@ -72,8 +118,45 @@ final class OAuthController extends Controller
             return $this->failFlow('That sign-in attempt expired or was invalid. Please try again.');
         }
 
-        $code = $request->isPost() ? (string) $request->post('code', '') : (string) $request->query('code', '');
+        $emailController = null;
+        if (array_key_exists('email_change', $payload)) {
+            if (!is_array($payload['email_change'])) {
+                return $this->failFlow('That confirmation expired or was invalid. Please try again.');
+            }
+            $emailController = new EmailChangeController($this->container);
+            $emailController->gate();
+            $expires = $payload['email_change']['expires_at'] ?? null;
+            if (!is_int($expires) || $expires <= time() || $expires > time() + self::STATE_TTL) {
+                return $this->failFlow('That confirmation expired. Please start again from email settings.');
+            }
+            if (!isset($payload['email_change_code'])) {
+                $returnedCode = $request->str('code');
+                if ($returnedCode === '' || strlen($returnedCode) > 2048) {
+                    return $this->failFlow('Provider confirmation was cancelled or invalid. Your email is unchanged.');
+                }
+                $payload['email_change_code'] = $returnedCode;
+                return $this->emailChangeHandoff($payload, $provider->label(), true);
+            }
+            // Native same-origin POST restores the SameSite=Lax member cookie
+            // after Apple's cross-site form_post. GET never issues email here.
+            if (!$request->isPost()) {
+                return $this->emailChangeHandoff($payload, $provider->label(), false);
+            }
+            try {
+                $emailController->validateOAuthState($payload['email_change']);
+            } catch (ValidationException $error) {
+                $response = $emailController->formView($this->requireUser(), $error->errors, '', 422);
+                $this->forgetStateCookie($response);
+                return $response;
+            }
+        }
+
+        $code = $emailController !== null ? (string) $payload['email_change_code']
+            : ($request->isPost() ? (string) $request->post('code', '') : (string) $request->query('code', ''));
         if ($code === '') {
+            if ($emailController !== null) {
+                return $this->emailChangeFailure($emailController, $payload['email_change'], 'Provider confirmation was cancelled. Your email is unchanged.');
+            }
             return $this->failFlow('Sign-in was cancelled or failed.');
         }
 
@@ -81,7 +164,16 @@ final class OAuthController extends Controller
             $tokens = $provider->exchange($code, (string) ($payload['verifier'] ?? ''), $this->callbackUri($provider->name()));
             $identity = $provider->identity($tokens, (string) ($payload['nonce'] ?? ''));
         } catch (Throwable) {
+            if ($emailController !== null) {
+                return $this->emailChangeFailure($emailController, $payload['email_change'], 'We could not confirm your account with that provider. Please try again.');
+            }
             return $this->failFlow('We could not complete sign-in with that provider. Please try again.');
+        }
+
+        if ($emailController !== null) {
+            $response = $emailController->completeOAuth($request, $payload['email_change'], $identity);
+            $this->forgetStateCookie($response);
+            return $response;
         }
 
         $current = !empty($payload['link']) ? $this->currentUser() : null;
@@ -173,6 +265,27 @@ final class OAuthController extends Controller
     }
 
     // ---- internals --------------------------------------------------------
+
+    /** No exchange or account mutation occurs until the member submits this form. */
+    private function emailChangeHandoff(array $payload, string $label, bool $writeCookie): Response
+    {
+        $response = $this->noindex($this->view('account/email_change_provider_return', [
+            'provider_label' => $label,
+            'callback_path' => '/auth/' . $payload['p'] . '/callback',
+            'state' => $payload['state'],
+        ]))->header('Cache-Control', 'private, no-store')->header('Referrer-Policy', 'no-referrer');
+        if ($writeCookie) {
+            $this->writeStateCookie($response, $payload);
+        }
+        return $response;
+    }
+
+    private function emailChangeFailure(EmailChangeController $controller, array $state, string $message): Response
+    {
+        $response = $controller->formView($this->requireUser(), ['authentication' => $message], (string) $state['email'], 422);
+        $this->forgetStateCookie($response);
+        return $response;
+    }
 
     /** @return \App\Service\OAuth\OAuthProvider */
     private function provider(string $name)

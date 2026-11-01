@@ -45,14 +45,25 @@ final class RateLimitService
         $this->consume($policy, $request, $user, $subject);
     }
 
+    /** A destination ceiling shared across all accounts and IPs in the store. */
+    public function enforceGlobalSubject(string $policy, string $subject): void
+    {
+        $key = 'rl:' . $policy . ':s' . hash('sha256', strtolower(trim($subject)));
+        $this->consumeKey($policy, $key);
+    }
+
     private function consume(string $policy, Request $request, ?User $user, ?string $subject): void
+    {
+        $this->consumeKey($policy, $this->key($policy, $request, $user, $subject));
+    }
+
+    private function consumeKey(string $policy, string $key): void
     {
         $limits = $this->policy($policy);
         if ($limits === null) {
             return;
         }
         [$max, $decay] = $limits;
-        $key = $this->key($policy, $request, $user, $subject);
         if ($this->limiter->tooManyAttempts($key, $max)) {
             $wait = max(1, $this->limiter->availableIn($key));
             throw new HttpException(429, "You're doing that too quickly. Please wait " . human_duration($wait) . ' and try again.');

@@ -463,6 +463,12 @@ final class UserRepository
         );
     }
 
+    /** Call under the account lock after consuming an owner-bound verification. */
+    public function changeVerifiedEmail(int $id, string $email): void
+    {
+        $this->db->run('UPDATE users SET email = ?, email_verified_at = UTC_TIMESTAMP() WHERE id = ?', [$email, $id]);
+    }
+
     /** Set the OAuth-imported avatar source (USER §5.2); monogram remains the fallback when absent. */
     public function setAvatarSource(int $id, string $source): void
     {

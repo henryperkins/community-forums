@@ -1,0 +1,20 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.27
+Configuration: /home/ubuntu/.codex/worktrees/6033/community-forums/phpunit.xml
+
+F                                                                   1 / 1 (100%)
+
+Time: 00:00.089, Memory: 6.00 MB
+
+There was 1 failure:
+
+1) Tests\Integration\Core\AppEmailChangeTest::test_destination_throttle_is_shared_by_accounts_and_ips_without_storing_raw_email
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 429.
+
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Support/TestCase.php:423
+/home/ubuntu/.codex/worktrees/6033/community-forums/tests/Integration/Core/AppEmailChangeTest.php:197
+
+FAILURES!
+Tests: 1, Assertions: 4, Failures: 1.

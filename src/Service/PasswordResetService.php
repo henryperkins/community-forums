@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Config;
+use App\Core\Database;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Mail\MailException;
@@ -32,6 +33,7 @@ final class PasswordResetService
     private const TYPE = 'password_reset';
 
     public function __construct(
+        private Database $db,
         private UserRepository $users,
         private VerificationRepository $verifications,
         private SessionRepository $sessions,
@@ -56,21 +58,26 @@ final class PasswordResetService
         if ($row === null) {
             return;
         }
-        $userId = (int) $row['id'];
-
-        // One live link at a time: retire any earlier outstanding tokens.
-        $this->verifications->invalidateOutstanding($userId, self::TYPE);
-
         $rawToken = bin2hex(random_bytes(32));
         $ttl = $this->ttlSeconds();
-        $this->verifications->create(
-            $userId,
-            self::TYPE,
-            hash('sha256', $rawToken),
-            gmdate('Y-m-d H:i:s', time() + $ttl),
-        );
+        $recipient = $this->db->transaction(function () use ($row, $email, $rawToken, $ttl): ?string {
+            // Email confirmation locks the account before touching its tokens.
+            // Recheck the address after waiting for that same lock, rather than
+            // issuing recovery mail from an earlier contact lookup.
+            $fresh = $this->users->findForUpdate((int) $row['id']);
+            if ($fresh === null || strcasecmp((string) $fresh['email'], $email) !== 0) {
+                return null;
+            }
+            $userId = (int) $fresh['id'];
+            $this->verifications->invalidateOutstanding($userId, self::TYPE);
+            $this->verifications->create($userId, self::TYPE, hash('sha256', $rawToken),
+                gmdate('Y-m-d H:i:s', time() + $ttl), (string) $fresh['email']);
+            return (string) $fresh['email'];
+        });
 
-        $this->sendEmail((string) $row['email'], $rawToken, $ttl);
+        if ($recipient !== null) {
+            $this->sendEmail($recipient, $rawToken, $ttl);
+        }
     }
 
     /**
@@ -87,7 +94,14 @@ final class PasswordResetService
         if (strlen($rawToken) !== 64 || ctype_xdigit($rawToken) === false) {
             return null;
         }
-        return $this->verifications->findValid(hash('sha256', $rawToken), self::TYPE);
+        $row = $this->verifications->findValid(hash('sha256', $rawToken), self::TYPE);
+        if ($row !== null && $row['new_email'] !== null) {
+            $user = $this->users->find((int) $row['user_id']);
+            if ($user === null || strcasecmp((string) $user['email'], (string) $row['new_email']) !== 0) {
+                return null;
+            }
+        }
+        return $row;
     }
 
     /**
@@ -111,24 +125,23 @@ final class PasswordResetService
             throw new ValidationException($errors, []);
         }
 
-        $userId = (int) $verification['user_id'];
+        $passwordHash = $this->hasher->hash($password);
+        return $this->db->transaction(function () use ($verification, $passwordHash): User {
+            $userId = (int) $verification['user_id'];
+            $fresh = $this->users->findForUpdate($userId);
+            $token = $fresh === null ? null : $this->verifications->findValidForUpdate((string) $verification['token_hash'], self::TYPE, $userId);
+            if ($token === null || (int) $token['id'] !== (int) $verification['id']
+                || ($token['new_email'] !== null && strcasecmp((string) $token['new_email'], (string) $fresh['email']) !== 0)
+                || $this->verifications->consumeValid((int) $token['id'], $userId, self::TYPE, (string) $token['token_hash']) !== 1) {
+                throw new ValidationException(['password' => 'This reset link is invalid or has expired. Please request a new one.']);
+            }
 
-        // Consume first so a double-submit / link-reuse cannot reset twice.
-        if ($this->verifications->markUsed((int) $verification['id']) === 0) {
-            throw new ValidationException(['password' => 'This reset link has already been used. Please request a new one.'], []);
-        }
-
-        $this->users->updatePassword($userId, $this->hasher->hash($password));
-        $this->verifications->invalidateOutstanding($userId, self::TYPE);
-        // A reset implies possible compromise — drop every existing session so a
-        // hijacked one cannot survive the password change.
-        $this->sessions->revokeAllForUser($userId);
-
-        $user = $this->users->findEntity($userId);
-        if ($user === null) {
-            throw new \RuntimeException('Account vanished during password reset.');
-        }
-        return $user;
+            $this->users->updatePassword($userId, $passwordHash);
+            $this->verifications->invalidateOutstanding($userId, self::TYPE);
+            // A reset implies possible compromise — drop every existing session.
+            $this->sessions->revokeAllForUser($userId);
+            return User::fromRow(array_replace($fresh, ['password_hash' => $passwordHash]));
+        });
     }
 
     private function ttlSeconds(): int

@@ -67,6 +67,7 @@ return [
         'password_reset_ttl' => (int) Env::get('AUTH_PASSWORD_RESET_TTL', '3600'),
         // Email-verification link lifetime in seconds (default 24 hours).
         'email_verify_ttl' => (int) Env::get('AUTH_EMAIL_VERIFY_TTL', '86400'),
+        'email_change_ttl' => (int) Env::get('AUTH_EMAIL_CHANGE_TTL', '3600'),
     ],
 
     'mail' => [
@@ -268,6 +269,10 @@ return [
         'composer_preview' => [120, 600],
         'composer_suggest' => [120, 60],
         'password_reset' => [5, 3600],
+        'email_change' => [5, 3600],
+        'email_change_auth' => [10, 900],
+        'email_change_destination' => [3, 3600],
+        'email_change_confirm' => [10, 900],
         'mfa_login' => [5, 900],
         'mfa_account' => [8, 900],   // per-account 2FA-guess ceiling: bounds brute-force across freshly minted challenge tokens/IPs
 
