@@ -26,7 +26,7 @@ $dmDialogBeforeSubmit = function (): void {
 <div class="dm-compose-panel" data-dm-compose<?= empty($dmCompose['open']) ? ' hidden' : '' ?>>
     <div class="dm-dialog" aria-labelledby="dm-compose-title">
         <div class="dm-dialog-head">
-            <div><span class="eyebrow">Private counsel</span><h2 id="dm-compose-title">New message</h2></div>
+            <div><span class="eyebrow">Private conversation</span><h2 id="dm-compose-title">New message</h2></div>
             <a href="/messages" class="dm-dialog-close" data-close-compose aria-label="Close"><?= $this->partial('partials/icon', ['name' => 'x']) ?></a>
         </div>
         <?= $this->partial('partials/composer_shell', [

@@ -1,0 +1,23 @@
+✔ confirmed releases keep recent pages and lazy imports working, then retire the oldest release (7978.29784ms)
+✔ repeated local builds and source reverts preserve the deployed baseline (8208.42754ms)
+✔ recording a release requires the exact previously built version and never happens during checks (5864.683136ms)
+✔ a write failure preserves published assets and permits a normal retry (3582.545669ms)
+✔ a static-install failure preserves published assets and permits a normal retry (3975.394378ms)
+✔ a manifest-install failure preserves published assets and permits a normal retry (4322.498497ms)
+✔ a overlay-static-install failure preserves published assets and permits a normal retry (4188.698349ms)
+✔ overlayfs directory backups permit publication without losing deployed files (2507.700985ms)
+✔ fingerprinted CSS, scripts, lazy chunks and fonts bypass the container and are immutable (23.996837ms)
+✔ only the genuine current version makes source asset URLs immutable (1.6229ms)
+✔ conditional requests retain 304 and validators, and HEAD retains its empty body (1.164601ms)
+✔ range responses and their status survive without exposing Set-Cookie (0.58443ms)
+✔ missing/private assets and unsupported methods never fall through to PHP or an SPA (1.119098ms)
+✔ branding, package themes and application routes retain dynamic response semantics (0.612713ms)
+✔ published manifest verifies asset bytes and active Forum CSS avoids legacy font downloads (108.762415ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 40804.975832

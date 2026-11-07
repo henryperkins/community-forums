@@ -30,8 +30,8 @@ final class AppForumIndexDesignTest extends TestCase
         $this->assertStatus(200, $response);
         self::assertStringContainsString('class="forum-directory__hero"', $body);
         self::assertStringContainsString('data-directory-pane="boards"', $body);
-        self::assertStringContainsString('>Every board in the valley<', $body);
-        self::assertStringContainsString('Your own cross-board queue is the', $body);
+        self::assertStringContainsString('>Community boards<', $body);
+        self::assertStringContainsString('Follow your topics in the', $body);
         self::assertStringContainsString('href="/inbox"', $body);
         self::assertStringContainsString('href="/?pane=boards"', $body);
         self::assertStringContainsString('href="/?pane=tags"', $body);

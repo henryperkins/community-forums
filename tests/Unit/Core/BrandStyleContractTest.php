@@ -11,8 +11,8 @@ use PHPUnit\Framework\TestCase;
  * ADR 0054 increment 4: an exposed style control must reach every supported
  * component. These contracts read the shipped stylesheets: each vocabulary
  * value has a token rule for the shell and the sample, components read the
- * tokens rather than literals, the type pairings name only self-hosted
- * families, and every corner scale honours the Twelve-Max Rule.
+ * tokens rather than literals, the type pairings use local system fonts,
+ * and every corner scale remains modest and ordered.
  */
 final class BrandStyleContractTest extends TestCase
 {
@@ -25,7 +25,7 @@ final class BrandStyleContractTest extends TestCase
 
     public function test_every_vocabulary_value_has_a_shell_and_sample_rule(): void
     {
-        $app = self::css('app.css');
+        $app = self::css('forum-theme.css');
         $axes = ['data-rail' => BrandStyle::RAILS, 'data-type-pairing' => BrandStyle::TYPES, 'data-corners' => BrandStyle::CORNERS];
         foreach ($axes as $attribute => $vocabulary) {
             foreach (array_keys($vocabulary) as $value) {
@@ -50,64 +50,62 @@ final class BrandStyleContractTest extends TestCase
         self::assertStringContainsString('.board-rail { background: var(--rail-ground, var(--surface-sunken)); }', $app);
         self::assertStringContainsString(".board-rail-item:not(.is-active):hover,\n.board-rail-route:not(.is-active):hover { background: var(--rail-hover, var(--surface-page)); }", $app);
         // The layer's defaults are what the hooks fall back to.
-        $layer = self::css('imladris.css');
+        $layer = self::css('forum-base.css');
         self::assertMatchesRegularExpression('/\.board-rail \{[^}]*background: var\(--surface-sunken\);/', $layer);
         self::assertStringContainsString('.board-rail-item:hover { background: var(--surface-page);', $layer);
         // Every treatment keeps its hover on a different ground from the rail.
-        preg_match_all('/:root\[data-rail="([a-z]+)"\][^{]*\{ --rail-ground: var\((--[a-z-]+)\); --rail-hover: var\((--[a-z-]+)\); \}/', $app, $rails, PREG_SET_ORDER);
+        preg_match_all('/:root\[data-rail="([a-z]+)"\][^{]*\{ --rail-ground: var\((--[a-z-]+)\); --rail-hover: var\((--[a-z-]+)\); \}/', self::css('forum-theme.css'), $rails, PREG_SET_ORDER);
         self::assertCount(count(BrandStyle::RAILS), $rails);
         foreach ($rails as [, $rail, $ground, $hover]) {
             self::assertNotSame($ground, $hover, $rail);
         }
     }
 
-    public function test_type_pairings_name_only_self_hosted_serif_families(): void
+    public function test_type_pairings_preserve_stored_keys_with_system_fonts(): void
     {
-        preg_match_all('/@font-face \{ font-family: "([^"]+)"/', self::css('imladris.css'), $faces);
-        $shipped = array_values(array_unique($faces[1]));
-        self::assertEqualsCanonicalizing(['Cormorant Garamond', 'EB Garamond', 'Marcellus', 'JetBrains Mono'], $shipped);
-        $app = self::css('app.css');
-        foreach (array_keys(BrandStyle::TYPES) as $pairing) {
-            self::assertSame(1, preg_match('/:root\[data-type-pairing="' . $pairing . '"\][^{]*\{\s*--font-display: "([^"]+)"([^;]*);/', $app, $match), $pairing);
-            self::assertContains($match[1], $shipped, "$pairing leads with a self-hosted family");
-            self::assertStringNotContainsString('sans-serif', $match[2], "$pairing keeps the All-Serif Rule");
-            self::assertStringEndsWith('serif', trim($match[2]), "$pairing keeps a serif fallback");
+        $theme = self::css('forum-theme.css');
+        self::assertStringNotContainsString('@font-face', $theme);
+        self::assertStringContainsString('--font-ui: system-ui,', $theme);
+        self::assertStringContainsString('--font-body: var(--font-ui);', $theme);
+        $expected = [
+            'imladris' => 'var(--font-ui)',
+            'book' => 'ui-serif, Georgia, serif',
+            'lapidary' => 'var(--font-ui)',
+        ];
+        self::assertSame(array_keys(BrandStyle::TYPES), array_keys($expected));
+        foreach ($expected as $pairing => $font) {
+            self::assertSame(1, preg_match('/:root\[data-type-pairing="' . $pairing . '"\][^{]*\{\s*--font-display: ([^;]+);/', $theme, $match), $pairing);
+            self::assertSame($font, $match[1], $pairing . ' retains its system-font presentation');
         }
-        // Marcellus ships one weight: its pairing never synthesizes another.
-        self::assertMatchesRegularExpression('/data-type-pairing="lapidary"\][^{]*\{[^}]*font-synthesis-weight: none;/', $app);
     }
 
     public function test_components_read_type_tokens_not_literal_families(): void
     {
-        foreach (['app.css', 'imladris.css'] as $file) {
+        foreach (['app.css', 'forum-base.css', 'forum-theme.css'] as $file) {
             $css = preg_replace('/@font-face \{[^}]*\}/', '', self::css($file));
             preg_match_all('/(?<![-\w])font-family:(?!\s*(?:var\(|inherit|initial|unset|revert-layer|revert))\s*([^;}]+)/', (string) $css, $literals);
             self::assertSame([], $literals[1], "$file sets literal font families outside @font-face");
         }
     }
 
-    public function test_every_corner_scale_honours_the_twelve_max_rule(): void
+    public function test_every_corner_scale_is_ordered_and_bounded(): void
     {
-        $app = self::css('app.css');
+        $theme = self::css('forum-theme.css');
         foreach (array_keys(BrandStyle::CORNERS) as $scale) {
-            self::assertSame(1, preg_match('/:root\[data-corners="' . $scale . '"\][^{]*\{ --radius-sm: (\d+)px; --radius-md: (\d+)px; --radius-lg: (\d+)px; --radius-xl: (\d+)px; \}/', $app, $radii), $scale);
+            self::assertSame(1, preg_match('/:root\[data-corners="' . $scale . '"\][^{]*\{ --radius-sm: (\d+)px; --radius-md: (\d+)px; --radius-lg: (\d+)px; --radius-xl: (\d+)px; \}/', $theme, $radii), $scale);
             [, $sm, $md, $lg, $xl] = array_map('intval', $radii);
-            self::assertTrue($sm <= $md && $md <= $lg && $lg <= $xl, "$scale is ordered");
-            self::assertLessThanOrEqual(12, $lg, "$scale content containers");
-            self::assertLessThanOrEqual(20, $xl, "$scale large containers");
+            self::assertTrue($sm <= $md && $md <= $lg && $lg <= $xl, $scale . ' is ordered');
+            self::assertLessThanOrEqual(12, $xl, $scale . ' containers stay modest');
         }
-        // The standard scale is exactly the layer's own, so it changes nothing.
-        $layer = self::css('imladris.css');
-        foreach (['sm' => 4, 'md' => 7, 'lg' => 12, 'xl' => 20] as $step => $px) {
-            self::assertMatchesRegularExpression('/--radius-' . $step . ':\s+' . $px . 'px;/', $layer);
+        foreach (['sm' => 4, 'md' => 6, 'lg' => 8, 'xl' => 12] as $step => $px) {
+            self::assertMatchesRegularExpression('/--radius-' . $step . ':\s+' . $px . 'px;/', $theme);
         }
-        // Compact cards follow the scale, at 6px with the standard corners.
-        self::assertStringContainsString('[data-density="compact"] { --radius: calc(var(--radius-md) - 1px); }', $app);
+        self::assertStringContainsString('[data-density="compact"] { --radius: calc(var(--radius-md) - 1px); }', self::css('app.css'));
     }
 
     public function test_components_read_radius_tokens_apart_from_hairline_details_and_pills(): void
     {
-        foreach (['app.css', 'imladris.css'] as $file) {
+        foreach (['app.css', 'forum-base.css', 'forum-theme.css'] as $file) {
             preg_match_all('/border-radius:\s*([0-9.]+)px/', self::css($file), $literals);
             foreach ($literals[1] as $px) {
                 // Sub-4px detail radii (focus rings, marks, thumbnail strokes)

@@ -18,7 +18,7 @@ $orderCopy = $order === 'newest' ? 'newest first' : 'by relevance';
 <?php if (($current_user ?? null) !== null): ?>
 <?php $this->start('subheader_leading'); ?>
 <div class="page-toolbar search-toolbar">
-    <h1 class="forum-page-title">Search the council</h1>
+    <h1 class="forum-page-title">Search forums</h1>
     <nav class="page-toolbar-controls" aria-label="Search view">
         <details class="inbox-menu" name="inbox-controls" data-inbox-menu>
             <summary aria-label="Show: <?= $e($scopeLabels[$scope]) ?>" title="Show: <?= $e($scopeLabels[$scope]) ?>"><span class="toolbar-control-prefix">Show</span><span class="toolbar-control-value"><?= $e($scopeLabels[$scope]) ?></span><?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?></summary>
@@ -42,12 +42,12 @@ $orderCopy = $order === 'newest' ? 'newest first' : 'by relevance';
 <?php endif; ?>
 <div class="search-surface" data-search-scope="<?= $e($scope) ?>" data-search-order="<?= $e($order) ?>">
     <div class="search-column">
-        <?php if (($current_user ?? null) === null): ?><h1>Search the council</h1><?php endif; ?>
+        <?php if (($current_user ?? null) === null): ?><h1>Search forums</h1><?php endif; ?>
 
-        <form class="search-form" method="get" action="/search" role="search" aria-label="Search the council">
+        <form class="search-form" method="get" action="/search" role="search" aria-label="Search forums">
             <div class="search-input-row">
                 <input class="search-query-well" type="search" enterkeyhint="search" name="q" value="<?= $e($query) ?>"
-                       aria-label="Search the council" aria-describedby="search-query-help<?= $error !== null ? ' search-query-error' : '' ?>"
+                       aria-label="Search forums" aria-describedby="search-query-help<?= $error !== null ? ' search-query-error' : '' ?>"
                        <?= $error !== null ? 'aria-invalid="true" ' : '' ?>required minlength="3"
                        placeholder="A phrase, a title, a member…" autofocus>
                 <button class="btn" type="submit">Search</button>

@@ -10,7 +10,7 @@ use Tests\Support\TestCase;
  * Top-contributors (leaderboard) visual-fidelity pass against the Imladris UI kit
  * (ui_kits/retroboards Leaderboard). Asserts observable render behaviour:
  *  - regard uses the supplied Imladris Commend Star path, never a text symbol;
- *  - the header carries the "The council" eyebrow and a sentence-case title;
+ *  - the header carries the "Community" eyebrow and a sentence-case title;
  *  - the top three render as identity cards with a "@handle · title" sub-line;
  *  - lower ranks render as compact rows with the smaller mono regard.
  */
@@ -53,7 +53,7 @@ final class AppLeaderboardFidelityTest extends TestCase
         $res = $this->get('/leaderboard');
         $this->assertStatus(200, $res);
         $this->assertSeeText($res, 'eyebrow');
-        $this->assertSeeText($res, 'The council');
+        $this->assertSeeText($res, 'Community');
         $this->assertSeeText($res, 'Top contributors');
         $this->assertDontSeeText($res, 'Top Contributors');
     }

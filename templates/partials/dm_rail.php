@@ -51,7 +51,7 @@ $railTitleErrId = 'dm-rename-group-error-' . $railId;
             <div class="dm-rail-id">
                 <?= $this->partial('partials/monogram', ['name' => $railTitle, 'username' => 'group-' . $railId, 'gilt' => true]) ?>
                 <h2 class="dm-rail-name"><?= $e($railTitle) ?></h2>
-                <span class="dm-rail-handle"><?= $activeCount ?> in counsel</span>
+                <span class="dm-rail-handle"><?= $activeCount ?> participants</span>
             </div>
 
             <div class="dm-rail-sec">
@@ -172,7 +172,7 @@ $railTitleErrId = 'dm-rename-group-error-' . $railId;
                         <li><span class="k">Joined</span><span class="v"><?= $e(human_datetime($other['created_at'])) ?></span></li>
                     <?php endif; ?>
                     <?php if ($other !== null && isset($other['reputation'])): ?>
-                        <li><span class="k">Regard</span><span class="v"><?= (int) $other['reputation'] ?></span></li>
+                        <li><span class="k">Reputation</span><span class="v"><?= (int) $other['reputation'] ?></span></li>
                     <?php endif; ?>
                 </ul>
             </div>

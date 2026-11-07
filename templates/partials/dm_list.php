@@ -30,7 +30,7 @@ $dmRowQuery = $dmRowParams !== [] ? '?' . http_build_query($dmRowParams) : '';
 <header class="dm-listpane-head page-toolbar">
     <div class="dm-listpane-top">
         <span>
-            <span class="eyebrow dm-lock-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span>
+            <span class="eyebrow dm-lock-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private conversation</span>
             <<?= $dmHeadingTag ?> class="dm-listpane-title">Messages</<?= $dmHeadingTag ?>>
         </span>
     </div>

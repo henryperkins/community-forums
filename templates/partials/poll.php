@@ -50,7 +50,7 @@ $pollMode = (string) ($poll['mode'] ?? 'single') === 'multiple' ? 'choose any' :
                 </label>
             <?php endforeach; ?>
             <div class="poll-foot">
-                <span class="poll-meta">Open to the council</span>
+                <span class="poll-meta">Open to members</span>
                 <button class="btn btn-small" type="submit">Vote</button>
             </div>
         </form>

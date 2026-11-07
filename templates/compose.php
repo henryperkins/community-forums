@@ -20,7 +20,7 @@ $composeWrapper = function () use ($boards, $selected_board, $draft_board_missin
         <span>Title</span>
         <input type="text" name="title" class="input input-engraved compose-title-input" data-compose-title
                maxlength="160" minlength="3" value="<?= $e($old['title'] ?? '') ?>"
-               placeholder="What should the council consider?"<?= field_attrs($errors, 'title') ?> required>
+               placeholder="What would you like to discuss?"<?= field_attrs($errors, 'title') ?> required>
     </label>
     <?= field_error($errors, 'title') ?>
 
@@ -49,7 +49,7 @@ $composeWrapper = function () use ($boards, $selected_board, $draft_board_missin
     <div class="compose-column">
         <p class="compose-eyebrow" data-compose-board-name><?= $draft_board_missing ? 'Choose a board' : 'Posting to ' . $e($composeSelectedName) ?></p>
         <?= $this->partial('partials/page_heading', ['heading' => 'Open a topic']) ?>
-        <p class="compose-lede">Say what you want the council to consider, and what would change your mind.</p>
+        <p class="compose-lede">Describe your question or idea and include any details that will help others respond.</p>
 
         <?= $this->partial('partials/composer_shell', [
             'action' => '/threads',

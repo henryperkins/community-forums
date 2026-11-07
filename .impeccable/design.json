@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-25T17:29:45.576568Z",
-  "title": "Design System: RetroBoards — Imladris",
+  "generatedAt": "2026-11-07T00:00:00Z",
+  "title": "Design System: Forum",
   "extensions": {
     "navigationChrome": {
       "memberRail": "Category boards, personal folders and saved feeds, with public presence in the footer. Folder and category board rows share active, unread and visibility state; direct messages and Inbox filters stay on their own surfaces.",
@@ -9,264 +9,78 @@
       "operatorAreas": "Horizontal area links above 860px; a native disclosure headed by the current area at 860px and below. Both presentations use the same ordered, role- and flag-gated destinations."
     },
     "colorMeta": {
-      "green-700": {
+      "action": {
         "role": "primary",
-        "displayName": "Evergreen",
+        "displayName": "Blue",
         "tonalRamp": [
-          "#1C2E24",
-          "#24402F",
-          "#2E4A3A",
-          "#3A5C49",
-          "#4E7459",
-          "#6E9479",
-          "#BCD0BF",
-          "#DCE8DD",
-          "#EDF3ED"
+          "#1e3a8a",
+          "#1e40af",
+          "#1d4ed8",
+          "#93c5fd",
+          "#bfdbfe",
+          "#e8efff"
         ]
       },
-      "gold-500": {
-        "role": "secondary",
-        "displayName": "Mallorn Gold",
-        "tonalRamp": [
-          "#6B5120",
-          "#9A7530",
-          "#B08A3A",
-          "#C29A44",
-          "#D2B062",
-          "#EAD9A8",
-          "#F4EBCF"
-        ]
-      },
-      "river-500": {
-        "role": "tertiary",
-        "displayName": "Bruinen Blue",
-        "tonalRamp": [
-          "#1E3040",
-          "#2C4D63",
-          "#3F6E89",
-          "#5E8CA6",
-          "#BAD2DF",
-          "#DCE9F0"
-        ]
-      },
-      "parchment-50": {
+      "neutral": {
         "role": "neutral",
-        "displayName": "Parchment",
-        "tonalRamp": [
-          "#DED2B8",
-          "#ECE4D2",
-          "#F5EFE1",
-          "#FAF6EC"
-        ]
-      },
-      "ink-900": {
-        "role": "neutral",
-        "displayName": "Warm Ink",
-        "tonalRamp": [
-          "#1B231D",
-          "#313B33",
-          "#515C52",
-          "#5C685D",
-          "#94A095"
-        ]
-      },
-      "mist-100": {
-        "role": "neutral",
-        "displayName": "Mist",
-        "tonalRamp": [
-          "#DCE3DD",
-          "#EEF1ED"
-        ]
-      },
-      "twilight-900": {
-        "role": "neutral",
-        "displayName": "Twilight",
-        "tonalRamp": [
-          "#161D24",
-          "#1E2730",
-          "#283440"
-        ]
-      },
-      "leaf": {
-        "role": "primary",
-        "displayName": "Leaf",
-        "tonalRamp": [
-          "#1C2E24",
-          "#24402F",
-          "#2E4A3A",
-          "#3A5C49",
-          "#4E7459",
-          "#6E9479",
-          "#BCD0BF",
-          "#DCE8DD",
-          "#EDF3ED"
-        ]
-      },
-      "slate": {
-        "role": "tertiary",
         "displayName": "Slate",
         "tonalRamp": [
-          "#1E3040",
-          "#2C4D63",
-          "#3F6E89",
-          "#5E8CA6",
-          "#BAD2DF",
-          "#DCE9F0"
-        ]
-      },
-      "amber": {
-        "role": "secondary",
-        "displayName": "Amber",
-        "tonalRamp": [
-          "oklch(15% 0.11691 76.30)",
-          "oklch(25% 0.11691 76.30)",
-          "oklch(37% 0.11691 76.30)",
-          "oklch(49% 0.11691 76.30)",
-          "oklch(61% 0.11691 76.30)",
-          "oklch(73% 0.11691 76.30)",
-          "oklch(85% 0.11691 76.30)",
-          "oklch(95% 0.11691 76.30)"
-        ]
-      },
-      "rust": {
-        "role": "tertiary",
-        "displayName": "Rust",
-        "tonalRamp": [
-          "oklch(15% 0.11543 36.57)",
-          "oklch(25% 0.11543 36.57)",
-          "oklch(37% 0.11543 36.57)",
-          "oklch(49% 0.11543 36.57)",
-          "oklch(61% 0.11543 36.57)",
-          "oklch(73% 0.11543 36.57)",
-          "oklch(85% 0.11543 36.57)",
-          "oklch(95% 0.11543 36.57)"
+          "#111827",
+          "#172b4d",
+          "#243247",
+          "#475569",
+          "#64748b",
+          "#cbd5e1",
+          "#eef2f6",
+          "#f8fafc",
+          "#ffffff"
         ]
       }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Display",
-        "purpose": "Page titles (h1); medium-weight display serif."
+      "body": {
+        "displayName": "Interface",
+        "purpose": "System sans-serif, 1rem and unitless 1.6 leading."
       },
-      "headline": {
-        "displayName": "Headline",
-        "purpose": "Section headings (h2). The inbox has its own 1.85rem heading token."
+      "prose": {
+        "displayName": "Discussion prose",
+        "purpose": "System sans-serif, 1.125rem, unitless 1.65 leading and 65ch measure."
       },
       "title": {
-        "displayName": "Title",
-        "purpose": "Subheadings (h3) and board names."
-      },
-      "body": {
-        "displayName": "Body",
-        "purpose": "Post prose at 1.62 leading. Reading measures are documented separately."
-      },
-      "label": {
-        "displayName": "Label",
-        "purpose": "Tracked Marcellus eyebrows; case and leading depend on the component."
-      },
-      "mono": {
-        "displayName": "Mono",
-        "purpose": "Small timestamps and counts; numeric columns use tabular numerals."
-      },
-      "body-ui": {
-        "displayName": "Body Ui",
-        "purpose": "Shell text and ordinary fields at 1.6 leading."
-      },
-      "button-label": {
-        "displayName": "Button Label",
-        "purpose": "Sentence-case action labels at 0.9rem and 0.03em tracking."
-      },
-      "chip-label": {
-        "displayName": "Chip Label",
-        "purpose": "The existing 0.62rem chip default. This legacy value is below the new small-label scale floor."
-      },
-      "small": {
-        "displayName": "Small",
-        "purpose": "Supporting body copy from --text-sm."
-      },
-      "fine": {
-        "displayName": "Fine",
-        "purpose": "Helper prose from --text-fine."
+        "displayName": "Page title",
+        "purpose": "System sans-serif, 1.875rem and weight 700."
       },
       "meta": {
-        "displayName": "Meta",
-        "purpose": "Structural metadata from --text-meta."
+        "displayName": "Metadata",
+        "purpose": "At least .875rem at the default scale, with ordinary-text contrast."
       },
-      "chip": {
-        "displayName": "Chip",
-        "purpose": "The 0.7rem --text-chip floor for new small labels; older overrides remain."
-      },
-      "tab-label": {
-        "displayName": "Tab Label",
-        "purpose": "Ruled section navigation at the regular Marcellus weight."
-      },
-      "avatar-label": {
-        "displayName": "Avatar Label",
-        "purpose": "The monogram fallback at its delivered 400 — Marcellus ships one weight — in a frame that runs from 21px to 84px by context."
+      "mono": {
+        "displayName": "Code",
+        "purpose": "System monospace; local scrolling for long code."
       }
     },
     "shadows": [
       {
         "name": "shadow-xs",
-        "value": "0 1px 2px rgba(27,35,29,.06)",
-        "purpose": "Shallow foundation elevation, retained by ordinary cards, buttons and posts; ruled application topic rows use no shadow."
-      },
-      {
-        "name": "shadow-sm",
-        "value": "0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05)",
-        "purpose": "Selected row, accepted answer, switch knob."
-      },
-      {
-        "name": "shadow-md",
-        "value": "0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05)",
-        "purpose": "Available foundation hover elevation; the application topic list overrides it with a tonal wash."
+        "value": "0 1px 2px rgb(15 23 42 / .06)",
+        "purpose": "Shallow component elevation."
       },
       {
         "name": "shadow-lg",
-        "value": "0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06)",
-        "purpose": "Popovers and menus, and the member profile's identity cover — the one resting surface that wears it, a hero plate (§5.4)."
-      },
-      {
-        "name": "shadow-xl",
-        "value": "0 24px 60px rgba(22,29,36,.18), 0 8px 18px rgba(22,29,36,.08)",
-        "purpose": "Modal dialogs only."
-      },
-      {
-        "name": "shadow-inset",
-        "value": "inset 0 1px 2px rgba(27,35,29,.07)",
-        "purpose": "Fields and tracks — something pressed into the page."
-      },
-      {
-        "name": "gilt",
-        "value": "inset 0 0 0 1px rgba(194,154,68,.38)",
-        "purpose": "A thin gold inner ring marking a precious avatar: OP, accepted answer, profile, leaderboard top three."
-      },
-      {
-        "name": "focus-ring",
-        "value": "var(--shadow-inset), 0 0 0 3px var(--focus-ring)",
-        "purpose": "The ordinary input focus halo over its inset, paired with a 2px semantic action-colour outline. The gold halo flips in twilight."
+        "value": "0 12px 32px rgb(15 23 42 / .16)",
+        "purpose": "Overlay elevation; focus uses a separate outline."
       }
     ],
     "motion": [
       {
-        "name": "ease-calm",
-        "value": "cubic-bezier(.22,.61,.36,1)",
-        "purpose": "The shared calm easing for state transitions. Nothing bounces in Rivendell."
-      },
-      {
         "name": "dur-fast",
-        "value": "140ms",
-        "purpose": "Hover and press feedback on rows, buttons and tabs."
+        "value": "100ms",
+        "purpose": "Short interaction feedback; reduced-motion preferences suppress transitions."
       },
       {
         "name": "dur-base",
-        "value": "240ms",
-        "purpose": "State transitions with travel — switches, drawers, disclosure."
-      },
-      {
-        "name": "dur-slow",
-        "value": "420ms",
-        "purpose": "Reserved for the largest transitions. All three collapse to 0.001ms under prefers-reduced-motion."
+        "value": "160ms",
+        "purpose": "Disclosure transitions."
       }
     ],
     "breakpoints": [
@@ -302,205 +116,46 @@
   },
   "components": [
     {
-      "name": "Primary Button",
+      "name": "Primary button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The application action: evergreen by day, gold in twilight, with a hover that deepens its own fill.",
-      "html": "<button type=\"button\" class=\"ds-btn-primary\">Save changes</button>",
-      "css": ".ds-btn-primary { display: inline-block; background: var(--accent, #2E4A3A); color: var(--accent-contrast, #FAF6EC); border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-primary:not(:disabled):hover { background: color-mix(in srgb, var(--accent, #2E4A3A) 82%, #000); } .ds-btn-primary:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-primary { transition-duration: .001ms !important; } }"
+      "description": "Explicit action with a readable filled state and 44px target.",
+      "html": "<button class=\"btn btn-primary\" type=\"button\">Save changes</button>",
+      "css": ".btn-primary { background: var(--accent); color: var(--accent-contrast); min-height: 44px; border-radius: var(--radius-md); }"
     },
     {
-      "name": "Secondary Button",
-      "kind": "button",
-      "refersTo": "button-secondary",
-      "description": "The quiet outlined companion, following raised and sunken semantic surfaces.",
-      "html": "<button type=\"button\" class=\"ds-btn-secondary\">Cancel</button>",
-      "css": ".ds-btn-secondary { display: inline-block; background: var(--surface-raised, #FAF6EC); color: var(--text, #1B231D); border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: none; transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-secondary:not(:disabled):hover { background: var(--surface-sunken, #ECE4D2); border-color: var(--border-strong, #94A095); } .ds-btn-secondary:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-secondary { transition-duration: .001ms !important; } }"
-    },
-    {
-      "name": "Ghost Button",
-      "kind": "button",
-      "refersTo": "button-ghost",
-      "description": "A quiet action occupying the same box as its outlined siblings.",
-      "html": "<button type=\"button\" class=\"ds-btn-ghost\">View details</button>",
-      "css": ".ds-btn-ghost { display: inline-block; background: transparent; color: var(--text-body, #313B33); border: 1.5px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: none; transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-ghost:not(:disabled):hover { background: var(--surface-sunken, #ECE4D2); } .ds-btn-ghost:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-ghost:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-ghost { transition-duration: .001ms !important; } }"
-    },
-    {
-      "name": "Accent Button",
-      "kind": "button",
-      "refersTo": "button-accent",
-      "description": "The existing gold action variant, reserved for a single established moment of emphasis.",
-      "html": "<button type=\"button\" class=\"ds-btn-accent\">Post topic</button>",
-      "css": ".ds-btn-accent { display: inline-block; background: var(--gold-500, #C29A44); color: var(--ink-900, #1B231D); border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-accent:not(:disabled):hover { background: var(--gold-600, #B08A3A); } .ds-btn-accent:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-accent:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-accent:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-accent { transition-duration: .001ms !important; } }"
-    },
-    {
-      "name": "Danger Button",
-      "kind": "button",
-      "refersTo": "button-danger",
-      "description": "The existing .btn.danger treatment: a fixed rust fill and white ink, including twilight.",
-      "html": "<button type=\"button\" class=\"ds-btn-danger\">Delete topic</button>",
-      "css": ".ds-btn-danger { display: inline-block; background: var(--rust, #9C4A33); color: #FFFFFF; border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; font-weight: 400; letter-spacing: .03em; cursor: pointer; text-align: center; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), box-shadow var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)), transform var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-btn-danger:not(:disabled):hover { background: color-mix(in srgb, var(--rust, #9C4A33) 82%, #000); } .ds-btn-danger:not(:disabled):active { transform: translateY(.5px) scale(.995); } .ds-btn-danger:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } .ds-btn-danger:disabled { opacity: .5; cursor: not-allowed; } @media (prefers-reduced-motion: reduce) { .ds-btn-danger { transition-duration: .001ms !important; } }"
-    },
-    {
-      "name": "Status Chip",
-      "kind": "chip",
-      "refersTo": "chip-status",
-      "description": "The solved status: a word plus its semantic wash and ink; the legacy default remains 0.62rem.",
-      "html": "<span class=\"ds-chip\">Solved</span>",
-      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .62rem; font-weight: 400; line-height: 1; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--radius-pill, 999px); color: var(--on-done, #24402F); background: var(--surface-done, #EDF3ED); border: 1px solid var(--green-200, #BCD0BF); vertical-align: middle; }"
-    },
-    {
-      "name": "Text Input",
-      "kind": "input",
-      "refersTo": "input",
-      "description": "The ordinary field frame, preserving the application border-box sizing and inset under keyboard focus. Engraved fields are a separate override.",
-      "html": "<input class=\"ds-input\" type=\"text\" aria-label=\"Topic title\" placeholder=\"Topic title\">",
-      "css": ".ds-input { box-sizing: border-box; width: 100%; padding: 9px 11px; border: 1.5px solid var(--border-soft, #DCE3DD); border-radius: var(--radius-md, 7px); font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: var(--text-size-body, 1.0625rem); line-height: 1.6; color: var(--text, #1B231D); background: var(--surface-raised, #FAF6EC); box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)); } .ds-input::placeholder { color: var(--text-faint, #5C685D); } .ds-input:focus { border-color: var(--gold-400, #D2B062); outline: 2px solid var(--accent, #2E4A3A); outline-offset: 1px; box-shadow: var(--shadow-inset, inset 0 1px 2px rgba(27,35,29,.07)), 0 0 0 3px var(--focus-ring, rgba(194,154,68,.7)); } .ds-input[aria-invalid=\"true\"] { border-color: var(--danger, #9C4A33); }"
-    },
-    {
-      "name": "Ruled Section Navigation",
-      "kind": "nav",
-      "refersTo": "tab-ruled-active",
-      "description": "Generic application ruled tabs: regular Marcellus, a gold active underline and inherited action-colour link ink; scoped pages can override that compatibility treatment.",
-      "html": "<nav class=\"ds-tabs\" aria-label=\"Community sections\"><a class=\"ds-tab ds-tab-active\" href=\"#boards\" aria-current=\"page\">Boards</a><a class=\"ds-tab\" href=\"#tags\">Tags</a><a class=\"ds-tab\" href=\"#notifications\">Notifications</a><a class=\"ds-tab\" href=\"#connections\">Connections</a></nav>",
-      "css": ".ds-tabs { display: flex; flex-wrap: wrap; gap: 4px; box-shadow: inset 0 -1px 0 var(--border-hair, #DED2B8); } .ds-tab { font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .8rem; font-weight: 400; letter-spacing: .03em; color: var(--accent, #2E4A3A); padding: 8px 14px; text-decoration: none; } .ds-tab:hover { color: var(--accent, #2E4A3A); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: var(--gold-500, #C29A44); } .ds-tab-active { color: var(--accent, #2E4A3A); box-shadow: inset 0 -2px 0 var(--accent-2, #C29A44); } .ds-tab:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; }"
-    },
-    {
-      "name": "Application Card",
-      "kind": "card",
-      "refersTo": "card",
-      "description": "The generic application card uses the compatibility surface and preference-aware 7px radius, retaining the foundation shadow.",
-      "html": "<section class=\"ds-card\"><h3 class=\"ds-card-title\">General Discussion</h3><p class=\"ds-card-copy\">Talk about anything here.</p></section>",
-      "css": ".ds-card { background: var(--surface, #FAF6EC); color: var(--text, #1B231D); border: 1px solid var(--border, #DED2B8); border-radius: var(--radius, 7px); padding: 18px; max-width: 100%; overflow-x: auto; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); } .ds-card-title { font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif); font-size: 1.375rem; font-weight: 500; line-height: 1.15; letter-spacing: -.01em; margin: 0 0 .4em; } .ds-card-copy { font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: var(--text-size-body, 1.0625rem); line-height: 1.6; margin: 0; }"
-    },
-    {
-      "name": "Application Topic Row",
+      "name": "Discussion prose",
       "kind": "custom",
-      "refersTo": "thread-row",
-      "description": "The default presentation: a flat ruled row with a 3px status rule, the unread dot, a 44px monogram, status chips, the 1.2rem title and the Marcellus meta line. The board presentation gives status and activity their own columns; the queue adds a one-line excerpt.",
-      "html": "<article class=\"ds-row ds-row--unread\"><span class=\"ds-row-unread-dot\" role=\"img\" aria-label=\"Unread\"></span><span class=\"ds-row-avatar\" aria-hidden=\"true\">GA</span><div class=\"ds-row-main\"><div class=\"ds-row-chips\"><span class=\"ds-row-chip\">Solved</span></div><a class=\"ds-row-title\" href=\"#topic\">A road worth keeping</a><span class=\"ds-row-meta\"><span>by Gandalf</span><a class=\"ds-row-board\" href=\"#board\"># General Discussion</a><span>6 replies</span><time datetime=\"2026-10-19T18:00:00Z\">3h ago</time></span></div></article>",
-      "css": ".ds-row { position: relative; display: flex; gap: 13px; align-items: flex-start; padding: 14px 16px; border: 0; border-radius: var(--radius-lg, 12px); background: none; box-shadow: none; overflow: hidden; transition: background var(--dur-fast, 140ms) var(--ease-calm, cubic-bezier(.22,.61,.36,1)); } .ds-row::before { content: \"\"; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--leaf, #4E7459); } .ds-row:hover { background: var(--surface-sunken, #ECE4D2); } .ds-row-unread-dot { display: inline-block; flex: 0 0 auto; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--accent-2, #C29A44); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-2, #C29A44) 22%, transparent); } .ds-row-avatar { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .92rem; font-weight: 400; letter-spacing: .02em; background: var(--green-100, #DCE8DD); color: var(--green-800, #24402F); } .ds-row-main { min-width: 0; flex: 1; } .ds-row-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; } .ds-row-chips:empty { display: none; } .ds-row-chip { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .62rem; line-height: 1; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--radius-pill, 999px); border: 1px solid var(--green-200, #BCD0BF); background: var(--surface-done, #EDF3ED); color: var(--on-done, #24402F); } .ds-row-title { display: block; font-family: var(--font-display, \"Cormorant Garamond\", \"Hoefler Text\", Garamond, Georgia, \"Times New Roman\", serif); font-size: var(--text-thread, 1.2rem); font-weight: var(--weight-medium, 500); line-height: 1.2; letter-spacing: -.01em; color: var(--text-strong, #1B231D); text-decoration: none; } .ds-row--unread .ds-row-title { font-weight: var(--weight-semibold, 600); } .ds-row-title:hover { color: var(--brand, #2E4A3A); } .ds-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .75rem; letter-spacing: .02em; color: var(--text-faint, #5C685D); } .ds-row-board { color: var(--gold-ink, #7E5F22); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; } .ds-row a:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-row { transition-duration: .001ms !important; } }"
-    },
-    {
-      "name": "Confirm Step",
-      "kind": "custom",
-      "description": "A two-step confirmation for an action one click should not take: a native details summary names the action, and the open step says what follows before the real submit. No modal, no JavaScript; the note is linked to the commit by aria-describedby and an irreversible commit wears the danger button.",
-      "html": "<details class=\"ds-confirm\" open><summary>Leave group</summary><form class=\"ds-confirm-step\" method=\"post\"><p class=\"ds-confirm-note\" id=\"ds-confirm-note\">You will stop receiving this group’s letters. The owner can add you again.</p><button class=\"ds-confirm-commit\" type=\"submit\" aria-describedby=\"ds-confirm-note\">Leave group</button></form></details>",
-      "css": ".ds-confirm { display: inline-block; max-width: 34ch; } .ds-confirm > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; list-style: none; cursor: pointer; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; letter-spacing: .03em; color: var(--text-body, #313B33); } .ds-confirm > summary::-webkit-details-marker { display: none; } .ds-confirm > summary:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; border-radius: var(--radius-sm, 4px); } .ds-confirm[open] > summary { color: var(--text-faint, #5C685D); } .ds-confirm-step { display: grid; gap: var(--space-2, 8px); justify-items: start; padding: var(--space-2, 8px); } .ds-confirm-note { margin: 0; font-family: var(--font-body, \"EB Garamond\", \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif); font-size: .86rem; line-height: 1.45; color: var(--text-body, #313B33); text-wrap: pretty; } .ds-confirm-commit { display: inline-block; background: var(--rust, #9C4A33); color: #FFFFFF; border: 1px solid transparent; border-radius: var(--radius-md, 7px); padding: 9px 17px; font-family: var(--font-label, Marcellus, Optima, \"Palatino Linotype\", Palatino, \"Cormorant Garamond\", serif); font-size: .9rem; letter-spacing: .03em; cursor: pointer; box-shadow: var(--shadow-xs, 0 1px 2px rgba(27,35,29,.06)); } .ds-confirm-commit:hover { background: color-mix(in srgb, var(--rust, #9C4A33) 82%, #000); } .ds-confirm-commit:focus-visible { outline: 2px solid var(--accent, #2E4A3A); outline-offset: 2px; }"
+      "description": "A readable measure, clear paragraph spacing and underlined links.",
+      "html": "<div class=\"prose\"><p>Read the <a href=\"/guidelines\">community guidelines</a>.</p></div>",
+      "css": ".prose { font-size: var(--text-prose); line-height: 1.65; max-inline-size: var(--measure-prose); } .prose a { text-decoration: underline; }"
     }
   ],
   "narrative": {
-    "northStar": "The Councillor's Hall",
-    "overview": "This is a room where people keep counsel together and the record survives the conversation. Warm stone and aged parchment, evergreen boughs at the windows, one thread of mallorn gold catching the candlelight — and, underneath the ceremony, a working table. The register is Tolkien-adjacent without cosplay: considered, literary, quietly premium, and never a toy social app. Where most forum software looks cheap, Imladris is dressed.\n\nGravity is the point. The whole product is set in serif — four families, no sans anywhere — because a conversation worth keeping for years deserves the typography of a book rather than a chat client. Colour is warm and low-chroma; nothing is neon; the single gold accent is an *indicator*, never a field, apart from the DM Own-Letter Gold-Wash Exception below. Motion is calm and short. Nothing bounces in Rivendell.\n\nCeremony is earned, not applied. The hall is dignified, but the table is plain: the everyday controls a member touches a hundred times a day are quiet, legible, and unornamented. Ornament belongs to colophons and footnotes — the marks of esteem, the gilt ring on an accepted answer, the eight-pointed star watermark behind a topic header — not to functional chrome.",
+    "northStar": "Make reading and participating familiar, clear and accessible.",
+    "overview": "The Forum theme replaces Imladris. Neutral surfaces, system typography, blue actions and ordinary forum language support the existing PHP-rendered Community Inbox.",
     "keyCharacteristics": [
-      "All-serif voice: display, lapidary caps, book prose, and tabular mono — four families, zero sans.",
-      "Parchment ground, evergreen brand, one mallorn-gold accent used sparingly.",
-      "Warm-ink shadows, never pure black; surfaces flat at rest and lifting only on state.",
-      "Status always carries a word as well as a colour.",
-      "Two registers, day and twilight, driven entirely by semantic tokens.",
-      "Restrained radii — nothing rounder than 12px except tokens, which are pills."
+      "System fonts and relative text sizes",
+      "Independent light and dark palettes",
+      "Visible focus and control boundaries",
+      "Responsive rows and bounded reading measure"
     ],
     "rules": [
-      {
-        "name": "The One Gold Rule",
-        "body": "Mallorn gold is an indicator, never a field. It may be a dot, a rule, a ring, a star, a hairline, or a halo — it may not be the background of anything larger than a chip, apart from the DM Own-Letter Gold-Wash Exception below. *Audit test: outside that exception, if a gold region on screen is bigger than a status chip, it is wrong.*",
-        "section": "colors"
-      },
-      {
-        "name": "The DM Own-Letter Gold-Wash Exception",
-        "body": "In the DM register, \"mine\" letters wear the gold wash; nothing else on the surface may. This approved exception to the One Gold Rule is limited to the viewer's own message plates. Existing controls retain their established action tokens; the exception grants no other surface a gold wash.",
-        "section": "colors"
-      },
-      {
-        "name": "The Word-and-Colour Rule",
-        "body": "Status is never carried by colour alone. Every state that has a hue also has a word: \"Solved\", \"Needs answer\", \"Decision\", \"Locked\", \"Archived\". Colour-blind and monochrome readers lose nothing. *Audit test: cover the screen's colour and the state is still readable.*",
-        "section": "colors"
-      },
-      {
-        "name": "The Semantic-Only Rule",
-        "body": "Application code paints from semantic tokens (`--surface-raised`, `--brand`, `--on-done`), never from primitives (`--parchment-50`, `--green-700`). The twilight register is a re-pointing of semantics; anything painted from a primitive fails to flip. *Audit test: a new rule that names a primitive scale token is a bug unless it is inside the token layer itself.*",
-        "section": "colors"
-      },
-      {
-        "name": "The All-Serif Rule",
-        "body": "There is no sans-serif in this product. Four families, three of them serif and one a mono for data. A sans-serif anywhere is an intrusion from another design system. *Audit test: grep any new stylesheet for `sans-serif` outside a fallback stack.*",
-        "section": "typography"
-      },
-      {
-        "name": "The Lapidary Caps Rule",
-        "body": "The only uppercase text is Marcellus, tracked at 0.08–0.16em, at label sizes. It is a typographic device, not emphasis and not shouting. Sentence case everywhere else — including buttons, headings, and chips' underlying copy. *Audit test: any `text-transform: uppercase` on something that is not a Marcellus label is wrong.*",
-        "section": "typography"
-      },
-      {
-        "name": "The Tabular Rule",
-        "body": "Anything countable — reply counts, regard, timestamps, member totals — is set in JetBrains Mono with `font-variant-numeric: tabular-nums`, so columns of numbers align and a changing count does not reflow its row.",
-        "section": "typography"
-      },
-      {
-        "name": "The Delivered-Weight Rule",
-        "body": "Ask only for a weight the family ships. Marcellus delivers one 400 face: use 400 for its chips, eyebrows, tab labels, monograms and button labels; a heavier request asks the browser to approximate an unavailable weight. The two Garamonds ship normal weights 400, 500 and 600, Cormorant also carries 700, and JetBrains Mono ships 400, 500 and 600. Neither Garamond ships a 650 face; their italic faces are limited to 400 and 500. Existing selectors that request unavailable weights remain audit debt. *Audit test: `font-weight: 650`, 500+ on a Marcellus selector, or an undelivered italic weight needs correction.*",
-        "section": "typography"
-      },
-      {
-        "name": "The Real-URL Rule",
-        "body": "Every pane state is a URL that renders server-side and survives a hard refresh, a share, and a crawler. A view that only exists after JavaScript runs is not a view. *Audit test: load it with JavaScript disabled; if the content is gone, the layout is wrong.*",
-        "section": "layout"
-      },
-      {
-        "name": "The Two-Breakpoint Rule",
-        "body": "860px is the shell breakpoint and 900px the chrome breakpoint; 760px is the in-pane density step. Application styles also contain surface-specific thresholds; those are implementation facts, not a larger shared vocabulary. New responsive work reuses 860, 900 or 760, or justifies a new width in review. Recording the Messages 1700px deviation does not approve it. The profile's two recorded thresholds — 700px, where the list and connection tool rows wrap, and 560px, where the cover, the commends grid and the connection cards compact — are implementation facts of the same kind, chosen where the content breaks.",
-        "section": "layout"
-      },
-      {
-        "name": "The Warm-Shadow Rule",
-        "body": "No pure-black drop shadows anywhere. Every shadow is mixed from ink or twilight so it reads as candlelight on parchment rather than as a UI kit default. *Audit test: any `rgba(0,0,0,…)` in a shadow is wrong.*",
-        "section": "elevation"
-      },
-      {
-        "name": "The Lift-On-State Rule",
-        "body": "Ordinary surfaces use no shadow or the shallow `--shadow-xs`. Elevation is a *response* — hover, selection, focus — not a decoration. The foundation's interactive row offers a 1px lift and `--shadow-md`; the application topic list deliberately overrides both with a tonal hover wash. Use the final surface treatment rather than reinstating a foundation effect it has superseded. The profile identity cover is the documented exception; nothing else rests above `--shadow-xs`.",
-        "section": "elevation"
-      },
-      {
-        "name": "The Chrome-On-Top Rule",
-        "body": "Page content stacks at `z-index` 30 or below. The member bar sits above it at `--z-chrome` (40), so nothing on the page paints over the bar or its account menu. The phone drawer's scrim (`--z-scrim`, 55) and rail (`--z-drawer`, 60) come next. Popovers anchored to page content, sheets and dialogs already start at 42. A page control that must cover the bar is an overlay and takes an overlay's tier. These are application tokens (ADR 0039's block in `app.css`), because the layer's own bar sits at 20. *Audit test: on a phone, scroll content under the bar and tap its lower edge; the tap must land on the bar.*",
-        "section": "elevation"
-      },
-      {
-        "name": "The Twelve-Max Rule",
-        "body": "Nothing that holds content is rounder than 12px. 20px exists for a handful of large containers and should be justified; pills are for tokens only. *Audit test: a `border-radius` above 12px on anything that is not a token or a large container is wrong.*",
-        "section": "shapes"
-      },
-      {
-        "name": "The Constant-Ground Rule",
-        "body": "A surface whose ground does not flip takes its state colours from constant tokens in this family, never from the register's. *Audit test: on an always-twilight surface, grep the rule for `--accent` or `--presence`; a register token there fails by day.*",
-        "section": "components"
-      }
+      "WCAG 2.2 AA target; verification status must be explicit.",
+      "Primary controls use 44px targets.",
+      "Prose links are underlined.",
+      "Preserve native HTML and progressive enhancement.",
+      "Operator branding and stored preference keys retain their contracts."
     ],
     "dos": [
-      "Do paint from semantic tokens (`--surface-raised`, `--brand`, `--on-done`) so the twilight register flips for free.",
-      "Do pair every status colour with a status word, in the taxonomy already established (Solved, Needs answer, Decision, Pinned, Locked, Archived).",
-      "Do set button labels in Marcellus, sentence case, at 0.9rem/0.03em — tracked capitals are for chips, eyebrows, and meta lines only.",
-      "Do put anything countable in JetBrains Mono with tabular numerals.",
-      "Do ask each family only for a weight it ships — Marcellus is 400, the Garamonds step 400–600, and 650 exists nowhere (The Delivered-Weight Rule).",
-      "Do keep prose at 17px/1.62 with a measure near 64ch, and topic titles near 28ch.",
-      "Do reach for a hairline before a shadow, and for `--shadow-xs` before anything heavier.",
-      "Do honour `prefers-reduced-motion: reduce` — the stylesheet already collapses every duration to 0.001ms, and new motion must inherit that.",
-      "Do ship every state server-rendered first; JavaScript decorates through `data-*` hooks and the existing JSON endpoints."
+      "Test actual rendered states in both themes.",
+      "Honor browser sizing, reduced motion and forced colors.",
+      "Use semantic tokens and familiar action labels."
     ],
     "donts": [
-      "Don't introduce a sans-serif, a fifth family, or a webfont from a CDN. The CSP is same-origin and the fonts are self-hosted under OFL.",
-      "Don't synthesise a weight or a style: no `font-weight: 650`, no 500+ on Marcellus, no faux italic. A browser's fake bold is a different typeface.",
-      "Don't write an inline `<style>` block, an inline `<script>`, or a `style=\"…\"` attribute. The same-origin `style-src` and `script-src` policies block those forms. This constraint applies to application templates; the sidecar's CSS strings are tooling specimens, not styles to paste inline into PHP.",
-      "Don't use gold as a background for anything larger than a chip outside the DM Own-Letter Gold-Wash Exception, and don't use two accents — the palette has exactly one.",
-      "Don't put emoji in UI chrome. Status is a word and a colour. (Emoji in member-authored content is a product feature and stays.)",
-      "Don't print ★ or ☆. The commend star, drawn with `partials/icon`, is the one esteem glyph; `templates/` holds the characters at zero and a test holds them there.",
-      "Don't paint directly from a primitive scale token in application CSS.",
-      "Don't round anything holding content past 12px, and don't make a button or card pill-shaped. *Two live exceptions are unresolved rather than sanctioned — `.star-btn`/`.topic-tools-open` and `.board-mute-toggle` are buttons wearing pills because the handoff canvases draw them that way while this document and `components.css` say 7px. The Messages room adds two more to the same open question (2026-09-23): `.dm-newpill`, the \"New messages\" button, which the committed Messages mock draws as a pill; and the room's toast flash (`.main > .flash:has(+ .dm-shell)`), a `role=\"status\"` notice rather than a button, but a pill-shaped plate holding a sentence. ADR 0034 records the conflict (the Messages pair in its 2026-09-23 addendum); it needs a ruling, not a sweep.*",
-      "Don't use a pure-black shadow, or add elevation to something that is merely at rest.",
-      "Don't cut a corner. No `clip-path` octagons, no frame whose edge is drawn as background-gradient layers — a frame is a real border plus a radius, and a `clip-path` on a control silently eats its outer focus ring. Don't extend the lapidary register to new surfaces either; it is legacy and shrinking.",
-      "Don't invent a new breakpoint. 860px collapses the shell, 900px compacts the chrome, and 760px stacks in-pane layouts; reuse them.",
-      "Don't rename the lexicon where it has shipped. On member surfaces reputation is **regard**, badges are **marks of esteem**, like is **commend**, and the leaderboard is **top contributors**. *Counsel* is a register word (\"Add your counsel\", \"Private counsel\"), not the name of the reply control, which reads **Reply** with an \"N replies\" count (ADR 0027); the admin and moderation consoles use plain words such as Reputation and Badges (ADR 0024). `PRODUCT.md` records the lexicon as a binding brand commitment; how far it reaches beyond the shipped member strings is an open owner decision (ADR 0024, obligation 5)."
+      "Do not restore legacy font preloads or fantasy-only UI labels.",
+      "Do not claim conformance from automated scans alone.",
+      "Do not rewrite authored content as part of theme migration."
     ]
   }
 }

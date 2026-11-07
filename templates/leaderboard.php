@@ -28,7 +28,7 @@ $this->start('leaderboard_window_controls');
 <?php $this->stop(); endif; ?>
 <div class="leaderboard">
     <header class="board-header">
-        <?php if ($current_user === null): ?><p class="eyebrow">The council</p><h1>Top contributors</h1><?php endif; ?>
+        <?php if ($current_user === null): ?><p class="eyebrow">Community</p><h1>Top contributors</h1><?php endif; ?>
         <p class="muted">Members ranked by appreciation received. Recognition only — it unlocks nothing.</p>
     </header>
     <?php if ($current_user === null): ?><?= $this->block('leaderboard_window_controls') ?><?php endif; ?>

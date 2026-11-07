@@ -11,7 +11,7 @@ namespace App\Security\Packages;
  * match per-type grammars that structurally cannot express selectors,
  * additional declarations, url()/@import, or script-like constructs
  * (TM-TH-01/TM-TH-02). Also owns the WCAG pairs the build gate enforces
- * (TM-TH-04) and the generated Imladris baseline values used to compute effective
+ * (TM-TH-04) and the generated Forum baseline values used to compute effective
  * contrast for partial token sets. Mirrors ApiScopes/CapabilityCatalog:
  * static data, not a service.
  */
@@ -27,11 +27,11 @@ final class ThemeTokenPolicy
         '--text-strong' => 'color', '--text-body' => 'color', '--text-faint' => 'color',
         '--text-inverse' => 'color', '--accent' => 'color', '--accent-contrast' => 'color',
         '--accent-2' => 'color', '--danger' => 'color',
-        // Imladris brand ramp.
+        // Brand ramp (legacy names remain part of the package contract).
         '--brand' => 'color', '--brand-hover' => 'color', '--brand-press' => 'color',
         '--brand-subtle' => 'color', '--on-brand-subtle' => 'color',
         '--gold' => 'color', '--gold-soft' => 'color', '--gold-ink' => 'color',
-        // Imladris semantic surfaces and rules the shell actually paints from
+        // Semantic surfaces and rules the shell actually paints from
         // (ADR 0054). Field rules, focus and status families stay
         // application-controlled and are deliberately absent.
         '--surface-page' => 'color', '--surface-raised' => 'color', '--surface-sunken' => 'color',
@@ -50,66 +50,70 @@ final class ThemeTokenPolicy
     private const GENERIC_FONTS = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy',
         'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace', 'ui-rounded'];
 
-    // Transcribed from public/assets/imladris.css (:root / [data-theme="dark"])
+    // Transcribed from public/assets/forum-theme.css (:root / [data-theme="dark"])
     // and kept in lock-step by ThemeBaselineFidelityTest.
     private const BASELINE_LIGHT = [
-        '--surface' => '#faf6ec',
-        '--surface-2' => '#f5efe1',
-        '--surface-3' => '#ece4d2',
-        '--border' => '#ded2b8',
-        '--text' => '#1b231d',
-        '--text-muted' => '#515c52',
-        '--text-strong' => '#1b231d',
-        '--text-inverse' => '#faf6ec',
-        '--accent' => '#2e4a3a',
-        '--accent-contrast' => '#faf6ec',
-        '--accent-2' => '#c29a44',
-        '--danger' => '#9c4a33',
-        '--brand' => '#2e4a3a',
-        '--brand-subtle' => '#edf3ed',
-        '--on-brand-subtle' => '#24402f',
-        '--text-body' => '#313b33',
-        '--text-faint' => '#5c685d',
-        '--surface-page' => '#f5efe1',
-        '--surface-raised' => '#faf6ec',
-        '--surface-sunken' => '#ece4d2',
-        '--border-hair' => '#ded2b8',
-        '--border-soft' => '#dce3dd',
-        '--border-strong' => '#94a095',
-        '--gold' => '#c29a44',
-        '--gold-ink' => '#7e5f22',
-        '--rule-gold' => '#c29a44',
+        '--surface' => '#ffffff',
+        '--surface-2' => '#f8fafc',
+        '--surface-3' => '#eef2f6',
+        '--border' => '#cbd5e1',
+        '--text' => '#172b4d',
+        '--text-muted' => '#475569',
+        '--text-strong' => '#172b4d',
+        '--text-body' => '#243247',
+        '--text-faint' => '#526175',
+        '--text-inverse' => '#ffffff',
+        '--accent' => '#1d4ed8',
+        '--accent-contrast' => '#ffffff',
+        '--accent-2' => '#1d4ed8',
+        '--danger' => '#b42318',
+        '--brand' => '#1d4ed8',
+        '--brand-hover' => '#1e40af',
+        '--brand-press' => '#1e3a8a',
+        '--brand-subtle' => '#e8efff',
+        '--on-brand-subtle' => '#1e3a8a',
+        '--gold' => '#1d4ed8',
+        '--gold-soft' => '#e8efff',
+        '--gold-ink' => '#1e40af',
+        '--surface-page' => '#ffffff',
+        '--surface-raised' => '#ffffff',
+        '--surface-sunken' => '#eef2f6',
+        '--border-hair' => '#cbd5e1',
+        '--border-soft' => '#e2e8f0',
+        '--border-strong' => '#64748b',
+        '--rule-gold' => '#64748b',
     ];
 
     private const BASELINE_DARK = [
-        '--surface' => '#283440',
-        '--surface-2' => '#161d24',
-        '--surface-3' => '#1e2730',
-        '--border' => '#36434f',
-        '--text' => '#ece4d2',
-        '--text-muted' => '#aeb8b4',
-        '--text-strong' => '#faf6ec',
-        '--text-inverse' => '#1b231d',
-        '--accent' => '#d2b062',
-        '--accent-contrast' => '#161d24',
-        '--accent-2' => '#c29a44',
-        '--danger' => '#db8c73',
-        '--brand' => '#4e7459',
-        // app.css declares rgba(78,116,89,.20) (green-500 @ 20%); flattened by
-        // compositing over the dark --surface (#283440), the lightest surface it
-        // renders on — the conservative (lowest-contrast) 6-digit equivalent.
-        '--brand-subtle' => '#304145',
-        '--on-brand-subtle' => '#bcd0bf',
-        '--text-body' => '#d7dcd2',
-        '--text-faint' => '#94a095',
-        '--surface-page' => '#161d24',
-        '--surface-raised' => '#1e2730',
-        '--surface-sunken' => '#283440',
-        '--border-hair' => '#36434f',
-        '--border-soft' => '#2c3742',
-        '--border-strong' => '#51606c',
-        '--gold-ink' => '#d2b062',
-        '--rule-gold' => '#d2b062',
+        '--surface' => '#1f2937',
+        '--surface-2' => '#111827',
+        '--surface-3' => '#263445',
+        '--border' => '#475569',
+        '--text' => '#f8fafc',
+        '--text-muted' => '#cbd5e1',
+        '--text-strong' => '#f8fafc',
+        '--text-body' => '#e5e7eb',
+        '--text-faint' => '#b6c2d1',
+        '--text-inverse' => '#111827',
+        '--accent' => '#93c5fd',
+        '--accent-contrast' => '#111827',
+        '--accent-2' => '#93c5fd',
+        '--danger' => '#fda29b',
+        '--brand' => '#93c5fd',
+        '--brand-hover' => '#bfdbfe',
+        '--brand-press' => '#dbeafe',
+        '--brand-subtle' => '#243c60',
+        '--on-brand-subtle' => '#dbeafe',
+        '--gold' => '#93c5fd',
+        '--gold-soft' => '#243c60',
+        '--gold-ink' => '#bfdbfe',
+        '--surface-page' => '#111827',
+        '--surface-raised' => '#1f2937',
+        '--surface-sunken' => '#263445',
+        '--border-hair' => '#475569',
+        '--border-soft' => '#334155',
+        '--border-strong' => '#94a3b8',
+        '--rule-gold' => '#94a3b8',
     ];
 
     public static function isKnown(string $token): bool
@@ -184,8 +188,7 @@ final class ThemeTokenPolicy
             ['fg' => '--accent-contrast', 'bg' => '--accent', 'min' => 4.5],
             // The palette's real "text on brand-tinted fill" pairing (chips,
             // active rows, joinbar). --text-inverse on --brand was a plan-level
-            // mismodel: app.css never pairs those two, and the dark baseline
-            // fails it at 3.04:1 (Inc 4 plan correction).
+            // mismodel: app.css never pairs those two, (the original Inc 4 correction is retained in the decision history).
             ['fg' => '--on-brand-subtle', 'bg' => '--brand-subtle', 'min' => 4.5],
             // The semantic surfaces most text actually sits on (ADR 0054).
             ['fg' => '--text-body', 'bg' => '--surface-page', 'min' => 4.5],

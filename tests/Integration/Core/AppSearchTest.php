@@ -239,7 +239,7 @@ final class AppSearchTest extends TestCase
 
         $r = $this->get('/search', ['q' => 'Hyperloop', 'scope' => 'everything', 'order' => 'newest']);
         $this->assertStatus(200, $r);
-        $this->assertSeeText($r, 'Search the council');
+        $this->assertSeeText($r, 'Search forums');
         $this->assertSeeText($r, 'Hyperloop velocity tests');
         $this->assertSeeText($r, '2 results for “Hyperloop” · newest first');
         self::assertStringContainsString('<span>Topic</span>', $r->body());

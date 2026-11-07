@@ -14,8 +14,9 @@ export default defineConfig({
       // The optional editor entry is imported by URL from the classic bridge.
       preserveEntrySignatures: 'exports-only',
       input: {
+        'forum-base-style': 'public/assets/forum-base.css',
         'app-style': 'public/assets/app.css',
-        'imladris-style': 'public/assets/imladris.css',
+        'forum-theme-style': 'public/assets/forum-theme.css',
         'wysiwyg-composer': 'src/client/wysiwyg/index.ts',
       },
       output: {

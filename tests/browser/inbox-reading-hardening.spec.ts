@@ -189,6 +189,23 @@ test("the pane's reply box rests on one line, opens to answer and folds away", a
   expect(rest.height).toBeLessThanOrEqual(60);
   expect(rest.buttons).toEqual(['Reply']);
   expect(rest.send).toBeGreaterThanOrEqual(44);
+  const input = reply.locator('.composer-input:visible, .ProseMirror:visible').first();
+  const line = await input.evaluate((el) => {
+    const css = getComputedStyle(el);
+    return { available: el.clientHeight, required: parseFloat(css.lineHeight) + parseFloat(css.paddingTop) + parseFloat(css.paddingBottom) };
+  });
+  expect(line.available, 'the resting composer must fit a full line of the active reading type').toBeGreaterThanOrEqual(line.required);
+  const previousSize = await page.locator('html').getAttribute('data-font-size');
+  await page.evaluate(() => { document.documentElement.dataset.fontSize = 'large'; });
+  const largeLine = await input.evaluate((el) => {
+    const css = getComputedStyle(el);
+    return { available: el.clientHeight, required: parseFloat(css.lineHeight) + parseFloat(css.paddingTop) + parseFloat(css.paddingBottom) };
+  });
+  expect(largeLine.available, 'Large text must also fit the resting reply field').toBeGreaterThanOrEqual(largeLine.required);
+  await page.evaluate(value => {
+    if (value === null) delete document.documentElement.dataset.fontSize;
+    else document.documentElement.dataset.fontSize = value;
+  }, previousSize);
   await expect(page.locator('.inbox-preview-open')).toHaveCSS('min-height', '44px');
   const eyebrow = await page.locator('.inbox-preview-reply > .eyebrow').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
   expect(eyebrow).toBeGreaterThanOrEqual(11.5);
@@ -259,9 +276,9 @@ test('the view menus print every label in the menu type and every count by class
     }));
     // One register for every label: the unselected Sort labels were 10.56px mono.
     expect(new Set(seen.labels).size, `${selector} labels: ${seen.labels.join(', ')}`).toBe(1);
-    expect(seen.labels[0]).toContain('Marcellus');
-    // --text-chip (0.7rem), which a positional rule held at 0.66rem.
-    for (const size of seen.counts) expect(size).toBe('11.2px');
+    expect(seen.labels[0]).toContain('system-ui');
+    // The Forum theme keeps secondary text at least 0.875rem.
+    for (const size of seen.counts) expect(parseFloat(size)).toBeGreaterThanOrEqual(14);
     if (selector === '.inbox-compact-menu') {
       // The panel reads in its trigger's order: which topics, then in what sequence.
       expect(seen.groups[0]).toBe('Your queue');

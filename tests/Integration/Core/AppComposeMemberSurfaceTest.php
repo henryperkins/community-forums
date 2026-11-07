@@ -52,7 +52,7 @@ final class AppComposeMemberSurfaceTest extends TestCase
         $this->assertStatus(200, $page);
         $this->assertSeeText($page, 'Posting to Member Room');
         $this->assertSeeText($page, 'Open a topic');
-        $this->assertSeeText($page, 'Say what you want the council to consider, and what would change your mind.');
+        $this->assertSeeText($page, 'Describe your question or idea and include any details that will help others respond.');
         self::assertStringContainsString('data-compose-selected-board="member-room"', $page->body());
         self::assertStringContainsString('data-compose-board-picker="public-room"', $page->body());
         self::assertStringContainsString('data-compose-board-picker="member-room"', $page->body());

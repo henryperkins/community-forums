@@ -84,15 +84,18 @@ test('branding, package themes and application routes retain dynamic response se
   }
 });
 
-test('published manifest names only verified asset bytes and font preload matches emitted CSS', async () => {
+test('published manifest verifies asset bytes and active Forum CSS avoids legacy font downloads', async () => {
   for (const [url, metadata] of Object.entries(manifest.files)) {
     assert.match(url, /^\/assets\/[A-Za-z0-9_./-]+\.(?:js|css|woff2|svg|txt)$/);
     assert.ok(!url.includes('..'));
     const bytes = await readFile(new URL(`../../public${url}`, import.meta.url));
     assert.equal(createHash('sha256').update(bytes).digest('hex'), metadata.sha256, url);
   }
-  const css = await readFile(new URL(`../../public${manifest.urls['imladris.css']}`, import.meta.url), 'utf8');
-  assert.ok(css.includes(manifest.urls['fonts/imladris/eb-garamond-latin-400-normal.woff2']));
+  assert.equal(manifest.urls['imladris.css'], undefined);
+  for (const name of ['forum-base.css', 'forum-theme.css']) {
+    const css = await readFile(new URL(`../../public${manifest.urls[name]}`, import.meta.url), 'utf8');
+    assert.ok(!css.includes('@font-face'), `${name} must not introduce legacy font downloads`);
+  }
   for (const name of ['conversation-entry.js', 'app.js', 'composer.js', 'passkeys.js', 'tour.js']) {
     const script = await readFile(new URL(`../../public${manifest.urls[name]}`, import.meta.url), 'utf8');
     assert.match(script, /^['"]use strict['"];\s/, `${name} must preserve strict semantics when loaded as a classic script`);

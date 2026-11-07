@@ -392,6 +392,7 @@
         var bar = document.createElement('div');
         bar.className = 'composer-toolbar';
         bar.id = 'composer-toolbar-' + (++toolbarSeq);
+        bar.setAttribute('role', 'group');
         bar.setAttribute('aria-label', 'Formatting');
         var buttons = [];
         function updateState() {
@@ -2024,9 +2025,8 @@
             ? item.images.original.url
             : '';
     }
-    // A combobox needs an accessible name. Most composer textareas rely on a
-    // placeholder (which is not a name), so give them a label before we upgrade
-    // them — only when one is missing, never overriding an explicit label.
+    // Suggestion inputs need an accessible name. Give an otherwise unlabelled
+    // composer a fallback name without overriding an explicit label.
     function ensureAccessibleName(el) {
         var label = el.getAttribute('aria-label');
         if (label && label.trim() !== '') { return; }
@@ -2041,10 +2041,9 @@
         el.setAttribute('aria-label', placeholder !== '' ? placeholder : 'Message composer');
     }
     var slashMenuSeq = 0;
-    // Slash inserts + GIPHY are surfaced as an APG combobox: the textarea is the
-    // combobox, the popup is a listbox of role=option items, selection is tracked
-    // with aria-activedescendant (focus stays in the textarea so typing keeps
-    // filtering), and Arrow/Home/End/Enter/Escape drive it from the keyboard.
+    // Keep the textarea's native multiline textbox semantics. It controls a
+    // listbox of suggestions through aria-controls/aria-activedescendant while
+    // Arrow/Home/End/Enter/Escape operate the popup without moving input focus.
     function wireSlashMenu(form, adapter) {
         var ta = adapter.ta;
         var box = shellPart(form, '.composer-box');
@@ -2065,14 +2064,12 @@
         var activeIndex = -1;
         var lastRenderKey = null;
 
-        function comboboxReady() { return ta.getAttribute('role') === 'combobox'; }
-        function setExpanded(open) {
-            if (!comboboxReady()) { return; }
-            if (open) { ta.setAttribute('aria-controls', menuId); }
-            ta.setAttribute('aria-expanded', open ? 'true' : 'false');
-            if (!open) { ta.removeAttribute('aria-activedescendant'); }
+        function ownsPopup() { return ta.getAttribute('aria-controls') === menuId; }
+        function openMenu() {
+            menu.hidden = false;
+            if (!ownsPopup()) { ta.removeAttribute('aria-activedescendant'); }
+            ta.setAttribute('aria-controls', menuId);
         }
-        function openMenu() { menu.hidden = false; setExpanded(true); }
         function hide() {
             activeState = null;
             options = [];
@@ -2080,12 +2077,12 @@
             lastRenderKey = null;
             menu.hidden = true;
             menu.innerHTML = '';
-            setExpanded(false);
+            if (ownsPopup()) { ta.removeAttribute('aria-activedescendant'); }
         }
         function highlight(index) {
             if (!options.length) {
                 activeIndex = -1;
-                ta.removeAttribute('aria-activedescendant');
+                if (ownsPopup()) { ta.removeAttribute('aria-activedescendant'); }
                 return;
             }
             if (index < 0) { index = options.length - 1; }
@@ -2095,7 +2092,7 @@
                 options[i].setAttribute('aria-selected', i === index ? 'true' : 'false');
             }
             var active = options[activeIndex];
-            if (comboboxReady()) { ta.setAttribute('aria-activedescendant', active.id); }
+            if (ownsPopup()) { ta.setAttribute('aria-activedescendant', active.id); }
             active.scrollIntoView({ block: 'nearest' });
         }
         function collectOptions() {
@@ -2115,7 +2112,7 @@
         function showStatus(text) {
             // A visible listbox needs at least one option child (aria-required-
             // children); render transient GIPHY status as a single disabled,
-            // non-selectable option so the combobox stays valid.
+            // non-selectable option so the listbox stays valid.
             menu.innerHTML = '';
             var status = document.createElement('div');
             status.className = 'composer-slash-status';
@@ -2126,8 +2123,8 @@
             menu.appendChild(status);
             options = [];
             activeIndex = -1;
-            ta.removeAttribute('aria-activedescendant');
             openMenu();
+            ta.removeAttribute('aria-activedescendant');
         }
         function renderButtons(commands) {
             menu.innerHTML = '';
@@ -2223,14 +2220,16 @@
             config = j;
             ready = true;
             if (config === null) { return; }
-            // Upgrade to a combobox only when the picker can actually open (flag on
-            // + provider key configured), so composers elsewhere are unchanged.
+            // Expose suggestions only when the picker is available. Textareas
+            // support these relationships, but not combobox or aria-expanded.
             ensureAccessibleName(ta);
             menu.setAttribute('role', 'listbox');
             menu.setAttribute('aria-label', 'Composer insert commands');
-            ta.setAttribute('role', 'combobox');
-            ta.setAttribute('aria-expanded', 'false');
-            ta.setAttribute('aria-controls', menuId);
+            ta.removeAttribute('role');
+            ta.removeAttribute('aria-expanded');
+            // A delayed config response must not take ownership from an open
+            // reference picker. Opening this popup claims its own relationship.
+            if (!ta.hasAttribute('aria-controls')) { ta.setAttribute('aria-controls', menuId); }
             ta.setAttribute('aria-haspopup', 'listbox');
             ta.setAttribute('aria-autocomplete', 'list');
             render();
@@ -2635,25 +2634,19 @@
         box.appendChild(menu);
 
         ensureAccessibleName(ta);
-        ta.setAttribute('role', 'combobox');
-        if (!ta.hasAttribute('aria-expanded')) { ta.setAttribute('aria-expanded', 'false'); }
+        ta.removeAttribute('role');
+        ta.removeAttribute('aria-expanded');
         if (!ta.hasAttribute('aria-controls')) { ta.setAttribute('aria-controls', menuId); }
         ta.setAttribute('aria-haspopup', 'listbox');
         ta.setAttribute('aria-autocomplete', 'list');
 
-        function ownsCombobox() { return ta.getAttribute('aria-controls') === menuId; }
-        function setExpanded(open) {
-            ta.setAttribute('role', 'combobox');
-            if (open) { ta.setAttribute('aria-controls', menuId); }
-            ta.setAttribute('aria-expanded', open ? 'true' : 'false');
-            if (!open && ownsCombobox()) { ta.removeAttribute('aria-activedescendant'); }
-        }
+        function ownsPopup() { return ta.getAttribute('aria-controls') === menuId; }
         function openMenu() {
             menu.hidden = false;
-            setExpanded(true);
+            if (!ownsPopup()) { ta.removeAttribute('aria-activedescendant'); }
+            ta.setAttribute('aria-controls', menuId);
         }
         function hide() {
-            var wasOpen = !menu.hidden || (ownsCombobox() && ta.getAttribute('aria-expanded') === 'true');
             requestSeq++;
             activeState = null;
             options = [];
@@ -2661,12 +2654,12 @@
             lastRenderKey = null;
             menu.hidden = true;
             menu.innerHTML = '';
-            if (wasOpen) { setExpanded(false); }
+            if (ownsPopup()) { ta.removeAttribute('aria-activedescendant'); }
         }
         function highlight(index) {
             if (!options.length) {
                 activeIndex = -1;
-                if (ownsCombobox()) { ta.removeAttribute('aria-activedescendant'); }
+                if (ownsPopup()) { ta.removeAttribute('aria-activedescendant'); }
                 return;
             }
             if (index < 0) { index = options.length - 1; }
@@ -2676,7 +2669,7 @@
                 options[i].setAttribute('aria-selected', i === index ? 'true' : 'false');
             }
             var active = options[activeIndex];
-            ta.setAttribute('aria-activedescendant', active.id);
+            if (ownsPopup()) { ta.setAttribute('aria-activedescendant', active.id); }
             active.scrollIntoView({ block: 'nearest' });
         }
         function selectItem(item) {
@@ -3673,7 +3666,7 @@
         buildCounter(form, adapter);
         adapter = maybeUpgradeWysiwyg(form, ta, adapter);
         buildPreview(form, prefs, adapter, form._rbComposerFallbackAdapter);
-        // Wire the slash combobox before wireKeys so its keydown listener runs
+        // Wire slash suggestions before wireKeys so their keydown listener runs
         // first: when the menu is open it consumes Enter/Escape (via
         // stopImmediatePropagation) before enter-to-send / list-continuation see it.
         wireSlashMenu(form, adapter);

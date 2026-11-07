@@ -3,6 +3,9 @@ description: "Move New topic out of the member header into a shared row under it
 agent: agent
 ---
 
+> Historical task prompt. Current theme, cascade and release guidance is in AGENTS.md and ADR 0056. Imladris digest/baseline instructions below are superseded.
+
+
 # Create control in a shared row under the header
 
 ## Intent

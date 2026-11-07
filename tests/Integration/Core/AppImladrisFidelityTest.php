@@ -48,13 +48,14 @@ final class AppImladrisFidelityTest extends TestCase
 
         $this->assertStatus(200, $res);
         $this->assertSeeText($res, 'auth-stage');
-        $this->assertSeeText($res, 'auth-stage-star');
+        $this->assertDontSeeText($res, 'auth-stage-star');
+        self::assertMatchesRegularExpression('/<svg class="auth-brand-star"[^>]*viewBox="0 0 24 24"[^>]*aria-hidden="true"/', $res->body());
         $this->assertSeeText($res, 'auth-brand');
         $this->assertSeeText($res, 'auth-eyebrow');
         $this->assertSeeText($res, 'auth-form');
         // Slice 19 de-fiction: the auth colophon carried a decorative
         // quotation with no truthful replacement, so the element is deleted
-        // (ledger §3.2). The rest of the auth-stage composition is unchanged.
+        // (ledger §3.2). The Forum theme also retires the large decorative star.
         self::assertStringNotContainsString('auth-colophon', $res->body());
     }
 

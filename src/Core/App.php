@@ -438,11 +438,9 @@ final class App
 
         $urls = $this->assets()->urls();
         $links = [];
-        foreach (['imladris.css' => 'style', 'app.css' => 'style', 'app.js' => 'script'] as $name => $type) {
+        foreach (['forum-base.css' => 'style', 'app.css' => 'style', 'forum-theme.css' => 'style', 'app.js' => 'script'] as $name => $type) {
             $links[] = '<' . $urls[$name] . '>; rel=preload; as=' . $type;
         }
-        $links[] = '<' . $urls['fonts/imladris/eb-garamond-latin-400-normal.woff2']
-            . '>; rel=preload; as=font; type="font/woff2"; crossorigin';
         // Only public build assets: an edge may send cached Early Hints before
         // authentication. Theme previews and private resource URLs stay out.
         $response->header('Link', implode(', ', $links));

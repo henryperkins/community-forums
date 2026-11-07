@@ -15,7 +15,7 @@ use Tests\Support\TestCase;
  *    plinth, drawn from the real users.reputation;
  *  - that plinth is suppressed for an anonymous post, so masking a byline never
  *    leaks the real author's reputation (a deanonymisation channel);
- *  - the guest join-bar speaks the council lexicon ("counsel", emphasised);
+ *  - the guest join-bar gives a plain, emphasised instruction to log in and reply;
  *  - the breadcrumb resolves to a two-hop Forum index / #board back-trail.
  */
 final class AppCouncilTopicFidelityTest extends TestCase
@@ -84,7 +84,7 @@ final class AppCouncilTopicFidelityTest extends TestCase
 
         $this->assertStatus(200, $resp);
         $this->assertSeeText($resp, "You're browsing as a guest");
-        $this->assertSeeText($resp, '<em>log in to add your counsel.</em>');
+        $this->assertSeeText($resp, '<em>log in to reply.</em>');
     }
 
     public function test_breadcrumb_back_trail_resolves_to_forum_index_and_board(): void

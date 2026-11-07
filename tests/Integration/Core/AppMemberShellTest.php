@@ -373,7 +373,7 @@ final class AppMemberShellTest extends TestCase
         );
         self::assertStringNotContainsString('unread conversations"', $topbar);
         // Without the script nothing answers ⌘K, so the server claims no shortcut.
-        self::assertStringContainsString('<a class="forum-bar-search" href="/search" aria-label="Search the council" data-shortcut="k">', $topbar);
+        self::assertStringContainsString('<a class="forum-bar-search" href="/search" aria-label="Search forums" data-shortcut="k">', $topbar);
         self::assertStringContainsString('<span class="forum-bar-kbd" data-shortcut-hint aria-hidden="true" hidden></span>', $topbar);
         self::assertStringNotContainsString('⌘', $topbar);
         // The summary's expanded state says open or closed; its name carries no verb.

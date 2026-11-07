@@ -2,6 +2,24 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Conventional Forum theme
+
+- Replace the active Imladris presentation with neutral light/dark surfaces,
+  system fonts, blue actions and familiar forum labels. Preserve routes,
+  saved appearance keys, feature behavior and operator branding.
+- Introduce generated Forum foundation/theme assets, remove the legacy font
+  preload, and separate structural application rules into a cascade layer.
+- Improve reading size and measure, focus visibility, control targets,
+  responsive wrapping, reduced motion and forced-color styling.
+- Preserve native multiline textbox semantics in composer suggestions, name
+  formatting controls as a group, and retain keyboard selection and focus.
+- Fit the compact reply field to normal and Large reading text; correct
+  revealed-spoiler, search-highlight and urgent/error-state contrast.
+- Update branding previews and package contrast baselines to the active palette;
+  archive the previous visual rules and document accessibility/library decisions.
+- Qualification and remaining manual checks are recorded in the theme evidence
+  document. This entry does not indicate production deployment.
+
 ## [2026-11-07] - Inbox reading pane and triage hardening
 
 - Fix the Inbox reading pane at every width. An open pane no longer clips its

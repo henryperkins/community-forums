@@ -1,0 +1,104 @@
+
+Running 1 test using 1 worker
+
+(node:7321) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [desktop] › tests/browser/a11y.spec.ts:635:5 › phase 4 native textarea suggestions have no serious axe violations and are keyboard operable (2.7s)
+
+  1 passed (3.9s)
+
+Running 1 test using 1 worker
+
+(node:7389) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/gate-a.spec.ts:938:5 › phase 4 slash menu inserts approved snippets and GIPHY media (3.6s)
+
+  1 passed (4.7s)
+
+Running 1 test using 1 worker
+
+(node:7455) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/gate-a.spec.ts:1032:5 › phase 4 slash status rows consume Enter when enter-to-send is enabled (2.5s)
+
+  1 passed (3.7s)
+
+Running 1 test using 1 worker
+
+(node:7522) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [desktop] › tests/browser/wysiwyg-composer.spec.ts:161:5 › textarea composer inserts @ mention from keyboard picker (1.8s)
+
+  1 passed (2.8s)
+
+Running 1 test using 1 worker
+
+(node:7591) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [desktop] › tests/browser/wysiwyg-composer.spec.ts:493:5 › wysiwyg reference selections become chips and serialize to markdown (1.7s)
+
+  1 passed (2.9s)
+
+Running 1 test using 1 worker
+
+(node:7662) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [desktop] › tests/browser/wysiwyg-composer.spec.ts:509:5 › wysiwyg slash menu inserts snippets and GIPHY media (2.6s)
+
+  1 passed (3.5s)
+
+Running 1 test using 1 worker
+
+(node:7732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [mobile] › tests/browser/a11y.spec.ts:635:5 › phase 4 native textarea suggestions have no serious axe violations and are keyboard operable (2.4s)
+
+  1 passed (3.6s)
+
+Running 1 test using 1 worker
+
+(node:7800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › tests/browser/gate-a.spec.ts:938:5 › phase 4 slash menu inserts approved snippets and GIPHY media (2.8s)
+
+  1 passed (3.8s)
+
+Running 1 test using 1 worker
+
+(node:7868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › tests/browser/gate-a.spec.ts:1032:5 › phase 4 slash status rows consume Enter when enter-to-send is enabled (2.3s)
+
+  1 passed (3.6s)
+
+Running 1 test using 1 worker
+
+(node:7935) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [mobile] › tests/browser/wysiwyg-composer.spec.ts:161:5 › textarea composer inserts @ mention from keyboard picker (2.8s)
+
+  1 passed (4.0s)
+
+Running 1 test using 1 worker
+
+(node:8003) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [mobile] › tests/browser/wysiwyg-composer.spec.ts:493:5 › wysiwyg reference selections become chips and serialize to markdown (2.2s)
+
+  1 passed (4.1s)
+
+Running 1 test using 1 worker
+
+(node:8109) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✓  1 [mobile] › tests/browser/wysiwyg-composer.spec.ts:509:5 › wysiwyg slash menu inserts snippets and GIPHY media (2.2s)
+
+  1 passed (3.3s)

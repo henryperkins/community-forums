@@ -36,7 +36,7 @@ final class BrandStyleTest extends TestCase
     {
         self::assertSame('Preset', BrandingDocument::describe(['brand_sidebar_style' => ''], 'brand_sidebar_style'));
         self::assertSame('Flush with the page', BrandingDocument::describe(['brand_sidebar_style' => 'flush'], 'brand_sidebar_style'));
-        self::assertSame('Marcellus headings', BrandingDocument::describe(['brand_type_pairing' => 'lapidary'], 'brand_type_pairing'));
+        self::assertSame('System sans-serif headings', BrandingDocument::describe(['brand_type_pairing' => 'lapidary'], 'brand_type_pairing'));
         self::assertSame('Vellum', BrandingDocument::describe(['brand_theme_preset' => 'vellum'], 'brand_theme_preset'));
         self::assertSame('Compact', BrandingDocument::describe(['brand_density_default' => 'compact'], 'brand_density_default'));
         // A stored document is normalised the same way.

@@ -161,12 +161,48 @@ test.afterEach(() => {
 test('textarea composer inserts @ mention from keyboard picker', async ({ page }) => {
   setWysiwygComposer(false);
   await login(page, 'bob@retro.test');
-  const body = (await openNewTopicComposer(page)).locator('textarea.composer-input');
+  const form = await openNewTopicComposer(page);
+  const body = form.locator('textarea.composer-input');
+  const slash = form.locator('.composer-slash-menu[role="listbox"]');
+  const references = form.locator('.composer-reference-menu[role="listbox"]');
+  await expect(body).toHaveRole('textbox');
+  await expect(body).not.toHaveAttribute('role', /.*/);
+  await expect(body).not.toHaveAttribute('aria-expanded', /.*/);
+
+  // Moving from slash to reference suggestions transfers the controlled popup.
+  await body.fill('/');
+  await expect(slash).toBeVisible();
+  await expect(body).toHaveAttribute('aria-controls', (await slash.getAttribute('id'))!);
   await body.fill('@ali');
-  await expect(page.locator('.composer-reference-menu[role="listbox"]')).toBeVisible();
-  await expect(body).toHaveAttribute('aria-expanded', 'true');
+  await expect(slash).toBeHidden();
+  await expect(references).toBeVisible();
+  await expect(body).toHaveAttribute('aria-controls', (await references.getAttribute('id'))!);
+  await expect(body).toHaveAttribute('aria-autocomplete', 'list');
+  const option = references.getByRole('option').first();
+  await expect(option).toHaveAttribute('aria-selected', 'true');
+  const activeId = (await option.getAttribute('id'))!;
+  await expect(body).toHaveAttribute('aria-activedescendant', activeId);
+  await expect(body).toBeFocused();
+
+  // An inactive slash picker also receives input events. Its cleanup must not
+  // erase the reference picker's active descendant when its query is unchanged.
+  await body.dispatchEvent('input');
+  await expect(body).toHaveAttribute('aria-activedescendant', activeId);
+  await expect(option).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('Enter');
   await expect(body).toHaveValue('@alice ');
+  await expect(references).toBeHidden();
+  await expect(body).not.toHaveAttribute('aria-activedescendant', /.*/);
+  await expect(body).toBeFocused();
+
+  await body.fill('@ali');
+  await expect(references).toBeVisible();
+  await body.press('Escape');
+  await expect(references).toBeHidden();
+  await expect(body).toHaveValue('@ali');
+  await expect(body).not.toHaveAttribute('aria-activedescendant', /.*/);
+  await expect(body).not.toHaveAttribute('aria-expanded', /.*/);
+  await expect(body).toBeFocused();
 });
 
 test('textarea # picker inserts board reference and does not steal headings', async ({ page }) => {

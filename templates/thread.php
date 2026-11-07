@@ -105,7 +105,7 @@ $this->start('subheader_leading');
         <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
         <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
             <span class="thread-participants-rule">
-            <ul class="thread-participants" aria-label="In council">
+            <ul class="thread-participants" aria-label="Participants">
                 <?php foreach ($participants as $pp): ?>
                     <?php $pa = mask_author($pp['author_display_name'] ?? null, $pp['author_username'] ?? null, $pp['author_role'] ?? 'user', false, $pp['author_avatar_path'] ?? null); ?>
                     <li class="participant" title="<?= $e($pa['label']) ?>"><?= $this->partial('partials/monogram', ['name' => $pa['mono_name'], 'username' => $pa['mono_seed'], 'avatar_path' => $pa['avatar_path']]) ?></li>
@@ -355,7 +355,7 @@ $this->start('subheader_leading');
                 'show_avatars' => $show_avatars ?? true,
             ]) ?>
         <?php elseif ($current_user === null): ?>
-            <div class="joinbar"><span>You're browsing as a guest — <em>log in to add your counsel.</em></span><a class="btn" href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">Log in</a></div>
+            <div class="joinbar"><span>You're browsing as a guest — <em>log in to reply.</em></span><a class="btn" href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">Log in</a></div>
         <?php elseif ($current_user !== null && !$current_user->isActive()): ?>
             <div class="joinbar">Your account cannot post right now.</div>
         <?php elseif ($current_user !== null): ?>

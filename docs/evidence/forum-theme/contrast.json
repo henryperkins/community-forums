@@ -1,0 +1,90 @@
+[
+  {
+    "role": "Primary text",
+    "foreground": "--text",
+    "background": "--surface-page",
+    "threshold": 4.5,
+    "light": 14.1,
+    "dark": 16.96
+  },
+  {
+    "role": "Discussion text",
+    "foreground": "--text-body",
+    "background": "--surface-raised",
+    "threshold": 4.5,
+    "light": 12.95,
+    "dark": 11.86
+  },
+  {
+    "role": "Secondary text",
+    "foreground": "--text-muted",
+    "background": "--surface-page",
+    "threshold": 4.5,
+    "light": 7.58,
+    "dark": 11.95
+  },
+  {
+    "role": "Muted on sidebar",
+    "foreground": "--text-faint",
+    "background": "--surface-sunken",
+    "threshold": 4.5,
+    "light": 5.61,
+    "dark": 7.01
+  },
+  {
+    "role": "Links",
+    "foreground": "--accent",
+    "background": "--surface-page",
+    "threshold": 4.5,
+    "light": 6.7,
+    "dark": 9.84
+  },
+  {
+    "role": "Primary action label",
+    "foreground": "--accent-contrast",
+    "background": "--accent",
+    "threshold": 4.5,
+    "light": 6.7,
+    "dark": 9.84
+  },
+  {
+    "role": "Field boundary",
+    "foreground": "--field-rule",
+    "background": "--surface-raised",
+    "threshold": 3,
+    "light": 4.76,
+    "dark": 5.72
+  },
+  {
+    "role": "Focus outline",
+    "foreground": "--focus-ring",
+    "background": "--surface-page",
+    "threshold": 3,
+    "light": 6.39,
+    "dark": 12.48
+  },
+  {
+    "role": "Revealed spoiler",
+    "foreground": "--text",
+    "background": "--surface-3",
+    "threshold": 4.5,
+    "light": 12.54,
+    "dark": 12.09
+  },
+  {
+    "role": "Search highlight",
+    "foreground": "--on-brand-subtle",
+    "background": "--brand-subtle",
+    "threshold": 4.5,
+    "light": 8.99,
+    "dark": 9.11
+  },
+  {
+    "role": "Error and urgent state",
+    "foreground": "--on-danger",
+    "background": "--surface-danger",
+    "threshold": 4.5,
+    "light": 7.88,
+    "dark": 8.76
+  }
+]

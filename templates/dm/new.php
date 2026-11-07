@@ -31,7 +31,7 @@ $dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInsta
     <section class="dm-threadpane">
         <header class="dm-thread-head dm-thread-head-compose">
             <a class="dm-back" href="/messages" aria-label="Back to messages"><?= $this->partial('partials/icon', ['name' => 'chevron-left']) ?></a>
-            <div class="dm-thread-id"><div><span class="dm-thread-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span><h1 class="dm-thread-title">New message</h1></div></div>
+            <div class="dm-thread-id"><div><span class="dm-thread-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private conversation</span><h1 class="dm-thread-title">New message</h1></div></div>
         </header>
         <div class="dm-compose">
             <div class="dm-compose-wrap">

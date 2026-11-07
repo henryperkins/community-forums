@@ -167,11 +167,12 @@ final class AppRequestPerformanceTest extends TestCase
         $links = (string) $response->getHeader('Link');
         self::assertNotSame('', $links);
         preg_match_all('/<link rel="stylesheet" href="([^"]+)"/', $response->body(), $styles);
-        foreach (array_slice($styles[1], 0, 2) as $url) {
+        foreach (array_slice($styles[1], 0, 3) as $url) {
             self::assertStringContainsString('<' . html_entity_decode($url) . '>; rel=preload; as=style', $links);
         }
         self::assertMatchesRegularExpression('/; rel=preload; as=script/', $links);
-        self::assertMatchesRegularExpression('/\.woff2>; rel=preload; as=font; type="font\/woff2"; crossorigin/', $links);
+        self::assertStringNotContainsString('as=font', $links);
+        self::assertStringNotContainsString('imladris', $links);
         self::assertStringNotContainsString('/theme/', $links);
         self::assertNull($this->get('/healthz')->getHeader('Link'));
     }

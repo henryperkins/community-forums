@@ -66,9 +66,9 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
                 <?php endif; ?>
                 <h1><?= $e($welcomeHeading) ?></h1>
                 <?php foreach ($welcomeIntro as $i => $paragraph): ?>
-                <p><?= $e($paragraph) ?><?php if ($i === $welcomeLast): ?> Your own cross-board queue is the <a href="/inbox">inbox</a>.<?php endif; ?></p>
+                <p><?= $e($paragraph) ?><?php if ($i === $welcomeLast): ?> Follow your topics in the <a href="/inbox">inbox</a>.<?php endif; ?></p>
                 <?php endforeach; ?>
-                <p class="forum-directory__stats" aria-label="Forum totals">
+                <p class="forum-directory__stats">
                     <span data-forum-total="boards"><?= (int) $totals['boards'] ?> board<?= (int) $totals['boards'] === 1 ? '' : 's' ?></span>
                     <span data-forum-total="topics"><?= (int) $totals['topics'] ?> topic<?= (int) $totals['topics'] === 1 ? '' : 's' ?></span>
                     <span data-forum-total="posts"><?= (int) $totals['posts'] ?> post<?= (int) $totals['posts'] === 1 ? '' : 's' ?></span>
@@ -91,8 +91,8 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
-                <div class="directory-viewbar__peek" role="group" aria-label="Peek">
-                    <span>Peek</span>
+                <div class="directory-viewbar__peek" role="group" aria-label="Topic previews">
+                    <span>Topic previews</span>
                     <?php foreach ([0, 3, 5] as $peekValue): ?>
                         <?php $return = $viewUrl(['peek' => $peekValue]); ?>
                         <?php if ($current_user !== null): ?>
@@ -111,7 +111,7 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
 
             <div data-directory-view-shell>
             <details class="directory-viewbar-mobile" data-viewbar="narrow" data-directory-view-sheet>
-                <summary>Viewing <strong><?= $e($sortLabels[$sort] ?? $sortLabels['category']) ?></strong><?= $peek > 0 ? ' · peek ' . $peek : ' · no peek' ?></summary>
+                <summary>Viewing <strong><?= $e($sortLabels[$sort] ?? $sortLabels['category']) ?></strong><?= $peek > 0 ? ' · ' . $peek . ' previews' : ' · no previews' ?></summary>
                 <div class="directory-viewbar-mobile-panel">
                     <span class="directory-viewbar__label">Order</span>
                     <div class="directory-viewbar__choices" role="group" aria-label="Order">
@@ -129,8 +129,8 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
-                    <span class="directory-viewbar__label">Peek</span>
-                    <div class="directory-viewbar__peek" role="group" aria-label="Peek">
+                    <span class="directory-viewbar__label">Topic previews</span>
+                    <div class="directory-viewbar__peek" role="group" aria-label="Topic previews">
                         <?php foreach ([0, 3, 5] as $peekValue): ?>
                             <?php $return = $viewUrl(['peek' => $peekValue]); ?>
                             <?php if ($current_user !== null): ?>
@@ -151,13 +151,13 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
             </div>
 
             <div class="directory-viewbar__meta">
-                <span class="directory-viewbar__density"><?= ($appearance['density'] ?? 'comfortable') === 'compact' ? 'Compact' : 'Comfortable' ?> rows <a href="/settings/appearance">change</a></span>
+                <span class="directory-viewbar__density"><?= ($appearance['density'] ?? 'comfortable') === 'compact' ? 'Compact' : 'Comfortable' ?> rows <a href="/settings/appearance">Change</a></span>
                 <?php if ($sort !== 'category'): ?>
                     <p class="directory-order-note"><?= $e($orderNotes[$sort] ?? $orderNotes['category']) ?></p>
                 <?php endif; ?>
             </div>
             <?php if ($current_user === null): ?>
-                <p class="directory-guest-note">Order and peek are yours to set as a guest. <a href="/login?next=%2F">Log in</a> to have this view remembered, and to keep a queue of your own.</p>
+                <p class="directory-guest-note">You can change the order and topic previews as a guest. <a href="/login?next=%2F">Log in</a> to save this view and follow topics in your inbox.</p>
             <?php endif; ?>
 
             <?php if ((int) $totals['boards'] === 0): ?>
@@ -226,7 +226,7 @@ $viewUrl = static function (array $changes = []) use ($sort, $peek): string {
                             <?php $display = ($person['display_name'] ?? '') !== '' ? (string) $person['display_name'] : (string) $person['username']; ?>
                             <li>
                                 <?= $this->partial('partials/monogram', ['name' => $display, 'username' => (string) $person['username'], 'avatar_path' => $person['avatar_path'] ?? null]) ?>
-                                <span><a href="/u/<?= $e((string) $person['username']) ?>"><?= $e($display) ?></a><span>@<?= $e((string) $person['username']) ?> · <?= (int) ($person['reputation'] ?? 0) ?> regard</span></span>
+                                <span><a href="/u/<?= $e((string) $person['username']) ?>"><?= $e($display) ?></a><span>@<?= $e((string) $person['username']) ?> · <?= (int) ($person['reputation'] ?? 0) ?> reputation</span></span>
                                 <?php if (($connection_mode ?? 'followers') === 'followers'): ?>
                                     <form method="post" action="/u/<?= $e($current_user->username()) ?>/followers/<?= (int) $person['id'] ?>/remove">
                                         <?= $this->csrfField() ?>
