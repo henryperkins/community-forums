@@ -37,6 +37,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   (owner decision), and space the passkey sign-in apart from Log in.
 - Carry the verified `3630440af0d45598` asset release record. Qualification:
   `docs/evidence/inbox-critique-2026-11-07/README.md`; ADR 0029 follow-up.
+- Verified in production after publication (`c66e3b55dba6da68`, Cloud Run
+  `retroboards-00074-dzr`, Workers build `ef88c102`); receipts are in
+  `docs/evidence/inbox-critique-2026-11-07/production/`.
 
 ## [2026-11-07] - Inbox shares the member shell
 

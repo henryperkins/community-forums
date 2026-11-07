@@ -1,0 +1,49 @@
+{
+  "commit": "409532f55fd5a3e72e062cdf1ef94ba0a444edfb",
+  "push": "a2789ba0..409532f5 main -> main (with 1975bfce, the 3630440af0d45598 record)",
+  "cloud_build": {
+    "project": "rising-woods-449718-v6",
+    "region": "us-east4",
+    "id": "c95b5371-4d08-49da-97d5-672426f32cd9",
+    "status": "SUCCESS",
+    "created": "2026-11-07T17:57:07Z",
+    "finished": "2026-11-07T17:59:53.587220Z"
+  },
+  "cloud_run": {
+    "service": "retroboards",
+    "revision": "retroboards-00074-dzr",
+    "ready": true,
+    "created": "2026-11-07T17:59:15.615503Z",
+    "image": "app@sha256:850ad48ee873511294e08772bf26dafae85923d2ad5ec16212e2af13af9800a2",
+    "traffic": "not readable by the verifying account (run.services.get denied); the live HTML and sign-in note below are rendered by this commit only"
+  },
+  "cron_jobs": {
+    "retroboards-cron-0310": "app:409532f55fd5a3e72e062cdf1ef94ba0a444edfb",
+    "retroboards-cron-0700": "app:409532f55fd5a3e72e062cdf1ef94ba0a444edfb",
+    "retroboards-cron-5m": "app:409532f55fd5a3e72e062cdf1ef94ba0a444edfb",
+    "retroboards-cron-6h": "app:409532f55fd5a3e72e062cdf1ef94ba0a444edfb"
+  },
+  "worker": {
+    "check_run": "Workers Builds: retroboards",
+    "conclusion": "success",
+    "completed_at": "2026-11-07T17:58:20Z",
+    "build": "ef88c102-ee2d-45b2-ab1e-bc2481151f99"
+  },
+  "live": {
+    "asset_version": "c66e3b55dba6da68",
+    "files_checked": 25,
+    "files_matched": 25,
+    "login_references_current": true,
+    "health": {
+      "status": 200,
+      "body": "{\"status\":\"ok\",\"database\":\"ok\"}"
+    },
+    "behaviour": {
+      "guest_inbox_status": 302,
+      "guest_inbox_location": "/login?next=%2Finbox",
+      "login_from_inbox_has_note": true,
+      "plain_login_has_note": false
+    }
+  },
+  "verified_at": "2026-11-07T18:00:34Z (read-only)"
+}

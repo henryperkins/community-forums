@@ -131,4 +131,22 @@ files on `https://forum.candidary.online` were byte-identical to that manifest
 `a2789ba0`, and `npm run check:assets` passed (`asset-record-release.log`,
 `asset-record-check.log`). The record retires the oldest pinned release
 (`545bd84edf0dc37c`) and its two exclusive files. `origin/main` was still
-`a2789ba0` when re-checked at about 17:00 UTC. Nothing here was published.
+`a2789ba0` when re-checked at about 17:00 UTC; that record is `1975bfce`.
+
+### Publication of `409532f5`
+
+Pushed to `main` with `1975bfce` at 17:57 UTC (`deployment-409532f5.json`).
+Cloud Build `c95b5371` succeeded at 17:59:53 UTC. Cloud Run revision
+`retroboards-00074-dzr` is Ready, and all four cron jobs run
+`app:409532f55fd5a3e72e062cdf1ef94ba0a444edfb`. Workers Builds `ef88c102`
+succeeded at 17:58:20 UTC. The verifying account cannot read the service's
+traffic split (`run.services.get` is denied), but at 18:00 UTC the public site
+served what only this commit renders: all 25 delivery files of
+`c66e3b55dba6da68` matched the manifest byte for byte, the login page
+referenced them, `/healthz` answered `{"status":"ok","database":"ok"}`, and a
+guest's `/inbox` led to the new sign-in note while a plain `/login` did not
+(`live-verify-c66e3b55dba6da68.json`). The live release was then recorded with
+`npm run assets:record-release -- c66e3b55dba6da68`, and `npm run
+check:assets` passed (`asset-record-*-c66e3b55dba6da68.log`). That record
+retires `0abd713b0ebf7bca` and its one exclusive file, and rides with the next
+planned change (ADR 0051).
