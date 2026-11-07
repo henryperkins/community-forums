@@ -82,8 +82,87 @@ final class AppInboxRemediationTest extends TestCase
         }
 
         // What the retired block still owns, and must keep owning.
-        self::assertStringContainsString('body[data-route="inbox"] .app-shell { max-width: none; }', $css);
         self::assertStringContainsString('.inbox-reading .thread-view, .inbox-reading .board-view { max-width: 760px; }', $css);
+    }
+
+    /**
+     * The inbox used to lift the shell's --maxw cap for itself alone, so above
+     * 1280px every trip to or from it slid the board rail out from under the
+     * top bar's lockup and resized the panes. One frame serves every member
+     * surface: the base `.app-shell` rule is the only one that may size it.
+     */
+    public function test_no_route_lifts_the_shared_shell_width(): void
+    {
+        $css = file_get_contents(self::CSS);
+        self::assertIsString($css);
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+
+        preg_match_all('/([^{}]*\.app-shell\b[^{}]*)\{([^{}]*)\}/', $css, $rules, PREG_SET_ORDER);
+        $sizing = [];
+        foreach ($rules as [, $selector, $declarations]) {
+            if (preg_match('/(?:^|[;\s])max-width\s*:/', $declarations) !== 1) {
+                continue;
+            }
+            // Only rules whose subject is the shell: `.app-shell > .board-rail`
+            // sizes the drawer, not the frame. Drop (possibly nested) arguments
+            // so the commas left are the selector list's own.
+            $flat = $selector;
+            do {
+                $flat = (string) preg_replace('/\([^()]*\)/', '', $flat, -1, $replaced);
+            } while ($replaced > 0);
+            foreach (explode(',', $flat) as $complex) {
+                if (preg_match('/\.app-shell(?::[\w-]+)*$/', trim($complex)) === 1) {
+                    $sizing[] = (string) preg_replace('/\s+/', ' ', trim($selector) . ' { ' . trim($declarations) . ' }');
+                    break;
+                }
+            }
+        }
+
+        self::assertCount(1, $sizing, "Only the base shell rule may size .app-shell:\n" . implode("\n", $sizing));
+        self::assertStringStartsWith('.app-shell { max-width: var(--maxw);', $sizing[0]);
+    }
+
+    /**
+     * Inside the shared frame the reading pane is about 340px wide with the
+     * board rail open. The composer's narrow layout was keyed to the viewport
+     * alone, so on a desktop the pane's formatting row clipped Spoiler and Link
+     * off its edge without offering "More formatting" (COMPOSER.md, Responsive
+     * overflow), and its action bar clipped the identity and the Anonymous
+     * label away. The pane applies the phone's layout on its own width.
+     */
+    public function test_the_reading_pane_lays_out_the_composer_on_its_own_width(): void
+    {
+        $css = file_get_contents(self::CSS);
+        self::assertIsString($css);
+
+        self::assertStringContainsString('.inbox-reading { container: inbox-reading / inline-size; }', $css);
+        self::assertSame(1, preg_match('/@container inbox-reading \(max-width: 30rem\) \{(.*?)\n\}/s', $css, $query));
+        self::assertMatchesRegularExpression('/\.composer-toolbar-action:not\(\.is-essential\),\s*\.composer-toolbar-sep \{ display: none; \}/', $query[1]);
+        self::assertStringContainsString('.composer-more-wrap { display: inline-flex;', $query[1]);
+        self::assertStringContainsString('.composer-meta-row { grid-template-columns: minmax(0, 1fr) auto; }', $query[1]);
+        // The phone rule clips the row; a desktop pane keeps the hover tips above it.
+        self::assertStringNotContainsString('overflow', $query[1]);
+
+        // The reply box's action bar wraps rather than clipping, on phones and in the pane alike.
+        self::assertSame(1, preg_match('/@media \(max-width: 640px\) \{\s*\.composer-toolbar \{ overflow: hidden; \}(.*?)\n\}/s', $css, $phone));
+        foreach ([$phone[1], $query[1]] as $narrow) {
+            self::assertStringContainsString('.reply-composer .composer-actions-bar { flex-wrap: wrap;', $narrow);
+            self::assertStringContainsString('.reply-composer .composer-actions-start { display: contents; }', $narrow);
+            self::assertStringContainsString('.reply-composer .composer-anonymous-chip { flex: none; }', $narrow);
+        }
+    }
+
+    /**
+     * The anonymity notice is a sentence. Sharing the meta row's third column, it
+     * took every spare pixel from the draft status below about 670px, printed
+     * over it and took Discard's clicks, so it takes its own line at every width.
+     */
+    public function test_the_anonymity_notice_takes_its_own_line(): void
+    {
+        $css = file_get_contents(self::CSS);
+        self::assertIsString($css);
+
+        self::assertStringContainsString('.composer-anonymous-disclosure { grid-column: 1 / -1;', $css);
     }
 
     /**

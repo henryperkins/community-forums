@@ -1333,7 +1333,10 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-meta-draft[hidden],
 .composer-meta-draft:empty { display: none; }
 .composer-discard { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
-.composer-anonymous-disclosure { min-width: 0; overflow-wrap: anywhere; }
+/* The anonymity notice is a sentence, so it takes its own line. Sharing the row
+   it took every spare pixel from the flexible column, and below about 670px the
+   draft status printed under it while it took Discard's clicks. */
+.composer-anonymous-disclosure { grid-column: 1 / -1; min-width: 0; overflow-wrap: anywhere; }
 .composer-count { font-family: var(--font-mono); color: var(--text-muted); font-size: .76rem; white-space: nowrap; }
 .composer-count[hidden] { display: none; }
 .composer-count.over { color: var(--danger); font-weight: var(--weight-semibold); }
@@ -1516,7 +1519,14 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     }
     .composer-emoji-dialog.is-below { top: auto; }
     .composer-meta-row { grid-template-columns: minmax(0, 1fr) auto; }
-    .composer-anonymous-disclosure { grid-column: 1 / -1; }
+    /* The reply box's action bar wraps rather than clipping: its tools, the
+       identity and the Anonymous choice flow as one set of items, and Preview
+       and Send keep the end of the last line. A clipped bar cut the identity to
+       "a…" and Anonymous to a bare checkbox. */
+    .reply-composer .composer-actions-bar { flex-wrap: wrap; justify-content: flex-start; row-gap: 6px; }
+    .reply-composer .composer-actions-start { display: contents; }
+    .reply-composer .composer-anonymous-chip { flex: none; }
+    .reply-composer .composer-actions-end { margin-left: auto; }
 }
 
 @media (hover: none), (pointer: coarse) {
@@ -1758,9 +1768,11 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
    rule left upstream of its replacement is how a rewritten surface silently
    keeps a slice of the surface it replaced.
    ══════════════════════════════════════════════════════════════════════════ */
-/* The one shell decision this route still makes: the three panes are
-   full-bleed where every other member surface is capped and centred. */
-body[data-route="inbox"] .app-shell { max-width: none; }
+/* The inbox makes no shell decision of its own: it shares the one centred
+   --maxw frame every member surface uses, so its panes split at any width
+   exactly as they do at 1280px. Lifting the cap for this route alone (as it
+   once did) slid the rail out from under the top bar's lockup and made the
+   whole shell jump sideways on every trip to and from the inbox. */
 
 /* Marcellus pill tabs. The inbox's own filter tabs are retired — /feed and
    /leaderboard still wear them, so the pills stay. */
@@ -17117,6 +17129,27 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
     .composer-shell.is-submitting .composer-send .icon { animation: none; }
 }
 /* ══ End member surfaces production transfer ══ */
+
+/* The inbox reading pane's composer, kept outside the generated bridge above.
+   From 1280px the pane is the column the queue leaves inside the --maxw frame,
+   about 340px with the board rail open, and the composer lays out there as it
+   does on a narrow screen. Its formatting row keeps the essentials and the named
+   "More formatting" overflow (COMPOSER.md, Responsive overflow), or Spoiler and
+   Link clip off the pane's edge with no way to reach them. Unlike the phone rule
+   the row stays unclipped, so the desktop hover tips above it still show. The
+   meta row takes the phone's two columns, and the action bar wraps as the phone
+   reply box's does, or the identity and the Anonymous label are clipped away. */
+.inbox-reading { container: inbox-reading / inline-size; }
+@container inbox-reading (max-width: 30rem) {
+    .composer-toolbar-action:not(.is-essential),
+    .composer-toolbar-sep { display: none; }
+    .composer-more-wrap { display: inline-flex; flex: 0 0 auto; }
+    .composer-meta-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .reply-composer .composer-actions-bar { flex-wrap: wrap; justify-content: flex-start; row-gap: 6px; }
+    .reply-composer .composer-actions-start { display: contents; }
+    .reply-composer .composer-anonymous-chip { flex: none; }
+    .reply-composer .composer-actions-end { margin-left: auto; }
+}
 
 /* Operator welcome copy (ADR 0054), kept outside the generated bridge above:
    an optional tagline line over the directory heading, and room between

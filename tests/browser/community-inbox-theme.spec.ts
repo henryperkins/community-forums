@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
@@ -104,6 +104,28 @@ async function openShortcutInboxTopic(page: Page) {
   const preview = reading.locator('[data-inbox-preview]');
   await expect(preview).toBeVisible();
   return { link, reading, preview, form: preview.locator('#reply') };
+}
+
+// A narrow reply box once kept every control "visible" while clipping it away:
+// the identity read "a…" and Anonymous was a bare checkbox. Measure the words.
+async function replyControlsReadable(composer: Locator) {
+  return composer.evaluate((form) => {
+    const within = (element: Element | null, box: DOMRect) => {
+      if (!element) return true;
+      const rect = element.getBoundingClientRect();
+      return rect.left >= box.left - 1 && rect.right <= box.right + 1;
+    };
+    const box = form.querySelector('.composer-box')!.getBoundingClientRect();
+    const identity = form.querySelector<HTMLElement>('.composer-identity-copy');
+    const chip = form.querySelector<HTMLElement>('.composer-anonymous-chip');
+    return {
+      identityWhole: !identity || identity.scrollWidth <= identity.clientWidth + 1,
+      anonymousWhole: !chip || (chip.scrollWidth <= chip.clientWidth + 1 && within(chip.querySelector('label'), chip.getBoundingClientRect())),
+      actionsInside: [...form.querySelectorAll('.composer-actions-bar :is(button, label)')]
+        .filter((element) => element.getClientRects().length > 0)
+        .every((element) => within(element, box)),
+    };
+  });
 }
 
 async function expectNoSeriousA11yViolations(page: Page, include: string): Promise<void> {
@@ -535,6 +557,32 @@ test('canonical mobile composer keeps formatting and anonymous controls containe
     };
   });
   expect(containment).toEqual({ toolbarContained: true, anonymousContained: true, pageContained: true });
+  expect(await replyControlsReadable(composer)).toEqual({ identityWhole: true, anonymousWhole: true, actionsInside: true });
+});
+
+test('the Inbox reading pane reply box keeps its identity, Anonymous choice and Discard usable', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the reading pane is a narrow column from 1280px');
+  await login(page);
+  const { reading, form } = await openShortcutInboxTopic(page);
+  expect((await reading.boundingBox())!.width).toBeLessThan(480);
+  const editor = form.locator('.ProseMirror:visible, textarea[name="body"]:visible').first();
+  await editor.focus();
+  await expect(form).toHaveClass(/\bis-expanded\b/);
+  await editor.fill(`Pane draft ${Date.now()}`);
+  await expect(form.locator('[data-composer-draft-slot]')).toContainText('Draft saved', { timeout: 5000 });
+  await expect(form.locator('.composer-anonymous-disclosure')).toBeVisible();
+
+  expect(await replyControlsReadable(form)).toEqual({ identityWhole: true, anonymousWhole: true, actionsInside: true });
+  // The anonymity notice takes its own line, so nothing covers Discard.
+  const discard = form.getByRole('button', { name: 'Discard draft' });
+  await discard.scrollIntoViewIfNeeded();
+  expect(await discard.evaluate((button) => {
+    const rect = button.getBoundingClientRect();
+    const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return hit === button || button.contains(hit);
+  })).toBe(true);
+  await discard.click();
+  await expect(form.locator('[data-composer-draft-slot]')).not.toContainText('Draft saved');
 });
 
 test('parchment and twilight preserve the Inbox layout', async ({ page }) => {

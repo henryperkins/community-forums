@@ -109,6 +109,106 @@ test('document-scrolling rails stay below the header and fill the remaining view
   }
 });
 
+test('every member route, the inbox included, shares one centred shell frame', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the --maxw frame binds only at desktop widths');
+  await login(page);
+  // The inbox once lifted the cap for itself, so above 1280px the rail jumped to
+  // the window edge on the way in and back under the lockup on the way out.
+  const routes = ['/', '/c/chrome-place', fixture.topic, '/inbox', '/messages', '/notifications', '/search', '/compose', '/settings/account'];
+  const frame = () => page.evaluate(() => {
+    const box = (selector: string) => {
+      const rect = document.querySelector(selector)!.getBoundingClientRect();
+      return [Math.round(rect.x), Math.round(rect.width)];
+    };
+    return {
+      shell: box('.app-shell'), rail: box('[data-sidebar]'), main: box('#main'),
+      subheader: box('.forum-subheader'), lockup: box('.forum-bar-brand')[0],
+    };
+  });
+  for (const width of [1280, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 800 });
+    let reference: Awaited<ReturnType<typeof frame>> | undefined;
+    for (const route of routes) {
+      expect((await page.goto(route))!.status()).toBe(200);
+      const measured = await frame();
+      reference ??= measured;
+      expect(measured, `${route} at ${width}px`).toEqual(reference);
+    }
+    expect(reference!.shell[1]).toBeLessThanOrEqual(1280);
+    // Once the window clears --maxw and the bar's 22px gutters, the rail starts under the lockup.
+    if (width >= 1440) expect(reference!.rail[0]).toBe(reference!.lockup);
+    await noOverflow(page);
+  }
+  for (const route of ['/', '/inbox']) {
+    await page.goto(route);
+    await capture(page, info, `shell-1920-${route === '/' ? 'boards' : 'inbox'}`);
+  }
+  // A closed rail hands its width to the content inside the same frame, on every route.
+  // The background save follows the form's redirect; leaving mid-chain would abort it
+  // into the native fallback, so wait for the chain's final response.
+  const saved = page.waitForResponse(response => response.request().resourceType() === 'fetch'
+    && response.request().redirectedFrom()?.url().endsWith('/settings/member-surfaces') === true);
+  await page.locator('[data-panel-form="rail"] button').click();
+  await saved;
+  await expect(page.locator('body')).toHaveAttribute('data-rail-open', '0');
+  const closed = await frame();
+  expect(closed.main).toEqual(closed.shell);
+  await capture(page, info, 'shell-1920-inbox-rail-closed');
+  for (const route of ['/', '/settings/account', '/inbox']) {
+    await page.goto(route);
+    expect(await frame(), `${route} with the rail closed`).toEqual(closed);
+  }
+});
+
+test('the inbox reading pane keeps every formatting command reachable inside the shared frame', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the reading pane is a column only from 1280px');
+  await login(page);
+  await page.setViewportSize({ width: 1920, height: 800 });
+  const openPreview = async () => {
+    await page.goto('/inbox?scope=watching');
+    await page.locator(`[data-inbox-row] a[data-inbox-preview-url][href="${fixture.topic}"]`).click();
+    await expect(page.locator('[data-inbox-reading-content]')).toContainText('Chrome regression body.');
+    await page.locator('[data-inbox-reading] .composer-toolbar').scrollIntoViewIfNeeded();
+  };
+  const formattingRow = () => page.evaluate(() => {
+    const pane = document.querySelector('[data-inbox-reading]')!.getBoundingClientRect();
+    const shown = [...document.querySelectorAll('[data-inbox-reading] .composer-toolbar button')]
+      .filter(button => button.getClientRects().length > 0)
+      .map(button => {
+        const box = button.getBoundingClientRect();
+        return { name: button.getAttribute('aria-label')!.replace(/ \(.*\)$/, ''), inside: box.left >= pane.left && box.right <= pane.right };
+      });
+    return { pane: pane.width, names: shown.map(button => button.name), clipped: shown.filter(button => !button.inside).map(button => button.name) };
+  });
+
+  // With the board rail open the pane is what the queue leaves inside --maxw:
+  // a narrow column, so the row keeps its essentials and names its overflow.
+  await openPreview();
+  const narrow = await formattingRow();
+  expect(narrow.pane).toBeLessThan(480);
+  expect(narrow.names).toEqual(['Bold', 'Italic', 'Bullet list', 'Link', 'More formatting']);
+  expect(narrow.clipped).toEqual([]);
+  await page.locator('[data-inbox-reading] .composer-more-toggle').click();
+  const overflow = page.locator('[data-inbox-reading] .composer-format-overflow');
+  await expect(overflow.getByRole('button')).toHaveText(['Strike', 'Inline code', 'Quote', 'Heading', 'Numbered list', 'Code block', 'Spoiler']);
+  const pane = (await page.locator('[data-inbox-reading]').boundingBox())!;
+  const menu = (await overflow.boundingBox())!;
+  expect(menu.x).toBeGreaterThanOrEqual(pane.x);
+  expect(menu.x + menu.width).toBeLessThanOrEqual(pane.x + pane.width);
+  await capture(page, info, 'reading-pane-formatting-overflow');
+
+  // A closed rail gives the pane room for the whole row, so nothing is tucked away.
+  const saved = page.waitForResponse(response => response.request().resourceType() === 'fetch'
+    && response.request().redirectedFrom()?.url().endsWith('/settings/member-surfaces') === true);
+  await page.locator('[data-panel-form="rail"] button').click();
+  await saved;
+  await openPreview();
+  const wide = await formattingRow();
+  expect(wide.pane).toBeGreaterThan(480);
+  expect(wide.names).toEqual(['Bold', 'Italic', 'Strike', 'Inline code', 'Quote', 'Heading', 'Bullet list', 'Numbered list', 'Code block', 'Spoiler', 'Link']);
+  expect(wide.clipped).toEqual([]);
+});
+
 test('plain error headers expose only real pane targets and preserve member preferences', async ({ page }, info) => {
   await login(page);
   for (const route of ['/chrome-page-does-not-exist', '/admin/settings']) {

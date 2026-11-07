@@ -1,6 +1,6 @@
 # RetroBoards — Composer (Unified Input) Design
 
-**Status:** v0.13 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-09-25
+**Status:** v0.14 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-11-07
 **Companion to [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; PHP/MySQL, server-rendered + progressive enhancement).
 
 ## Scope
@@ -125,7 +125,7 @@ A compact engraved formatting row sits inside the top of the composer box on des
 | Action bar start | Attach, Emoji, identity / Anonymous where allowed |
 | Action bar end | Preview toggle, Send |
 
-- **Responsive overflow:** on narrow screens the formatting row keeps Bold, Italic, Bulleted list, and Link visible and tucks the other formatting commands behind the named **“More formatting”** (`＋`) overflow menu. Attach and Emoji remain in the action bar rather than the formatting overflow.
+- **Responsive overflow:** on narrow screens, and in the Inbox reading pane when it is a narrow column on a wide one, the formatting row keeps Bold, Italic, Bulleted list, and Link visible and tucks the other formatting commands behind the named **“More formatting”** (`＋`) overflow menu. Attach and Emoji remain in the action bar rather than the formatting overflow.
 - **Active-state reflection:** toggling is idempotent (B on bold text un-bolds it).
 - Controls are real buttons (keyboard-focusable, labelled), not icon-only without `aria-label`.
 
@@ -421,6 +421,7 @@ This surface specification has no separate decision backlog.
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.14 | 2026-11-07 | §4 responsive overflow also applies inside the Inbox reading pane when it is narrower than 30rem — about 340px with the board rail open in the shared 1280px frame — so its reply box keeps Link and the named overflow instead of clipping Spoiler and Link. On phones and in that pane the reply box's action bar wraps instead of clipping the identity and the Anonymous label, and the anonymity notice takes its own line at every width instead of covering Discard. ADR 0029 follow-up (2026-11-07). |
 | v0.13 | 2026-09-25 | Reconciled with the shipped composer. The DM submit target is `POST /messages` / `POST /messages/{id}` (§2). Local drafts use `rb-draft:{username}:{form action}` keys, edit forms keep none, drafts clear on the next loaded page, and signed-out drafts migrate automatically at sign-in (§8). The Drafts list is the `/drafts` page. The §14.1 mount context is `new_thread`, carried as `data-composer-*` attributes. §16.2 points to SCHEMA.md for the `attachments` shape instead of repeating the superseded `path`-column DDL. |
 | v0.12 | 2026-09-23 | Replaced obsolete local-only-draft and Phase 3 planning language with the shipped `server_drafts` contract. Consolidated the original question register into DECISIONS and ADRs. |
 | v0.11 | 2026-09-23 | Upload readiness, explicit failure recovery, interrupted drafts, cancellation, server pending-image validation, and wiki attachment finalization. Local evidence is separate from production/device verification. |

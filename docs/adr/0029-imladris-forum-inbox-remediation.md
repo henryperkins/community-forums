@@ -113,6 +113,42 @@ its width check distinguishes the configured viewport from Chromium's usable
 client width when a stable scrollbar gutter is present. The desktop and mobile
 owners pass against a freshly prepared evidence database.
 
+### Follow-up resolution — 2026-11-07
+
+Deferred item 6 is resolved in production's favour: `/inbox` no longer opts out
+of the shared frame. Its `max-width: none` made it the one member route whose
+shell changed with the route. Above 1280px the board rail jumped to the window
+edge, out from under the top bar's lockup, and the queue, pane, subheader and
+New moved with it (75px at 1440, 315px at 1920), then jumped back on the next
+route. The owner reported that as the one break in an otherwise uniform shell.
+Every member route now shares one centred `--maxw` frame (DESIGN.md: a 1280px
+content maximum), so at any width the inbox renders as it already did at
+1280px. Its queue/pane split and the reading-pane toggle the design puts in the
+bar are unchanged. ADR 0028 deferral 10 stays open: whether every member surface
+should go full-bleed, as the design draws them, remains a product-wide call, and
+it now applies to all of them at once. The design system's own app-shell card
+already draws the inbox inside the capped frame; its open note that the inbox
+escapes the outer chrome by a `body[data-route]` override no longer describes
+production, and is for the design project to retire upstream.
+
+Holding the inbox at 1280px kept its reading pane at about 340px with the board
+rail open. The reply box there had always been broken at that width, because
+its narrow layout was keyed only to a phone viewport: the formatting row clipped
+Spoiler and Link, and the action bar cut the identity to "a…" and Anonymous to a
+bare checkbox, as it also did on phones. The pane is now a size container, and
+below 30rem it applies the phone's layout: COMPOSER.md's essentials with the
+named "More formatting" overflow. On phones and in the pane, the reply box's
+action bar wraps instead of clipping. Separately, the anonymity notice took
+every spare pixel from the draft status whenever a box was under about 670px,
+printing over it and taking Discard's clicks, so it now takes its own line at
+every width. `AppInboxRemediationTest` replaces the assertion that pinned the
+opt-out with one that no route-scoped rule may size `.app-shell`, and pins the
+reply box rules. `chrome-consistency.spec.ts` measures nine routes at 1280, 1440
+and 1920px and the pane's formatting row in both rail states, and
+`community-inbox-theme.spec.ts` checks that the identity, the Anonymous label
+and Discard stay usable in the pane and on phones. Its existing Discard
+journey, red on the unchanged tree, now passes.
+
 ## A note on method
 
 ADR 0028 records that source parity is not visual parity. This surface adds the

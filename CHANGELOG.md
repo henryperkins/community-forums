@@ -2,6 +2,22 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-07] - Inbox shares the member shell
+
+- Remove the inbox's full-bleed exception so `/inbox` uses the same centred
+  1280px (`--maxw`) shell as every other member page. Above 1280px the board
+  rail, panes, subheader and New no longer jump sideways on the way to and from
+  the inbox, and the rail stays under the top bar's lockup. At any width the
+  inbox now renders as it already did at 1280px.
+- Fix the reply box at narrow widths. In the inbox reading pane the formatting
+  row keeps Bold, Italic, Bullet list and Link beside "More formatting" instead
+  of clipping Spoiler and Link. There and on phones the action bar wraps instead
+  of cutting the identity to "a…" and Anonymous to a bare checkbox. The
+  anonymity notice takes its own line at every width instead of covering Discard.
+- Replace the stylesheet assertion that pinned the exception with a contract
+  that no route-scoped rule may size `.app-shell`, and add Chromium and WebKit
+  coverage of nine routes at 1280, 1440 and 1920px (ADR 0029 follow-up).
+
 ## [2026-11-01] - Verified email changes default-on
 
 - Enable `email_change` by default after owner approval. Fresh installations and
