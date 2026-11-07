@@ -55,7 +55,7 @@ final class AssetManifest
             return $this->urls;
         }
         $urls = [];
-        foreach (['app.css', 'imladris.css', 'conversation-entry.js', 'app.js', 'composer.js', 'passkeys.js', 'tour.js', 'fonts/imladris/eb-garamond-latin-400-normal.woff2'] as $name) {
+        foreach (['forum-base.css', 'app.css', 'forum-theme.css', 'conversation-entry.js', 'app.js', 'composer.js', 'passkeys.js', 'tour.js'] as $name) {
             $urls[$name] = '/assets/' . $name . '?v=' . $this->version();
         }
         foreach (is_array($this->manifest['urls'] ?? null) ? $this->manifest['urls'] : [] as $name => $url) {

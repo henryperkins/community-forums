@@ -1,3 +1,5 @@
+/* Structural application rules, below the active Forum theme. */
+@layer application {
 /* RetroBoards application layer. Imladris foundations and reusable component
    defaults load first from /assets/imladris.css; this file owns shell layout,
    feature-specific states, and compatibility overrides. Keeping application
@@ -18802,3 +18804,5 @@ body.directory-view-open[data-route="boards"] .main { overflow: hidden; }
 :root[data-corners="soft"], .brand-preview[data-corners="soft"] { --radius-sm: 6px; --radius-md: 10px; --radius-lg: 12px; --radius-xl: 16px; }
 /* The sample resolves its own card radius from its own scale. */
 .brand-preview[data-corners] { --radius: var(--radius-md); }
+
+}

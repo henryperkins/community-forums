@@ -74,10 +74,10 @@ $opTier = ($opAuthor !== null && $opAuthor['profile_url'] !== null)
     <?php if ((int) $total_posts > count($posts)): ?><p class="inbox-preview-bounded"><a href="<?= $e($canonical) ?>">Continue with <?= (int) $total_posts - count($posts) ?> more posts</a></p><?php endif; ?>
 
     <?php if ((int) $thread['is_locked'] === 1): ?>
-        <p class="joinbar">This topic is locked. The wardens closed it once the council had spoken; the record stays readable.</p>
+        <p class="joinbar">This topic is locked. You can read the discussion, but new replies are closed.</p>
     <?php elseif ($can_reply): ?>
         <div class="inbox-preview-reply">
-            <span class="eyebrow">Add your counsel</span>
+            <span class="eyebrow">Write a reply</span>
             <?= $this->partial('partials/composer', [
                 'thread' => $thread,
                 'reply_errors' => [],

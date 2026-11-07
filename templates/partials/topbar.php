@@ -69,7 +69,7 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
             // The house mark, inline so it takes --accent through currentColor
             // and flips in twilight (EightPointStar). It is also the fallback in
             // whichever mode has no uploaded logo (partials/brand_logo, ADR 0054).
-            $houseMark = '<svg class="forum-bar-mark" viewBox="0 0 100 100" width="24" height="24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>'
+            $houseMark = $this->partial('partials/brand_mark', ['class' => 'forum-bar-mark'])
                 . '<span class="forum-bar-wordmark">' . $e($site_name) . '</span>';
             ?>
             <?= $this->partial('partials/brand_logo', [
@@ -129,9 +129,9 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
     ?>
     <?php if (!empty($features['search']) && $path !== '/search'): ?>
         <span class="forum-bar-searchwrap">
-            <a class="forum-bar-search" href="/search" aria-label="Search the council" data-shortcut="k">
+            <a class="forum-bar-search" href="/search" aria-label="Search forums" data-shortcut="k">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-                <span class="forum-bar-search-label">Search the council…</span>
+                <span class="forum-bar-search-label">Search forums…</span>
                 <span class="forum-bar-kbd" data-shortcut-hint aria-hidden="true" hidden></span>
             </a>
         </span>

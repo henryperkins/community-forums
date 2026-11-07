@@ -9,33 +9,23 @@ use App\Security\Packages\ThemeTokenPolicy;
 /** Resolved branding colours shared by delivery, preview, and contrast review. */
 final class BrandPalette
 {
-    public const CSS_VERSION = '3';
+    public const CSS_VERSION = '4';
     /** @return array<string,array<string,array<string,string>>> */
     public static function presets(?array $packageTokens = null): array
     {
-        // One shared definition (ADR 0054): every role a package may set comes
-        // from ThemeTokenPolicy's baseline, the same values the package build
-        // gate and contrast review use. Only application-owned roles (status,
-        // focus, field rule, inverse/cool grounds, derived hover/press) and the
-        // translucent dark washes as the stylesheet really declares them are
-        // added here.
+        // The built-in Forum theme and package gate share the same opaque
+        // colour roles. Additional application-owned roles stay outside the
+        // package whitelist. ADR 0056 retires the previous visual defaults.
         $classic = [
             'light' => array_replace(ThemeTokenPolicy::baseline('light'), [
-                '--surface-cool' => '#eef1ed', '--surface-inverse' => '#1e2730',
-                '--gold-soft' => '#f4ebcf',
-                '--surface-done' => '#edf3ed', '--on-done' => '#24402f',
-                '--brand-hover' => '#24402f', '--brand-press' => '#1c2e24',
-                '--focus-ring' => 'rgba(194,154,68,.7)', '--field-rule' => '#9a7530',
+                '--surface-soft' => '#f8fafc', '--surface-cool' => '#f1f5f9', '--surface-inverse' => '#172b4d',
+                '--surface-done' => '#ecfdf3', '--on-done' => '#14532d',
+                '--focus-ring' => '#0b57d0', '--field-rule' => '#64748b',
             ]),
             'dark' => array_replace(ThemeTokenPolicy::baseline('dark'), [
-                '--surface-cool' => '#eef1ed', '--surface-inverse' => '#f5efe1',
-                // The baseline flattens these washes for contrast arithmetic;
-                // the stylesheet declares them translucent.
-                '--brand-subtle' => 'rgba(78,116,89,.20)',
-                '--gold-soft' => 'rgba(194,154,68,.16)',
-                '--surface-done' => 'rgba(78,116,89,.20)', '--on-done' => '#bcd0bf',
-                '--brand-hover' => '#6e9479', '--brand-press' => '#1c2e24',
-                '--focus-ring' => 'rgba(210,176,98,.75)', '--field-rule' => '#b08a3a',
+                '--surface-soft' => '#182234', '--surface-cool' => '#263445', '--surface-inverse' => '#f8fafc',
+                '--surface-done' => '#173d2d', '--on-done' => '#bbf7d0',
+                '--focus-ring' => '#bfdbfe', '--field-rule' => '#94a3b8',
             ]),
         ];
         // Package builds contain validated token data, never raw operator CSS.
@@ -142,17 +132,17 @@ final class BrandPalette
         foreach ($presets as &$modes) {
             foreach ($modes as &$palette) {
                 $palette['--brand-primary'] = $palette['--accent'];
-                $palette['--brand-contrast'] ??= '#faf6ec';
+                $palette['--brand-contrast'] = self::contrastInk($palette['--brand']);
                 $palette['--brand-hover-contrast'] = self::contrastInk($palette['--brand-hover']);
                 $palette['--brand-press-contrast'] = self::contrastInk($palette['--brand-press']);
-                $palette['--brand-primary-hover'] = self::mix($palette['--accent'], '#000000', .82);
+                $palette['--brand-primary-hover'] = self::actionShade($palette['--accent'], .82);
                 $palette['--brand-primary-press'] = $palette['--brand-primary-hover'];
-                $palette['--brand-primary-hover-contrast'] = $palette['--accent-contrast'];
-                $palette['--brand-primary-press-contrast'] = $palette['--accent-contrast'];
+                $palette['--brand-primary-hover-contrast'] = self::contrastInk($palette['--brand-primary-hover']);
+                $palette['--brand-primary-press-contrast'] = self::contrastInk($palette['--brand-primary-press']);
                 $palette['--brand-accent'] = $palette['--accent-2'];
                 $palette['--brand-accent-contrast'] = self::contrastInk($palette['--accent-2']);
-                $palette['--brand-accent-hover'] = '#b08a3a';
-                $palette['--brand-accent-hover-contrast'] = '#1b231d';
+                $palette['--brand-accent-hover'] = self::actionShade($palette['--accent-2'], .82);
+                $palette['--brand-accent-hover-contrast'] = self::contrastInk($palette['--brand-accent-hover']);
             }
         }
         return $presets;

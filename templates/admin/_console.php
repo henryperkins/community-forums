@@ -170,7 +170,7 @@ foreach ($tierAreas as $key => $meta) {
             <?= $this->partial('partials/brand_logo', [
                 'plan' => is_array($branding['logo'] ?? null) ? $branding['logo'] : null,
                 'class' => 'admin-bar-logo', 'alt' => $brandName, 'height' => 24,
-                'fallback' => '<svg class="admin-bar-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>'
+                'fallback' => $this->partial('partials/brand_mark', ['class' => 'admin-bar-star'])
                     . '<span class="admin-bar-wordmark">' . $e($brandName) . '</span>',
             ]) ?>
         </a>
@@ -227,7 +227,7 @@ foreach ($tierAreas as $key => $meta) {
         </nav>
     </details>
 </div>
-<main class="admin-console" id="main"<?= $current !== null ? ' data-area="' . $e($area) . '"' : '' ?>>
+<main class="admin-console" id="main" tabindex="-1"<?= $current !== null ? ' data-area="' . $e($area) . '"' : '' ?>>
     <?php if ($current !== null): ?>
         <h1 class="admin-title"><?= $e($current['h1']) ?></h1>
         <nav class="admin-tabs" aria-label="<?= $e($current['aria']) ?>">

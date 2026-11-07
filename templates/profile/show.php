@@ -63,7 +63,7 @@ $profileExcerpt = static function (string $html): string {
         <div class="profile-aside">
             <div class="profile-rep">
                 <span class="profile-rep-value"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) $profile['reputation']) ?></span>
-                <span class="profile-rep-label">Regard</span>
+                <span class="profile-rep-label">Reputation</span>
             </div>
             <?php if (($current_user !== null) && empty($is_self)): ?>
                 <div class="profile-actions">
@@ -294,8 +294,8 @@ $profileExcerpt = static function (string $html): string {
         <div class="profile-commends">
             <section class="profile-regard-card">
                 <span class="profile-regard-value"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) $profile['reputation']) ?></span>
-                <p class="profile-regard-label">Regard</p>
-                <p class="profile-regard-note">Regard recognises contribution; it grants no powers.</p>
+                <p class="profile-regard-label">Reputation</p>
+                <p class="profile-regard-note">Reputation recognises contribution; it does not grant permissions.</p>
             </section>
             <section class="profile-commend-list">
                 <h2>Most commended</h2>

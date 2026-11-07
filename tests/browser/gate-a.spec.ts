@@ -967,40 +967,58 @@ test('phase 4 slash menu inserts approved snippets and GIPHY media', async ({ pa
   const form = page.locator('form.composer').first();
   const textarea = form.locator('textarea.composer-input');
 
-  // The menu is an ARIA combobox: the textarea drives a role=listbox of
-  // role=option items, navigable entirely from the keyboard.
+  // The native textarea controls listbox suggestions without replacing its
+  // multiline textbox semantics or adding unsupported aria-expanded state.
+  const menu = form.locator('.composer-slash-menu[role="listbox"]');
+  await expect(textarea).toHaveRole('textbox');
+  await expect(textarea).not.toHaveAttribute('role', /.*/);
+  await expect(textarea).not.toHaveAttribute('aria-expanded', /.*/);
   await textarea.fill('/');
-  await expect(page.locator('form.composer .composer-slash-menu[role="listbox"]').first()).toBeVisible();
-  await expect(textarea).toHaveAttribute('aria-expanded', 'true');
+  await expect(menu).toBeVisible();
+  await expect(textarea).toHaveAttribute('aria-controls', (await menu.getAttribute('id'))!);
+  await expect(textarea).toHaveAttribute('aria-autocomplete', 'list');
   const tableOption = page.getByRole('option', { name: 'Insert table' });
   const taskOption = page.getByRole('option', { name: 'Insert task list' });
   await expect(tableOption).toBeVisible();
   await expect(taskOption).toBeVisible();
   // First option is active by default; Arrow keys move the active descendant.
   await expect(tableOption).toHaveAttribute('aria-selected', 'true');
+  await expect(textarea).toHaveAttribute('aria-activedescendant', (await tableOption.getAttribute('id'))!);
+  await expect(textarea).toBeFocused();
   await shot(page, info, '26-slash-menu');
 
   await textarea.press('ArrowDown');
   await expect(taskOption).toHaveAttribute('aria-selected', 'true');
   await expect(tableOption).toHaveAttribute('aria-selected', 'false');
+  await expect(textarea).toHaveAttribute('aria-activedescendant', (await taskOption.getAttribute('id'))!);
   await textarea.press('ArrowUp');
   await expect(tableOption).toHaveAttribute('aria-selected', 'true');
+  await expect(textarea).toHaveAttribute('aria-activedescendant', (await tableOption.getAttribute('id'))!);
   // Enter inserts the active option (not a newline / form submit) and closes.
   await textarea.press('Enter');
   await expect(textarea).toHaveValue(/\| Heading \| Heading \|/);
   await expect(page.getByRole('option', { name: 'Insert table' })).toHaveCount(0);
-  await expect(textarea).toHaveAttribute('aria-expanded', 'false');
+  await expect(menu).toBeHidden();
+  await expect(textarea).not.toHaveAttribute('aria-activedescendant', /.*/);
+  await expect(textarea).toBeFocused();
 
   await textarea.fill('/gif cat');
   await page.getByRole('option', { name: 'Search GIPHY' }).click();
   await expect(page.getByRole('option', { name: 'Insert GIF Evidence cat' })).toBeVisible();
   await page.getByRole('option', { name: 'Insert GIF Evidence cat' }).click();
   await expect(textarea).toHaveValue('![Evidence cat](https://media4.giphy.com/media/cat/giphy.gif)');
+  await expect(menu).toBeHidden();
+  await expect(textarea).not.toHaveAttribute('aria-activedescendant', /.*/);
+  await expect(textarea).toBeFocused();
   // Escape closes the menu without disturbing the composed value.
   await textarea.fill('/');
-  await expect(textarea).toHaveAttribute('aria-expanded', 'true');
+  await expect(menu).toBeVisible();
   await textarea.press('Escape');
-  await expect(textarea).toHaveAttribute('aria-expanded', 'false');
+  await expect(menu).toBeHidden();
+  await expect(textarea).not.toHaveAttribute('aria-activedescendant', /.*/);
+  await expect(textarea).not.toHaveAttribute('aria-expanded', /.*/);
+  await expect(textarea).toHaveValue('/');
+  await expect(textarea).toBeFocused();
   await textarea.fill('![Evidence cat](https://media4.giphy.com/media/cat/giphy.gif)');
   await shot(page, info, '27-giphy-inserted');
 

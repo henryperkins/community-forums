@@ -1,0 +1,222 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.6
+Configuration: <baseline>/phpunit.xml
+
+F[RetroBoards] SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SKIP LOCKED' at line 5 @ <baseline>/src/Core/Database.php:252
+F                                                                  2 / 2 (100%)
+
+Time: 00:00.278, Memory: 62.50 MB
+
+There were 2 failures:
+
+1) Tests\Integration\Admin\AdminAuditPageTest::test_audit_body_adopts_the_design_register_without_weakening_raw_change_or_targets
+Failed asserting that '<!doctype html>\n
+<html lang="en"\n
+      data-theme="system"\n
+      data-density="comfortable"\n
+      data-font-size="medium"\n
+      >\n
+<head>\n
+    <meta charset="utf-8">\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\n
+            <title>Audit log</title>\n
+    <meta name="description" content="RetroBoards — a community forum.">\n
+            <meta property="og:site_name" content="RetroBoards">\n
+    <meta property="og:title" content="Audit log">\n
+    <meta property="og:description" content="RetroBoards — a community forum.">\n
+    <meta property="og:type" content="website">\n
+                    <link rel="icon" href="data:,">\n
+        <link rel="stylesheet" href="/assets/dist/imladris-style-DmYWEV0N.css">\n
+    <link rel="stylesheet" href="/assets/dist/app-style-CFVEFxJL.css">\n
+    <link rel="stylesheet" href="/assets/dist/wysiwyg-composer-BRAFF38E.css">        </head>\n
+<body class="variant-admin is-rail-open is-reading-open" data-route="" data-drafts="1" data-server-drafts="1" data-rail-open="1" data-inbox-reading-open="1" data-wysiwyg-composer="1" data-wysiwyg-src="/assets/dist/wysiwyg-composer-XlKwRXnh.js" data-user="overviewaudit" data-enter-to-send="1" data-show-preview="1" data-smart-lists="1" data-tour="1">\n
+<a class="skip-link" href="#main">Skip to content</a>\n
+        <div class="admin-bar">\n
+    <div class="admin-bar-id">\n
+        <a class="admin-bar-brand" href="/" aria-label="RetroBoards">\n
+            <svg class="admin-bar-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg><span class="admin-bar-wordmark">RetroBoards</span>        </a>\n
+        <a class="admin-bar-exit" href="/">\n
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>\n
+            Back to the forum\n
+        </a>\n
+        <div class="admin-bar-right">\n
+                            <form class="admin-bar-search" method="get" action="/search" role="search">\n
+                    <input class="input input-small" type="search" enterkeyhint="search" name="q" placeholder="Search…" aria-label="Search">\n
+                </form>\n
+                                                                                <a class="topbar-link bell" href="/notifications" data-bell data-notification-link aria-label="Notifications" title="Notifications">\n
+                        <svg class="bell-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>\n
+                        <span class="bell-count" data-notification-count aria-hidden="true" hidden>0</span>\n
+                        <span class="sr-only">Notifications</span>\n
+                    </a>\n
+                                <a class="admin-bar-user" href="/u/overviewaudit" aria-label="overviewaudit">\n
+                        <span class="monogram mono-0" aria-hidden="true">OV</span>\n
+                    <span class="admin-bar-username">overviewaudit</span>\n
+                </a>\n
+                <form class="inline" method="post" action="/logout">\n
+                    <input type="hidden" name="_token" value="8794b249b7171fee1829625d93a2e0605867f16910524b7780fe4520ef015f3b">                    <button class="linkbtn" type="submit" aria-label="Log out">\n
+                        <svg class="icon icon-log-out" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>\n
+                        <span class="admin-bar-action-label">Log out</span>\n
+                    </button>\n
+                </form>\n
+                                    <span class="admin-bar-mode">Admin mode</span>\n
+        </div>\n
+    </div>\n
+    <nav class="admin-tier" aria-label="Admin areas" data-admin-tier>\n
+                    <span class="admin-tier-item is-active" aria-current="page">Overview</span>\n
+                <a class="admin-tier-item" href="/mod/reports">Moderation</a>\n
+                <a class="admin-tier-item" href="/admin/structure">Content</a>\n
+                <a class="admin-tier-item" href="/admin/roles">People</a>\n
+                <a class="admin-tier-item" href="/admin/users">Members</a>\n
+                <a class="admin-tier-item" href="/admin/branding">Appearance</a>\n
+                <a class="admin-tier-item" href="/admin/email">Notifications</a>\n
+                <a class="admin-tier-item" href="/admin/api-tokens">Integrations</a>\n
+                <a class="admin-tier-item" href="/admin/packages">Packages</a>\n
+                <a class="admin-tier-item" href="/admin/features">Features</a>\n
+                <a class="admin-tier-item" href="/admin/settings">Settings</a>\n
+        </nav>\n
+    <details class="admin-area-menu">\n
+        <summary data-admin-current-area><span>Admin areas</span><strong>Overview</strong><svg class="icon icon-chevron-down" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>\n
+</summary>\n
+        <nav class="admin-mobile-areas" aria-label="Admin areas" data-admin-mobile-areas>\n
+                        <span class="admin-area-item is-active" aria-current="page">Overview</span>\n
+                <a class="admin-area-item" href="/mod/reports">Moderation</a>\n
+                <a class="admin-area-item" href="/admin/structure">Content</a>\n
+                <a class="admin-area-item" href="/admin/roles">People</a>\n
+                <a class="admin-area-item" href="/admin/users">Members</a>\n
+                <a class="admin-area-item" href="/admin/branding">Appearance</a>\n
+                <a class="admin-area-item" href="/admin/email">Notifications</a>\n
+                <a class="admin-area-item" href="/admin/api-tokens">Integrations</a>\n
+                <a class="admin-area-item" href="/admin/packages">Packages</a>\n
+                <a class="admin-area-item" href="/admin/features">Features</a>\n
+                <a class="admin-area-item" href="/admin/settings">Settings</a>\n
+            </nav>\n
+    </details>\n
+</div>\n
+<main class="admin-console" id="main" data-area="overview">\n
+            <h1 class="admin-title">Admin console</h1>\n
+        <nav class="admin-tabs" aria-label="Admin sections">\n
+                                                <a class="admin-tab" href="/admin">Dashboard</a>\n
+                                                                <span class="admin-tab is-active" aria-current="page">Audit log</span>\n
+                                    </nav>\n
+                        <div class="admin-pane admin-overview-audit">\n
+        <p class="pane-intro">Every moderation and admin action, append-only. Filter it, page through it, and follow a target's whole trail from its own record. Member names are current; a deleted actor may no longer be identifiable.</p>\n
+\n
+    <section class="card audit-filter-card">\n
+        <form method="get" action="/admin/audit" class="filter-form">\n
+            <div class="filter-grid">\n
+                <label class="field">\n
+                    <span>Actor</span>\n
+                    <input type="search" name="actor" class="input" maxlength="80" value="" placeholder="Username or display name">\n
+                                    </label>\n
+                <label class="field">\n
+                    <span>Action</span>\n
+                    <input type="search" name="action" class="input" maxlength="80" value="overview_" placeholder="e.g. suspend, update_board">\n
+                </label>\n
+                <label class="field">\n
+                    <span>Target type</span>\n
+                    <select name="target_type" class="input">\n
+                                                <option value="">Any target</option>\n
+                                                    <option value="user">User</option>\n
+                                                    <option value="board">Board</option>\n
+                                                    <option value="category">Category</option>\n
+                                                    <option value="thread">Thread</option>\n
+                                                    <option value="post">Post</option>\n
+                                                    <option value="setting">Setting</option>\n
+                                                    <option value="webhook">Webhook</option>\n
+                                                    <option value="tag">Tag</option>\n
+                                            </select>\n
+                </label>\n
+                <label class="field">\n
+                    <span>Target #</span>\n
+                    <input type="number" name="target_id" class="input" min="1" value="">\n
+                                    </label>\n
+                <label class="field">\n
+                    <span>From</span>\n
+                    <input type="date" name="from" class="input" value="">\n
+                                    </label>\n
+                <label class="field">\n
+                    <span>To</span>\n
+                    <input type="date" name="to" class="input" value="">\n
+                                    </label>\n
+            </div>\n
+            <div class="form-actions filter-actions">\n
+                <button class="btn btn-small" type="submit">Apply filters</button>\n
+                <a class="btn btn-small btn-ghost" href="/admin/audit">Reset</a>\n
+                <span class="filter-result-count audit-result-count">2 entries</span>\n
+            </div>\n
+        </form>\n
+    </section>\n
+\n
+    <section class="card audit-table-card">\n
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Audit log entries">\n
+            <table class="audit">\n
+                <thead>\n
+                    <tr>\n
+                        <th scope="col">When</th>\n
+                        <th scope="col">Actor</th>\n
+                        <th scope="col">Action</th>\n
+                        <th scope="col">Target</th>\n
+                        <th scope="col">Reason</th>\n
+                        <th scope="col">Change</th>\n
+                    </tr>\n
+                </thead>\n
+                <tbody>\n
+                                                        <tr>\n
+                        <td class="audit-time nowrap"><time datetime="2026-08-04T08:52:00Z">Aug 4, 2026 at 08:52 UTC</time></td>\n
+                        <td>@overviewaudit (#1)</td>\n
+                        <td class="action-cell">overview_board_change</td>\n
+                        <td>\n
+                                                            <span class="audit-target">Board #42</span>\n
+                                                    </td>\n
+                        <td class="audit-reason">Board reason</td>\n
+                        <td>\n
+                                                        <details class="audit-change">\n
+                                <summary>Raw details</summary>\n
+                                <p>Action: <code>overview_board_change</code></p>\n
+                                <p>Target: <code>board #42</code></p>\n
+                                <p>Reason: <code>Board reason</code></p>                                                                                            </details>\n
+                        </td>\n
+                    </tr>\n
+                                                        <tr>\n
+                        <td class="audit-time nowrap"><time datetime="2026-08-04T09:14:00Z">Aug 4, 2026 at 09:14 UTC</time></td>\n
+                        <td>@overviewaudit (#1)</td>\n
+                        <td class="action-cell">overview_user_change</td>\n
+                        <td>\n
+                                                            <a class="audit-target-link" href="/admin/users/2">@overviewtarget (#2)</a>\n
+                                                    </td>\n
+                        <td class="audit-reason">User reason</td>\n
+                        <td>\n
+                                                            <ul>\n
+                                                                            <li><strong>Account state:</strong> Active → Suspended</li>\n
+                                                                    </ul>\n
+                                                                                        <details class="audit-change">\n
+                                <summary>Raw details</summary>\n
+                                <p>Action: <code>overview_user_change</code></p>\n
+                                <p>Target: <code>user #2</code></p>\n
+                                <p>Reason: <code>User reason</code></p>                                <p>Before: <code>{&quot;status&quot;: &quot;active&quot;}</code></p>                                <p>After: <code>{&quot;status&quot;: &quot;suspended&quot;}</code></p>                            </details>\n
+                        </td>\n
+                    </tr>\n
+                                </tbody>\n
+            </table>\n
+        </div>\n
+            </section>\n
+\n
+        </div>\n
+</main>\n
+<script src="/assets/dist/app-107ef98522c229d0.js" defer></script>\n
+<script src="/assets/dist/composer-6daea7e3dfcc4d41.js" defer></script><script src="/assets/dist/passkeys-abc14d1e680e3beb.js" defer></script><script src="/assets/dist/tour-4573ee743ebaf07c.js" defer></script></body>\n
+</html>\n
+' [UTF-8](length: 13853) contains "Before: <code>{&quot;status&quot;:&quot;active&quot;}</code>" [ASCII](length: 60).
+
+<baseline>/tests/Integration/Admin/AdminAuditPageTest.php:262
+
+2) Tests\Integration\Admin\AppAdminThreadIntelligenceTest::test_pause_provider_retry_and_thread_recovery_are_csrf_protected_persistent_and_audited
+Expected a redirect status.
+Failed asserting that an array contains 500.
+
+<baseline>/tests/Support/TestCase.php:428
+<baseline>/tests/Integration/Admin/AppAdminThreadIntelligenceTest.php:256
+
+FAILURES!
+Tests: 2, Assertions: 32, Failures: 2.

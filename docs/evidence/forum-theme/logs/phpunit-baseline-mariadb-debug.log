@@ -1,0 +1,214 @@
+PHPUnit Started (PHPUnit 11.5.56 using PHP 8.3.6 (cli) on Linux)
+Test Runner Configured
+Bootstrap Finished (<baseline>/tests/bootstrap.php)
+Event Facade Sealed
+Data Provider Method Called (Tests\Unit\Composer\MarkdownRoundTripTest::corpus for test method Tests\Unit\Composer\MarkdownRoundTripTest::test_construct_renders_as_expected)
+Data Provider Method Finished for Tests\Unit\Composer\MarkdownRoundTripTest::test_construct_renders_as_expected:
+- Tests\Unit\Composer\MarkdownRoundTripTest::corpus
+Data Provider Method Called (Tests\Unit\Composer\MarkdownRoundTripTest::corpus for test method Tests\Unit\Composer\MarkdownRoundTripTest::test_render_is_deterministic)
+Data Provider Method Finished for Tests\Unit\Composer\MarkdownRoundTripTest::test_render_is_deterministic:
+- Tests\Unit\Composer\MarkdownRoundTripTest::corpus
+Data Provider Method Called (Tests\Unit\Composer\MarkdownRoundTripTest::xssCorpus for test method Tests\Unit\Composer\MarkdownRoundTripTest::test_dangerous_input_is_neutralised)
+Data Provider Method Finished for Tests\Unit\Composer\MarkdownRoundTripTest::test_dangerous_input_is_neutralised:
+- Tests\Unit\Composer\MarkdownRoundTripTest::xssCorpus
+Data Provider Method Called (Tests\Unit\Controller\LocalPathTest::localPaths for test method Tests\Unit\Controller\LocalPathTest::test_a_local_path_is_kept)
+Data Provider Method Finished for Tests\Unit\Controller\LocalPathTest::test_a_local_path_is_kept:
+- Tests\Unit\Controller\LocalPathTest::localPaths
+Data Provider Method Called (Tests\Unit\Controller\LocalPathTest::refusedPaths for test method Tests\Unit\Controller\LocalPathTest::test_anything_else_falls_back)
+Data Provider Method Finished for Tests\Unit\Controller\LocalPathTest::test_anything_else_falls_back:
+- Tests\Unit\Controller\LocalPathTest::refusedPaths
+Data Provider Method Called (Tests\Unit\Core\SchemaRaceRetryTest::messages for test method Tests\Unit\Core\SchemaRaceRetryTest::test_classifies_only_stale_schema_errors_as_races)
+Data Provider Method Finished for Tests\Unit\Core\SchemaRaceRetryTest::test_classifies_only_stale_schema_errors_as_races:
+- Tests\Unit\Core\SchemaRaceRetryTest::messages
+Data Provider Method Called (Tests\Unit\Security\EgressGuardAdversarialTest::deniedLiteralUrls for test method Tests\Unit\Security\EgressGuardAdversarialTest::test_validate_static_denies_literal_ssrf_targets)
+Data Provider Method Finished for Tests\Unit\Security\EgressGuardAdversarialTest::test_validate_static_denies_literal_ssrf_targets:
+- Tests\Unit\Security\EgressGuardAdversarialTest::deniedLiteralUrls
+Data Provider Method Called (Tests\Unit\Security\EgressGuardAdversarialTest::deniedResolvedUrls for test method Tests\Unit\Security\EgressGuardAdversarialTest::test_validate_denies_resolved_ssrf_targets)
+Data Provider Method Finished for Tests\Unit\Security\EgressGuardAdversarialTest::test_validate_denies_resolved_ssrf_targets:
+- Tests\Unit\Security\EgressGuardAdversarialTest::deniedResolvedUrls
+Data Provider Method Called (Tests\Unit\Security\Packages\ManifestValidatorTest::providerRefusals for test method Tests\Unit\Security\Packages\ManifestValidatorTest::test_malformed_manifests_refuse_with_the_exact_code)
+Data Provider Method Finished for Tests\Unit\Security\Packages\ManifestValidatorTest::test_malformed_manifests_refuse_with_the_exact_code:
+- Tests\Unit\Security\Packages\ManifestValidatorTest::providerRefusals
+Data Provider Method Called (Tests\Unit\Support\UserAgentLabelTest::agents for test method Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific)
+Data Provider Method Finished for Tests\Unit\Support\UserAgentLabelTest::test_labels_are_bounded_and_specific:
+- Tests\Unit\Support\UserAgentLabelTest::agents
+Data Provider Method Called (Tests\Unit\ThreadIntelligence\ThreadIntelligenceConfigTest::numericLimitProvider for test method Tests\Unit\ThreadIntelligence\ThreadIntelligenceConfigTest::test_in_range_limits_are_accepted_as_ints_and_numeric_strings)
+Data Provider Method Finished for Tests\Unit\ThreadIntelligence\ThreadIntelligenceConfigTest::test_in_range_limits_are_accepted_as_ints_and_numeric_strings:
+- Tests\Unit\ThreadIntelligence\ThreadIntelligenceConfigTest::numericLimitProvider
+Data Provider Method Called (Tests\Unit\ThreadIntelligence\ThreadIntelligenceConfigTest::numericLimitProvider for test method Tests\Unit\ThreadIntelligence\ThreadIntelligenceConfigTest::test_zero_negative_nonnumeric_and_out_of_range_limits_fall_back_with_warning)
+Data Provider Method Finished for Tests\Unit\ThreadIntelligence\ThreadIntelligenceConfigTest::test_zero_negative_nonnumeric_and_out_of_range_limits_fall_back_with_warning:
+- Tests\Unit\ThreadIntelligence\ThreadIntelligenceConfigTest::numericLimitProvider
+Data Provider Method Called (Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::invalidValidatedOutputListCases for test method Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::test_validated_output_rejects_associative_values_for_list_contracts)
+Data Provider Method Finished for Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::test_validated_output_rejects_associative_values_for_list_contracts:
+- Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::invalidValidatedOutputListCases
+Data Provider Method Called (Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::rawProcessingInstructionCases for test method Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::test_raw_html_processing_instructions_are_rejected)
+Data Provider Method Finished for Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::test_raw_html_processing_instructions_are_rejected:
+- Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::rawProcessingInstructionCases
+Data Provider Method Called (Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::renderedLinkCases for test method Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::test_content_that_renders_as_a_link_is_rejected)
+Data Provider Method Finished for Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::test_content_that_renders_as_a_link_is_rejected:
+- Tests\Unit\ThreadIntelligence\ThreadIntelligenceOutputValidatorTest::renderedLinkCases
+Data Provider Method Called (Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::transientSchedule for test method Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::test_transient_delays_use_the_pinned_schedule_with_deterministic_positive_jitter)
+Data Provider Method Finished for Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::test_transient_delays_use_the_pinned_schedule_with_deterministic_positive_jitter:
+- Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::transientSchedule
+Data Provider Method Called (Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::oneRetryFailures for test method Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::test_truncation_and_complete_response_validation_retry_once_then_require_review)
+Data Provider Method Finished for Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::test_truncation_and_complete_response_validation_retry_once_then_require_review:
+- Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::oneRetryFailures
+Data Provider Method Called (Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::deferrals for test method Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::test_site_and_policy_deferrals_never_increment_failure_attempts)
+Data Provider Method Finished for Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::test_site_and_policy_deferrals_never_increment_failure_attempts:
+- Tests\Unit\ThreadIntelligence\ThreadIntelligenceRetryPolicyTest::deferrals
+Data Provider Method Called (Tests\Integration\Admin\AdminMembersCorrectnessTest::selfOrders for test method Tests\Integration\Admin\AdminMembersCorrectnessTest::test_bulk_warning_skips_self_regardless_of_selection_order)
+Data Provider Method Finished for Tests\Integration\Admin\AdminMembersCorrectnessTest::test_bulk_warning_skips_self_regardless_of_selection_order:
+- Tests\Integration\Admin\AdminMembersCorrectnessTest::selfOrders
+Data Provider Method Called (Tests\Integration\Admin\AdminMembersCorrectnessTest::invalidJoinedRanges for test method Tests\Integration\Admin\AdminMembersCorrectnessTest::test_invalid_joined_range_is_a_recoverable_422)
+Data Provider Method Finished for Tests\Integration\Admin\AdminMembersCorrectnessTest::test_invalid_joined_range_is_a_recoverable_422:
+- Tests\Integration\Admin\AdminMembersCorrectnessTest::invalidJoinedRanges
+Data Provider Method Called (Tests\Integration\Api\ApiAuthorizationMatrixTest::scopeMatrix for test method Tests\Integration\Api\ApiAuthorizationMatrixTest::test_scope_matrix_enforces_least_privilege)
+Data Provider Method Finished for Tests\Integration\Api\ApiAuthorizationMatrixTest::test_scope_matrix_enforces_least_privilege:
+- Tests\Integration\Api\ApiAuthorizationMatrixTest::scopeMatrix
+Data Provider Method Called (Tests\Integration\Core\AppAccountConsoleTest::accountRoutes for test method Tests\Integration\Core\AppAccountConsoleTest::test_all_account_routes_render_one_common_head_and_explicit_active_destination)
+Data Provider Method Finished for Tests\Integration\Core\AppAccountConsoleTest::test_all_account_routes_render_one_common_head_and_explicit_active_destination:
+- Tests\Integration\Core\AppAccountConsoleTest::accountRoutes
+Data Provider Method Called (Tests\Integration\Core\AppAccountConsoleTest::conditionalRailFeatures for test method Tests\Integration\Core\AppAccountConsoleTest::test_each_conditional_rail_control_is_owned_by_exactly_one_feature)
+Data Provider Method Finished for Tests\Integration\Core\AppAccountConsoleTest::test_each_conditional_rail_control_is_owned_by_exactly_one_feature:
+- Tests\Integration\Core\AppAccountConsoleTest::conditionalRailFeatures
+Data Provider Method Called (Tests\Integration\Core\AppAccountConsoleTest::htmlValidationActions for test method Tests\Integration\Core\AppAccountConsoleTest::test_every_existing_html_422_keeps_its_explicit_active_owner)
+Data Provider Method Finished for Tests\Integration\Core\AppAccountConsoleTest::test_every_existing_html_422_keeps_its_explicit_active_owner:
+- Tests\Integration\Core\AppAccountConsoleTest::htmlValidationActions
+Data Provider Method Called (Tests\Integration\Core\AppServerDraftsTest::blockedDraftWrites for test method Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them)
+Data Provider Method Finished for Tests\Integration\Core\AppServerDraftsTest::test_restricted_accounts_can_read_drafts_but_cannot_write_them:
+- Tests\Integration\Core\AppServerDraftsTest::blockedDraftWrites
+Data Provider Method Called (Tests\Integration\Core\AppServerDraftsTest::unmatchedResumeSources for test method Tests\Integration\Core\AppServerDraftsTest::test_resume_cleanup_preserves_any_copy_outside_its_exact_source)
+Data Provider Method Finished for Tests\Integration\Core\AppServerDraftsTest::test_resume_cleanup_preserves_any_copy_outside_its_exact_source:
+- Tests\Integration\Core\AppServerDraftsTest::unmatchedResumeSources
+Data Provider Method Called (Tests\Integration\Core\DatabaseParameterTest::prepareModes for test method Tests\Integration\Core\DatabaseParameterTest::test_bound_values_round_trip_with_default_and_native_prepares)
+Data Provider Method Finished for Tests\Integration\Core\DatabaseParameterTest::test_bound_values_round_trip_with_default_and_native_prepares:
+- Tests\Integration\Core\DatabaseParameterTest::prepareModes
+Data Provider Method Called (Tests\Integration\Core\DatabaseParameterTest::prepareModes for test method Tests\Integration\Core\DatabaseParameterTest::test_a_second_statement_cannot_mutate_data_in_either_prepare_mode)
+Data Provider Method Finished for Tests\Integration\Core\DatabaseParameterTest::test_a_second_statement_cannot_mutate_data_in_either_prepare_mode:
+- Tests\Integration\Core\DatabaseParameterTest::prepareModes
+Data Provider Method Called (Tests\Integration\Core\DatabaseRequestCacheTest::transactionOutcomes for test method Tests\Integration\Core\DatabaseRequestCacheTest::test_scoped_transaction_commit_and_rollback_keep_only_unrelated_snapshots)
+Data Provider Method Finished for Tests\Integration\Core\DatabaseRequestCacheTest::test_scoped_transaction_commit_and_rollback_keep_only_unrelated_snapshots:
+- Tests\Integration\Core\DatabaseRequestCacheTest::transactionOutcomes
+Data Provider Method Called (Tests\Integration\Core\DatabaseRequestCacheTest::transactionOutcomes for test method Tests\Integration\Core\DatabaseRequestCacheTest::test_unclassified_nested_writes_cannot_be_undone_by_a_scoped_transaction_cache)
+Data Provider Method Finished for Tests\Integration\Core\DatabaseRequestCacheTest::test_unclassified_nested_writes_cannot_be_undone_by_a_scoped_transaction_cache:
+- Tests\Integration\Core\DatabaseRequestCacheTest::transactionOutcomes
+Data Provider Method Called (Tests\Integration\Core\DatabaseRequestCacheTest::cteMutations for test method Tests\Integration\Core\DatabaseRequestCacheTest::test_cte_mutation_attempts_invalidate_including_servers_without_cte_writes)
+Data Provider Method Finished for Tests\Integration\Core\DatabaseRequestCacheTest::test_cte_mutation_attempts_invalidate_including_servers_without_cte_writes:
+- Tests\Integration\Core\DatabaseRequestCacheTest::cteMutations
+Data Provider Method Called (Tests\Integration\Repository\ThreadReadCursorRepositoryTest::prepareModes for test method Tests\Integration\Repository\ThreadReadCursorRepositoryTest::test_batch_post_pages_keep_time_order_ties_and_viewer_visibility)
+Data Provider Method Finished for Tests\Integration\Repository\ThreadReadCursorRepositoryTest::test_batch_post_pages_keep_time_order_ties_and_viewer_visibility:
+- Tests\Integration\Repository\ThreadReadCursorRepositoryTest::prepareModes
+Data Provider Method Called (Tests\Integration\Repository\UserRepositoryDirectoryTest::endDays for test method Tests\Integration\Repository\UserRepositoryDirectoryTest::test_joined_to_includes_the_final_second_without_crossing_into_the_next_day)
+Data Provider Method Finished for Tests\Integration\Repository\UserRepositoryDirectoryTest::test_joined_to_includes_the_final_second_without_crossing_into_the_next_day:
+- Tests\Integration\Repository\UserRepositoryDirectoryTest::endDays
+Data Provider Method Called (Tests\Integration\Service\ApiTokenServiceTest::invalidMintCases for test method Tests\Integration\Service\ApiTokenServiceTest::test_mint_validation_rejects)
+Data Provider Method Finished for Tests\Integration\Service\ApiTokenServiceTest::test_mint_validation_rejects:
+- Tests\Integration\Service\ApiTokenServiceTest::invalidMintCases
+Data Provider Method Called (Tests\Integration\Service\PermissionSimulatorTest::invalidSimulationTimes for test method Tests\Integration\Service\PermissionSimulatorTest::test_invalid_simulation_time_reports_an_error_without_a_decision)
+Data Provider Method Finished for Tests\Integration\Service\PermissionSimulatorTest::test_invalid_simulation_time_reports_an_error_without_a_decision:
+- Tests\Integration\Service\PermissionSimulatorTest::invalidSimulationTimes
+Data Provider Method Called (Tests\Integration\ThreadIntelligence\ThreadIntelligenceBudgetTest::invalidCounterDates for test method Tests\Integration\ThreadIntelligence\ThreadIntelligenceBudgetTest::test_status_fails_unavailable_for_an_invalid_counter_date_without_exposing_it)
+Data Provider Method Finished for Tests\Integration\ThreadIntelligence\ThreadIntelligenceBudgetTest::test_status_fails_unavailable_for_an_invalid_counter_date_without_exposing_it:
+- Tests\Integration\ThreadIntelligence\ThreadIntelligenceBudgetTest::invalidCounterDates
+Data Provider Method Called (Tests\Integration\ThreadIntelligence\ThreadIntelligenceBudgetTest::invalidCounterDates for test method Tests\Integration\ThreadIntelligence\ThreadIntelligenceBudgetTest::test_reserve_fails_unavailable_for_an_invalid_counter_date_without_resetting_spend)
+Data Provider Method Finished for Tests\Integration\ThreadIntelligence\ThreadIntelligenceBudgetTest::test_reserve_fails_unavailable_for_an_invalid_counter_date_without_resetting_spend:
+- Tests\Integration\ThreadIntelligence\ThreadIntelligenceBudgetTest::invalidCounterDates
+Test Suite Loaded (3571 tests)
+Test Runner Started
+Test Suite Sorted
+Test Suite Filtered (2 tests)
+Test Runner Execution Started (2 tests)
+Test Suite Started (<baseline>/phpunit.xml, 2 tests)
+Test Suite Started (integration, 2 tests)
+Test Suite Started (Tests\Integration\Core\AppReactionTest, 2 tests)
+Test Preparation Started (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities)
+Before Test Method Called (Tests\Integration\Core\AppReactionTest::setUp)
+Before Test Method Finished:
+- Tests\Integration\Core\AppReactionTest::setUp
+Test Prepared (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities)
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag header invalid in Entity, line: 22
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag svg invalid in Entity, line: 24
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag path invalid in Entity, line: 24
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag svg invalid in Entity, line: 27
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag path invalid in Entity, line: 27
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag svg invalid in Entity, line: 32
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag g invalid in Entity, line: 32
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag path invalid in Entity, line: 32
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag path invalid in Entity, line: 32
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag circle invalid in Entity, line: 32
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag nav invalid in Entity, line: 35
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag svg invalid in Entity, line: 41
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag circle invalid in Entity, line: 41
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag path invalid in Entity, line: 41
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag nav invalid in Entity, line: 54
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag svg invalid in Entity, line: 55
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag path invalid in Entity, line: 55
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag section invalid in Entity, line: 69
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag main invalid in Entity, line: 83
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag nav invalid in Entity, line: 85
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag svg invalid in Entity, line: 85
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag path invalid in Entity, line: 85
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag article invalid in Entity, line: 88
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag header invalid in Entity, line: 90
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag time invalid in Entity, line: 96
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag article invalid in Entity, line: 106
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag svg invalid in Entity, line: 110
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag path invalid in Entity, line: 110
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag time invalid in Entity, line: 119
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag svg invalid in Entity, line: 124
+Test Triggered PHP Warning (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities, suppressed using operator) in <baseline>/tests/Integration/Core/AppReactionTest.php:221
+DOMDocument::loadHTML(): Tag path invalid in Entity, line: 124
+Test Failed (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities)
+guest sees all built-in gesture names
+Failed asserting that actual size 1 matches expected size 9.
+After Test Method Called (Tests\Integration\Core\AppReactionTest::tearDown)
+After Test Method Finished:
+- Tests\Integration\Core\AppReactionTest::tearDown
+Test Finished (Tests\Integration\Core\AppReactionTest::testStaticReactionsKeepVisibleGestureNamesWithoutReactorIdentities)
+Test Preparation Started (Tests\Integration\Core\AppReactionTest::testReactionNamesAreBatchedAcrossPostsAndEmoji)
+Before Test Method Called (Tests\Integration\Core\AppReactionTest::setUp)
+Before Test Method Finished:
+- Tests\Integration\Core\AppReactionTest::setUp
+Test Prepared (Tests\Integration\Core\AppReactionTest::testReactionNamesAreBatchedAcrossPostsAndEmoji)
+Test Failed (Tests\Integration\Core\AppReactionTest::testReactionNamesAreBatchedAcrossPostsAndEmoji)
+Failed asserting that two arrays are equal.
+After Test Method Called (Tests\Integration\Core\AppReactionTest::tearDown)
+After Test Method Finished:
+- Tests\Integration\Core\AppReactionTest::tearDown
+Test Finished (Tests\Integration\Core\AppReactionTest::testReactionNamesAreBatchedAcrossPostsAndEmoji)
+Test Suite Finished (Tests\Integration\Core\AppReactionTest, 2 tests)
+Test Suite Finished (integration, 2 tests)
+Test Suite Finished (<baseline>/phpunit.xml, 2 tests)
+Test Runner Execution Finished
+Test Runner Finished
+PHPUnit Finished (Shell Exit Code: 1)

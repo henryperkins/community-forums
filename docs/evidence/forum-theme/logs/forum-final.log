@@ -1,0 +1,112 @@
+
+Running 1 test using 1 worker
+
+(node:8381) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/forum-theme.spec.ts:58:5 › Forum guest routes have readable light/dark states without legacy fonts (14.1s)
+
+  1 passed (15.7s)
+
+Running 1 test using 1 worker
+
+(node:8462) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/forum-theme.spec.ts:71:5 › Forum member and operator surfaces retain readable states (11.8s)
+
+  1 passed (13.2s)
+
+Running 1 test using 1 worker
+
+(node:8539) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/forum-theme.spec.ts:79:5 › Keyboard, narrow reflow, text spacing and system preferences remain usable (1.7s)
+
+  1 passed (2.7s)
+
+Running 1 test using 1 worker
+
+(node:8603) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/forum-theme.spec.ts:117:7 › HTML appearance workflow › authentication and appearance persist without JavaScript (3.3s)
+
+  1 passed (5.2s)
+
+Running 1 test using 1 worker
+
+(node:8671) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/forum-theme.spec.ts:138:5 › Reading, composing and forced-color switches use the shared accessible controls (9.9s)
+
+  1 passed (11.0s)
+
+Running 1 test using 1 worker
+
+(node:8744) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/forum-controls.spec.ts:37:5 › Forum account menu and mobile board drawer restore keyboard focus (1.3s)
+
+  1 passed (2.4s)
+
+Running 1 test using 1 worker
+
+(node:8809) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [desktop] › tests/browser/forum-controls.spec.ts:89:5 › Forum emoji dialog contains keyboard focus and returns it to the right control (2.6s)
+
+  1 passed (3.5s)
+
+Running 1 test using 1 worker
+
+(node:8874) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › tests/browser/forum-theme.spec.ts:58:5 › Forum guest routes have readable light/dark states without legacy fonts (12.5s)
+
+  1 passed (13.5s)
+
+Running 1 test using 1 worker
+
+(node:8952) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › tests/browser/forum-theme.spec.ts:71:5 › Forum member and operator surfaces retain readable states (10.1s)
+
+  1 passed (11.4s)
+
+Running 1 test using 1 worker
+
+(node:9026) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › tests/browser/forum-theme.spec.ts:79:5 › Keyboard, narrow reflow, text spacing and system preferences remain usable (1.9s)
+
+  1 passed (3.0s)
+
+Running 1 test using 1 worker
+
+(node:9091) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › tests/browser/forum-theme.spec.ts:117:7 › HTML appearance workflow › authentication and appearance persist without JavaScript (2.6s)
+
+  1 passed (3.7s)
+
+Running 1 test using 1 worker
+
+(node:9158) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › tests/browser/forum-theme.spec.ts:138:5 › Reading, composing and forced-color switches use the shared accessible controls (7.9s)
+
+  1 passed (9.1s)
+
+Running 1 test using 1 worker
+
+(node:9233) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › tests/browser/forum-controls.spec.ts:37:5 › Forum account menu and mobile board drawer restore keyboard focus (2.0s)
+
+  1 passed (3.1s)
+
+Running 1 test using 1 worker
+
+(node:9300) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [mobile] › tests/browser/forum-controls.spec.ts:89:5 › Forum emoji dialog contains keyboard focus and returns it to the right control (2.2s)
+
+  1 passed (3.2s)

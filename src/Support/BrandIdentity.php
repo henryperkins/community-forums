@@ -13,8 +13,8 @@ namespace App\Support;
  */
 final class BrandIdentity
 {
-    public const DEFAULT_DIRECTORY_HEADING = 'Every board in the valley';
-    public const DEFAULT_DIRECTORY_INTRO = 'Browse the boards the council keeps and pick one to see its topics.';
+    public const DEFAULT_DIRECTORY_HEADING = 'Community boards';
+    public const DEFAULT_DIRECTORY_INTRO = 'Browse a board to read topics or start a discussion.';
 
     /**
      * Setting key => form field, label, character limit and whether line breaks

@@ -345,7 +345,7 @@ final class AppBrandingThemeTest extends TestCase
         self::assertStringStartsWith(':root{}', $disabled->body());
         self::assertStringNotContainsString('#123456', $disabled->body());
         self::assertStringNotContainsString('[data-theme="dark"]', $disabled->body());
-        self::assertStringContainsString('.theme-thumb [data-thumb-mode="light"]{--thumb-page:#f5efe1;', $disabled->body());
+        self::assertStringContainsString('.theme-thumb [data-thumb-mode="light"]{--thumb-page:#ffffff;', $disabled->body());
         self::assertSame('private, no-store', $disabled->getHeader('cache-control'));
     }
 

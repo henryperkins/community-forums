@@ -95,7 +95,7 @@ final class AppBrandIdentityTest extends TestCase
         $settings->set('brand_logo_path', '');
         $settings->set('brand_logo_dark_path', '/media/12');
         $body = $this->get('/')->body();
-        self::assertMatchesRegularExpression('#<span class="brand-when-light"><svg class="forum-bar-mark"[^>]*>.*?</svg><span class="forum-bar-wordmark">Variant Commons</span></span><span class="brand-when-dark"><img class="brand-logo" src="/media/12" alt="" height="28"></span>#s', $body);
+        self::assertMatchesRegularExpression('#<span class="brand-when-light"><svg class="forum-bar-mark"[^>]*>.*?</svg>\s*<span class="forum-bar-wordmark">Variant Commons</span></span><span class="brand-when-dark"><img class="brand-logo" src="/media/12" alt="" height="28"></span>#s', $body);
         $login = $this->authPage('/login');
         self::assertMatchesRegularExpression('#<span class="brand-when-light"><svg class="auth-brand-star".*?<span class="auth-brand-name">Variant Commons</span></span><span class="brand-when-dark"><img class="auth-brand-logo" src="/media/12"#s', $login);
 
@@ -150,7 +150,7 @@ final class AppBrandIdentityTest extends TestCase
         self::assertStringContainsString('<p class="forum-directory__tagline">Boats, tides and people</p>', $home);
         self::assertStringContainsString('<h1>Welcome aboard</h1>', $home);
         self::assertStringContainsString('<p>Pick a board.</p>', $home);
-        self::assertStringContainsString('<p>Say hello in General. Your own cross-board queue is the <a href="/inbox">inbox</a>.</p>', $home);
+        self::assertStringContainsString('<p>Say hello in General. Follow your topics in the <a href="/inbox">inbox</a>.</p>', $home);
         self::assertStringNotContainsString(BrandIdentity::DEFAULT_DIRECTORY_HEADING, $home);
         self::assertStringContainsString('<meta name="description" content="A friendly harbour forum for sailors.">', $home);
         self::assertStringContainsString('<meta property="og:description" content="A friendly harbour forum for sailors.">', $home);
@@ -170,8 +170,8 @@ final class AppBrandIdentityTest extends TestCase
 
         $home = $this->get('/')->body();
         self::assertStringNotContainsString('forum-directory__tagline', $home);
-        self::assertStringContainsString('<h1>Every board in the valley</h1>', $home);
-        self::assertStringContainsString('<p>Browse the boards the council keeps and pick one to see its topics. Your own cross-board queue is the <a href="/inbox">inbox</a>.</p>', $home);
+        self::assertStringContainsString('<h1>Community boards</h1>', $home);
+        self::assertStringContainsString('<p>Browse a board to read topics or start a discussion. Follow your topics in the <a href="/inbox">inbox</a>.</p>', $home);
         self::assertStringContainsString('<meta name="description" content="Harbor Commons — a community forum.">', $home);
         self::assertStringNotContainsString('auth-tagline', $this->authPage('/login'));
     }
@@ -236,7 +236,7 @@ final class AppBrandIdentityTest extends TestCase
         $home = $this->get('/')->body();
         self::assertStringContainsString('<p class="forum-directory__tagline">&lt;script&gt;alert(1)&lt;/script&gt;</p>', $home);
         self::assertStringNotContainsString('<script>alert(1)</script>', $home);
-        self::assertStringContainsString('<h1>Every board in the valley</h1>', $home);
+        self::assertStringContainsString('<h1>Community boards</h1>', $home);
         self::assertStringContainsString('content="RetroBoards — a community forum."', $home);
     }
 
@@ -287,7 +287,7 @@ final class AppBrandIdentityTest extends TestCase
         $this->assertStatus(200, $page);
         $body = $page->body();
         foreach (['Light' => 'light', 'Dark' => 'dark'] as $label => $mode) {
-            self::assertStringContainsString('<span class="choice-card-title">' . $label . '</span><span class="choice-card-desc">Classic · ' . $mode . ' backgrounds</span>', $body);
+            self::assertStringContainsString('<span class="choice-card-title">' . $label . '</span><span class="choice-card-desc">Forum · ' . $mode . ' backgrounds</span>', $body);
         }
         self::assertStringContainsString('<span class="choice-card-title">System</span>', $body);
         self::assertStringNotContainsString('Parchment', $body);
@@ -298,8 +298,8 @@ final class AppBrandIdentityTest extends TestCase
         self::assertStringContainsString('name="density" value="comfortable" checked', $body);
 
         $classic = $this->get('/brand.css')->body();
-        self::assertStringContainsString('.theme-thumb [data-thumb-mode="light"]{--thumb-page:#f5efe1;--thumb-panel:#faf6ec;', $classic);
-        self::assertStringContainsString('.theme-thumb [data-thumb-mode="dark"]{--thumb-page:#161d24;--thumb-panel:#1e2730;', $classic);
+        self::assertStringContainsString('.theme-thumb [data-thumb-mode="light"]{--thumb-page:#ffffff;--thumb-panel:#ffffff;', $classic);
+        self::assertStringContainsString('.theme-thumb [data-thumb-mode="dark"]{--thumb-page:#111827;--thumb-panel:#1f2937;', $classic);
 
         $settings = new SettingRepository($this->db);
         $settings->set('brand_theme_preset', 'retro');

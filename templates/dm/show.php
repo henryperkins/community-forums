@@ -39,7 +39,7 @@ $this->section('title', $title);
             <div class="dm-thread-id">
                 <?= $this->partial('partials/monogram', ['name' => !empty($is_group) ? $title : $otherName, 'username' => !empty($is_group) ? ('group-' . (int) $conversation_id) : (string) ($other['username'] ?? $otherName), 'avatar_path' => !empty($is_group) ? null : ($other['avatar_path'] ?? null), 'gilt' => true]) ?>
                 <div>
-                    <span class="dm-thread-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?><?= !empty($is_group) ? 'Private group' : 'Private counsel' ?></span>
+                    <span class="dm-thread-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?><?= !empty($is_group) ? 'Private group' : 'Private conversation' ?></span>
                     <h1 class="dm-thread-title">
                         <?php if (!empty($is_group)): ?>
                             <?= $e($title) ?>
@@ -49,7 +49,7 @@ $this->section('title', $title);
                     </h1>
                     <p class="dm-thread-sub">
                         <?php if (!empty($is_group)): ?>
-                            <?= count(array_filter($participants ?? [], fn ($p) => empty($p['left_at']))) ?> in counsel<span data-dm-group-presence><?php $here = count(array_filter($presence_states ?? [], fn ($s) => $s === 'online')); ?><?= $here > 0 ? ' · ' . $here . ' here now' : '' ?></span><?= !empty($muted) ? ' · muted' : '' ?>
+                            <?= count(array_filter($participants ?? [], fn ($p) => empty($p['left_at']))) ?> participants<span data-dm-group-presence><?php $here = count(array_filter($presence_states ?? [], fn ($s) => $s === 'online')); ?><?= $here > 0 ? ' · ' . $here . ' here now' : '' ?></span><?= !empty($muted) ? ' · muted' : '' ?>
                         <?php elseif ($other !== null): ?>
                             @<?= $e($other['username']) ?><?= $this->partial('partials/dm_presence', ['user_id' => $other['id'], 'state' => $presence_states[(int) $other['id']] ?? 'offline']) ?><?= !empty($muted) ? ' · muted' : '' ?>
                         <?php else: ?>
@@ -115,7 +115,7 @@ $this->section('title', $title);
             <div class="dm-scroll-inner">
             <?php if ((int) $page > 1): ?><a class="dm-earlier" href="/messages/<?= (int) $conversation_id ?>?page=<?= (int) $page - 1 ?>">Earlier messages</a><?php endif; ?>
             <?php if ((int) $page === 1): ?>
-                <div class="dm-day dm-day-begin"><?= $this->partial('partials/icon', ['name' => 'lock']) ?><span><?= !empty($joined_after_message_id) ? 'Your counsel begins here' : 'Beginning of your counsel' ?></span></div>
+                <div class="dm-day dm-day-begin"><?= $this->partial('partials/icon', ['name' => 'lock']) ?><span><?= !empty($joined_after_message_id) ? 'Your conversation starts here' : 'Start of the conversation' ?></span></div>
                 <p class="dm-begin-note"><?= !empty($joined_after_message_id) ? 'You can read the messages sent since you joined.' : 'Only those named here can read it.' ?></p>
             <?php endif; ?>
             <div data-dm-messages>

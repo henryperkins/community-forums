@@ -91,7 +91,7 @@ final class BrandingDocument
         'appearance' => [
             'label' => 'appearance defaults',
             'keys' => ['brand_theme_default', 'brand_theme_preset', 'brand_sidebar_style', 'brand_type_pairing', 'brand_corners', 'brand_density_default'],
-            'explain' => 'Returns signed-out visitors to System mode, the style preset to Classic without sidebar, type or corner overrides, and the default density to Comfortable. Members keep their own appearance settings.',
+            'explain' => 'Returns signed-out visitors to System mode, the style preset to Forum without sidebar, type or corner overrides, and the default density to Comfortable. Members keep their own appearance settings.',
         ],
     ];
 

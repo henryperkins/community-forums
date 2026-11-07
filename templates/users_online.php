@@ -51,7 +51,7 @@ $queryFor = static function (array $over) use ($filter, $search): string {
     <div class="users-online-column">
         <header class="users-online-hero">
             <?php if ($current_user === null): ?><p class="eyebrow">Presence</p><?php endif; ?>
-            <?= $this->partial('partials/page_heading', ['heading' => 'Who is at the council']) ?>
+            <?= $this->partial('partials/page_heading', ['heading' => 'Who is online']) ?>
             <p class="users-online-lede">Members who chose to show their presence and have been here recently. A leaf means here now; amber means stepped away.</p>
         </header>
 
@@ -92,7 +92,7 @@ $queryFor = static function (array $over) use ($filter, $search): string {
                 <?php elseif ($filter === 'away'): ?>
                     No one has stepped away.
                 <?php elseif ($filter === 'online'): ?>
-                    No one is at the council right now.
+                    No one is online right now.
                 <?php else: ?>
                     No one is showing as online right now.
                 <?php endif; ?>

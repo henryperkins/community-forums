@@ -1,6 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
 <section class="profile-badges">
-    <p class="profile-badges-label">Marks of esteem</p>
+    <p class="profile-badges-label">Badges</p>
     <ul class="badge-row">
         <?php foreach ($badges as $b): ?>
             <?php // The supplied Imladris Commend Star replaces seed emoji. ?>

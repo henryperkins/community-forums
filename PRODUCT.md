@@ -15,7 +15,7 @@ RetroBoards serves **two first-class audiences**, confirmed as equally real. Nei
 | Role | Who | Job |
 |---|---|---|
 | **Guest** | Unauthenticated, often from search | Read threads, evaluate the community, understand how to join |
-| **User** | Registered member | Post topics and counsel, react, star, DM, build identity and regard |
+| **User** | Registered member | Post topics and replies, react, star, DM, build identity and reputation |
 | **Moderator** | Trusted member, scoped to one or more boards | Keep boards healthy: pin, lock, move, delete, handle reports |
 | **Admin / Staff** | Site operator | Everything: boards, categories, roles, settings, all moderation |
 
@@ -82,13 +82,13 @@ Two further positions are load-bearing:
 
 ## Brand Commitments
 
-**Binding.** The **Imladris** design language and its lexicon are settled, and future work preserves both rather than reinterpreting them. Imladris is specified in `docs/design-system/imladris/` (README, `imladris-spec.md`, `PRODUCTION.md`, `manifest.json`, tokens and components); production tokens ship in the generated Imladris CSS, and `public/assets/app.css` is the authoritative token and component CSS inside the app.
+**Current direction (2026-11-07, ADR 0056).** The built-in **Forum** theme replaces Imladris with a conventional, accessible reading interface. Root `DESIGN.md`, `resources/forum/`, and the research notes in `docs/design-system/` define the active presentation. Imladris documents and assets are retained as historical material; their all-serif, ornamental and fantasy-lexicon rules no longer govern new work.
 
-- **Identity.** Parchment-and-evergreen surfaces, a single mallorn-gold accent, an eight-pointed elven star, set entirely in serif type. The intent is a councillor's hall — considered, literary, quietly premium — not a toy social app. Twilight is the night register.
-- **Voice.** Elevated, plain, and council-minded; Tolkien-adjacent without cosplay. Warm but serious, never breezy. No hype, no exclamation marks, no startup-speak. Sentence case everywhere; the only uppercase is a typographic device, not shouting. The reader is *you*; the community is *we / the council*.
-- **Lexicon** (binding): reply becomes **counsel**, community becomes **the council**, like or upvote becomes **commend**, reputation becomes **regard**, badges become **marks of esteem**, leaderboard becomes **top contributors**, tiers are Member, Veteran, Loremaster, Legend. The reaction set is Commend, Kindled, Seconded, Illuminating. *As shipped (2026-09-25):* member surfaces render regard, commend, marks of esteem and top contributors, and use counsel as a register word ("Add your counsel"). The reply control still reads **Reply**, with an "N replies" count (ADR 0027), and the admin and moderation consoles use plain words (ADR 0024). Whether the lexicon extends to those surfaces — or the shipped member strings change — is an open owner decision recorded in ADR 0024 (obligation 5).
-- **Emoji.** Not in UI chrome — status is always a word plus a colour, never an emoji. Authored content is different: members use emoji in posts, and the composer ships emoji tooling as product features.
-- **The project's own line**, which governs how the product talks about itself: *status is verified, not asserted; outcomes resolve into artifacts; testimony never outranks the work.*
+- **Identity.** Neutral light and dark surfaces, blue links and actions, system sans-serif typography, visible controls and restrained separators. Uploaded community logos and configured community identity remain operator-owned.
+- **Language.** Use familiar forum terms: community, board, topic, reply, message, reputation and badges. Interface copy should explain an action directly. Stored reaction names, member titles and authored content are not silently migrated.
+- **Reading.** Default interface text is `1rem`; discussion prose is `1.125rem` with unitless `1.65` leading and a `65ch` maximum measure. User font settings and browser text sizing remain effective.
+- **States.** Pair meaningful colors with text, icons or shape. Focus is visible; prose links are underlined. Status words remain available without color.
+- **The project's own line:** status is verified, not asserted; outcomes resolve into artifacts; testimony never outranks the work.
 
 **Not binding.** The **name "RetroBoards" is still a placeholder** and may change. `PRODUCT_DESIGN.md` §1 calls it swappable, and the reference deployment already runs under a different domain. Future work must not treat the name as fixed, build identity around the word itself, or add naming claims.
 
@@ -100,10 +100,10 @@ Real, in-repo, and usable — future work cites these rather than inventing equi
 - **Browser and accessibility evidence** in `docs/evidence/` — dozens of captured runs, including `imladris-forum-surfaces-production`, the admin and account slices, `dm-reimagine`, backup/restore rehearsals, and the Phase 5 Gate A closeout index at `docs/evidence/phase5/gate-a-closeout.md`.
 - **A Playwright suite** (`tests/browser/`, roughly 40 specs) covering forum surfaces, admin and moderation consoles, composer, profiles, passkeys, providers, packages, invitations, appeals, group DMs, and link previews, plus `a11y.spec.ts` and `field-error-a11y.spec.ts`.
 - **A PHPUnit suite** that drives the real kernel in-process (`App::handle()`) as a cookie-jar HTTP client.
-- **Brand assets** in `docs/design-system/imladris/assets/`: the elven star and commend star SVGs, self-hosted OFL-licensed WOFF2 fonts (Cormorant Garamond, Marcellus, EB Garamond, JetBrains Mono), and the mood references `mood-hall.png` and `mood-elements.png`.
+- **Historical brand assets** in `docs/design-system/imladris/assets/`: the elven star and commend star SVGs, self-hosted OFL-licensed WOFF2 fonts (Cormorant Garamond, Marcellus, EB Garamond, JetBrains Mono), and the mood references `mood-hall.png` and `mood-elements.png`.
 - **A decision record** — `docs/adr/` for every deferral and open carryover, `CHANGELOG.md` for what shipped, `src/Core/FeatureFlags.php` `DEFAULTS` plus the runbooks in `docs/runbooks/` for current availability, and `docs/history/` for the archived phase plans and status ledgers.
 
-**Absences future work must not fabricate:** there are no customers, testimonials, case studies, press, pricing, user counts, or usability-test results. Success-metric *targets* do not exist yet — only the metrics and their definitions. There is no PHPUnit CI; the only CI workflow runs the Playwright evidence capture, so "the suite is green" is a local claim that has to be earned locally.
+**Absences future work must not fabricate:** there are no customers, testimonials, case studies, press, pricing, user counts, or usability-test results. Success-metric *targets* do not exist yet — only the metrics and their definitions. GitHub Actions is permanently unavailable under the current owner decision; workflow files are manual references. Suite and browser results are local claims that must be earned and recorded.
 
 ## Product Principles
 
@@ -116,8 +116,8 @@ Real, in-repo, and usable — future work cites these rather than inventing equi
 
 ## Accessibility & Inclusion
 
-- **Target: WCAG 2.0 and 2.1, Level A and AA**, enforced in capturable form — `tests/browser/a11y.spec.ts` runs axe with `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`.
+- **Target: WCAG 2.2 Level AA, including applicable Level A criteria.** The theme acceptance plan combines rendered contrast, keyboard, reflow and preference checks with automated axe scans. Passing automation is not a conformance certification; assistive-technology review remains a separate requirement.
 - Semantic HTML with ARIA landmarks for the three panes, full keyboard navigation, and explicit focus management for the drawer and the account menu.
-- Theme tokens were chosen for AA contrast in both the day and twilight registers; contrast is a token-level obligation, not a per-surface fix.
+- Theme tokens and actual rendered text/control pairs must meet their applicable contrast thresholds in light and dark modes; custom operator palettes retain the existing contrast review.
 - `prefers-reduced-motion: reduce` is honoured in the stylesheet and must remain honoured by anything new.
 - Anonymity, IP retention limits, minimal PII (email only), self-service export and deletion, and no third-party trackers by default are inclusion commitments as much as privacy ones.

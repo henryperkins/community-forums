@@ -1,0 +1,180 @@
+
+Running 1 test using 1 worker
+
+(node:5762) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:103:5 › an open reading pane scrolls itself, never the page, and its reply box is reachable (2.5s)
+
+  1 passed (4.3s)
+
+Running 1 test using 1 worker
+
+(node:5828) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:139:5 › the queue is the list rail and the topic being read takes the rest of the frame (2.3s)
+
+  1 passed (4.3s)
+
+Running 1 test using 1 worker
+
+(node:5894) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:169:5 › the pane's reply box rests on one line, opens to answer and folds away (2.3s)
+
+  1 passed (3.8s)
+
+Running 1 test using 1 worker
+
+(node:5961) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:235:5 › the whole queue row opens its preview, and its controls keep their own clicks (1.6s)
+
+  1 passed (3.1s)
+
+Running 1 test using 1 worker
+
+(node:6028) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:260:5 › the view menus print every label in the menu type and every count by class (1.6s)
+
+  1 passed (3.2s)
+
+Running 1 test using 1 worker
+
+(node:6094) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:292:5 › a scope holding nothing recedes, unless it is the scope being shown (1.3s)
+
+  1 passed (3.0s)
+
+Running 1 test using 1 worker
+
+(node:6162) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:328:5 › the queue in twilight draws its checkboxes in the dark scheme (2.8s)
+
+  1 passed (4.4s)
+
+Running 1 test using 1 worker
+
+(node:6243) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:352:5 › the queue meta wraps in lines, and the pager is a 44px target (1.3s)
+
+  1 passed (3.0s)
+
+Running 1 test using 1 worker
+
+(node:6312) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:371:5 › a guest sent from the Inbox is told why, and the passkey stands apart (494ms)
+
+  1 passed (1.9s)
+
+Running 1 test using 1 worker
+
+(node:6385) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [desktop] › tests/browser/inbox-reading-hardening.spec.ts:389:5 › the welcome tour stands beside what it describes (2.4s)
+
+  1 passed (4.2s)
+
+Running 1 test using 1 worker
+
+(node:6472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:103:5 › an open reading pane scrolls itself, never the page, and its reply box is reachable (2.1s)
+
+  1 passed (3.8s)
+
+Running 1 test using 1 worker
+
+(node:6540) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  -  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:139:5 › the queue is the list rail and the topic being read takes the rest of the frame
+
+  1 skipped
+
+Running 1 test using 1 worker
+
+(node:6620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:169:5 › the pane's reply box rests on one line, opens to answer and folds away (2.0s)
+
+  1 passed (3.3s)
+
+Running 1 test using 1 worker
+
+(node:6818) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:235:5 › the whole queue row opens its preview, and its controls keep their own clicks (1.5s)
+
+  1 passed (3.1s)
+
+Running 1 test using 1 worker
+
+(node:6907) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:260:5 › the view menus print every label in the menu type and every count by class (1.4s)
+
+  1 passed (3.1s)
+
+Running 1 test using 1 worker
+
+(node:6985) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  -  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:292:5 › a scope holding nothing recedes, unless it is the scope being shown
+
+  1 skipped
+
+Running 1 test using 1 worker
+
+(node:7055) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  -  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:328:5 › the queue in twilight draws its checkboxes in the dark scheme
+
+  1 skipped
+
+Running 1 test using 1 worker
+
+(node:7122) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:352:5 › the queue meta wraps in lines, and the pager is a 44px target (1.4s)
+
+  1 passed (3.1s)
+
+Running 1 test using 1 worker
+
+(node:7189) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:371:5 › a guest sent from the Inbox is told why, and the passkey stands apart (627ms)
+
+  1 passed (2.5s)
+
+Running 1 test using 1 worker
+
+(node:7254) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Seeded the design's forum-inbox dataset (sign in as erestor@retro.test).
+  ✓  1 [mobile] › tests/browser/inbox-reading-hardening.spec.ts:389:5 › the welcome tour stands beside what it describes (2.9s)
+
+  1 passed (5.7s)

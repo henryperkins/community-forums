@@ -102,7 +102,7 @@ final class BrandPaletteTest extends TestCase
     public function test_contrast_review_does_not_accept_malformed_package_tokens_as_css(): void
     {
         $palettes = BrandPalette::presets(['tokens' => ['--surface' => 'red;}body{display:none', '--unknown' => 'bad']]);
-        self::assertSame('#faf6ec', $palettes['classic']['light']['--surface']);
+        self::assertSame('#ffffff', $palettes['classic']['light']['--surface']);
         self::assertArrayNotHasKey('--unknown', $palettes['classic']['light']);
     }
 
@@ -112,7 +112,7 @@ final class BrandPaletteTest extends TestCase
         // built-in Classic base, to the policy baseline the build gate and
         // contrast review use. Only the translucent dark washes differ, as the
         // stylesheet declares them translucent and the baseline flattens them.
-        $translucent = ['dark' => ['--brand-subtle', '--gold-soft']];
+        $translucent = []; // Forum uses opaque fills in both modes (ADR 0056).
         $classic = BrandPalette::presets()['classic'];
         foreach (['light', 'dark'] as $mode) {
             $baseline = ThemeTokenPolicy::baseline($mode);

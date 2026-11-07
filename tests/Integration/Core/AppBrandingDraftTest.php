@@ -76,7 +76,7 @@ final class AppBrandingDraftTest extends TestCase
         self::assertStringContainsString('Previewing your branding draft.', $body);
         self::assertStringContainsString('<h1>Welcome to the draft</h1>', $body);
         self::assertStringContainsString('<title>Previewed Commons</title>', $body);
-        self::assertSame(1, preg_match('#href="(/brand\.css\?v=3-draft-[a-f0-9]{16}-[^"]*&amp;draft=1)"#', $body, $link));
+        self::assertSame(1, preg_match('#href="(/brand\.css\?v=4-draft-[a-f0-9]{16}-[^"]*&amp;draft=1)"#', $body, $link));
         $draftCss = $this->get('/brand.css', ['v' => 'x', 'draft' => '1']);
         self::assertSame('private, no-store', $draftCss->getHeader('cache-control'));
         self::assertStringContainsString('--accent-2:#b0611c', $draftCss->body());

@@ -116,7 +116,7 @@ final class AppPollTest extends TestCase
         self::assertStringNotContainsString('poll-status', $before->body());
         self::assertStringContainsString('<p class="poll-eyebrow">Poll<span class="poll-eyebrow-mode">· choose one</span></p>', $before->body());
         self::assertStringContainsString('poll-option', $before->body());
-        self::assertStringContainsString('Open to the council', $before->body());
+        self::assertStringContainsString('Open to members', $before->body());
 
         $this->assertRedirectContains($this->post('/polls/' . $pollId . '/vote', ['option_ids' => [$firstOption]]), '/t/' . $thread['thread_id']);
         $after = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);

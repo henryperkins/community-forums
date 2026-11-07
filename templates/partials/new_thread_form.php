@@ -29,7 +29,7 @@ $newThreadHeader = function () use ($old, $e, $newThreadTitleId, $newThreadTitle
              the input a grandchild and quietly give it its border back. The
              design's visible "Title" label is deferred for that reason
              (ADR 0027); aria-label carries the name meanwhile. */ ?>
-    <input type="text" id="<?= $e($newThreadTitleId) ?>" name="title" class="input" placeholder="What should the council consider?" maxlength="160" value="<?= $e($old['title'] ?? '') ?>"<?= $newThreadTitleError !== '' ? ' aria-invalid="true" aria-describedby="' . $e($newThreadTitleErrorId) . '"' . ($newThreadTitleFocus ? ' autofocus' : '') : '' ?> aria-label="Topic title" required>
+    <input type="text" id="<?= $e($newThreadTitleId) ?>" name="title" class="input" placeholder="What would you like to discuss?" maxlength="160" value="<?= $e($old['title'] ?? '') ?>"<?= $newThreadTitleError !== '' ? ' aria-invalid="true" aria-describedby="' . $e($newThreadTitleErrorId) . '"' . ($newThreadTitleFocus ? ' autofocus' : '') : '' ?> aria-label="Topic title" required>
     <?php
 };
 $newThreadBeforeSubmit = function (): void {

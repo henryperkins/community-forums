@@ -27,7 +27,8 @@ async function fixture(t) {
   await copyFile(new URL('vite.config.mjs', root), path.join(directory, 'vite.config.mjs'));
   await symlink(fileURLToPath(new URL('node_modules', root)), path.join(directory, 'node_modules'),
     process.platform === 'win32' ? 'junction' : 'dir');
-  await put('public/assets/imladris.css', '@font-face{font-family:fixture;src:url(./fonts/fixture.woff2)}');
+  await put('public/assets/forum-base.css', '@layer forum.components,application;@font-face{font-family:fixture;src:url(./fonts/fixture.woff2)}');
+  await put('public/assets/forum-theme.css', ':root{--font-body:system-ui}');
   await put('public/assets/fonts/fixture.woff2', 'font fixture');
   await put('public/assets/elven-star.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
   for (const name of ['conversation-entry', 'app', 'composer', 'passkeys', 'tour']) {

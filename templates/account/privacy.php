@@ -44,7 +44,7 @@ $discoverable = !array_key_exists('discoverable_by_email', $prefs) || !empty($pr
             </div>
             <div>
                 <label class="switchline"><input class="switch" type="checkbox" role="switch" name="hide_from_leaderboard" value="1"<?= $hideLb ? ' checked' : '' ?>><span class="switch-text">Hide me from leaderboards</span></label>
-                <p class="switch-sub">You still earn regard; you just won't be ranked publicly.</p>
+                <p class="switch-sub">You still earn reputation; you just won't be ranked publicly.</p>
             </div>
             <div>
                 <label class="switchline"><input class="switch" type="checkbox" role="switch" name="discoverable_by_email" value="1"<?= $discoverable ? ' checked' : '' ?>><span class="switch-text">Let others find me by email</span></label>

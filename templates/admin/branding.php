@@ -218,7 +218,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                             <li><strong><?= $e($presetInfo['label']) ?></strong> — <?= $e($presetInfo['summary']) ?></li>
                         <?php endforeach; ?>
                     </ul>
-                    <p class="branding-colour-help" id="branding-style-help">Override one part of the preset below, or leave it on “Preset”. Text is always EB Garamond. With an active package, a part you override applies over the package and the rest follows the package.</p>
+                    <p class="branding-colour-help" id="branding-style-help">Override one part of the preset below, or leave it on “Preset”. Body text uses your system’s sans-serif font. With an active package, a part you override applies over the package and the rest follows the package.</p>
                     <div class="branding-field-grid branding-style-grid">
                         <?php foreach ($styleFields as $field => [$styleLabel, $axis, $choices, $current]): ?>
                             <?php $inputId = 'branding-' . str_replace('_', '-', $field); ?>
@@ -427,7 +427,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                                 </div>
                             </section>
                             <div class="brand-preview-content thread-row-inbox">
-                                <p class="brand-preview-copy"><span class="unread-dot" aria-label="Unread"></span> A sample discussion</p>
+                                <p class="brand-preview-copy"><span class="unread-dot" role="img" aria-label="Unread"></span> A sample discussion</p>
                                 <a class="thread-title" href="#branding-preview">Sample link</a>
                                 <p>Readable content with a <span class="chip chip-decision_made">Decision</span> status.</p>
                             </div>
@@ -457,7 +457,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                     </div>
                     <p class="brand-preview-note">Each mode uses its own logo variant, falling back to the base logo. System follows the visitor’s device. Sign-in screens show the same logo on a raised plate.</p>
                     <?php if (!empty($brand_package_active)): ?>
-                        <p class="brand-preview-note">This sample uses the package theme currently shown in your session. Classic and Retro apply when no package theme is shown. Saving branding changes the live community.</p>
+                        <p class="brand-preview-note">This sample uses the package theme currently shown in your session. Built-in presets apply when no package theme is shown. Saving branding changes the live community.</p>
                     <?php endif; ?>
                     <noscript><p class="brand-preview-note">This preview shows the saved colours and logos. Turn on JavaScript to preview edits before saving.</p></noscript>
                     <a class="btn btn-secondary branding-preview-shortcut" href="#branding-palette">Back to appearance controls</a>

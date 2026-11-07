@@ -632,22 +632,26 @@ test('phase 4 custom emoji surfaces have no serious axe violations', async ({ pa
   await expectNoSeriousA11yViolations(page, info, '[data-post-toolbar]');
 });
 
-test('phase 4 slash combobox has no serious axe violations and is keyboard operable', async ({ page }, info) => {
-  // slash_giphy graduated to default-on (GA 2026-07-02). The composer slash
-  // inserts + GIPHY picker are an APG combobox (textarea = combobox, popup =
-  // role=listbox of role=option). Scope the axe scan to the listbox surface per
-  // the scoped-scan precedent, and assert the keyboard contract that graduation
-  // required: default active option, arrow navigation via aria-activedescendant,
-  // and Escape-to-close.
+test('phase 4 native textarea suggestions have no serious axe violations and are keyboard operable', async ({ page }, info) => {
+  // A native multiline textbox controls the listbox without a combobox role
+  // override. Scan both the input and popup, and retain the selected-option,
+  // active-descendant, keyboard navigation, and Escape-to-close contract.
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
   await openTopicComposer(page);
-  const body = page.locator('form.composer textarea.composer-input').first();
+  const form = page.locator('form.composer').first();
+  const body = form.locator('textarea.composer-input');
+  const menu = form.locator('.composer-slash-menu[role="listbox"]');
   await expect(body).toBeVisible();
+  await expect(body).toHaveRole('textbox');
+  await expect(body).not.toHaveAttribute('role', /.*/);
+  await expect(body).not.toHaveAttribute('aria-expanded', /.*/);
 
   await body.fill('/');
-  await expect(page.locator('.composer-slash-menu[role="listbox"]').first()).toBeVisible();
-  await expect(body).toHaveAttribute('aria-expanded', 'true');
+  await expect(menu).toBeVisible();
+  await expect(body).toHaveAttribute('aria-controls', (await menu.getAttribute('id'))!);
+  await expect(body).toHaveAttribute('aria-autocomplete', 'list');
+  await expect(body).toBeFocused();
 
   const firstOption = page.getByRole('option', { name: 'Insert table' });
   await expect(firstOption).toHaveAttribute('aria-selected', 'true');
@@ -655,16 +659,22 @@ test('phase 4 slash combobox has no serious axe violations and is keyboard opera
   expect(activeId, 'active option should have an id for aria-activedescendant').toBeTruthy();
   await expect(body).toHaveAttribute('aria-activedescendant', activeId!);
 
-  // Certify the listbox + options are free of serious/critical violations.
-  await expectNoSeriousA11yViolations(page, info, '.composer-slash-menu');
+  // Include the native textarea; scanning only the popup misses invalid input roles.
+  await expectNoSeriousA11yViolations(page, info, 'form.composer');
 
   await body.press('ArrowDown');
-  await expect(page.getByRole('option', { name: 'Insert task list' })).toHaveAttribute('aria-selected', 'true');
+  const taskOption = page.getByRole('option', { name: 'Insert task list' });
+  await expect(taskOption).toHaveAttribute('aria-selected', 'true');
   await expect(firstOption).toHaveAttribute('aria-selected', 'false');
+  await expect(body).toHaveAttribute('aria-activedescendant', (await taskOption.getAttribute('id'))!);
+  await expect(body).toBeFocused();
 
   await body.press('Escape');
-  await expect(body).toHaveAttribute('aria-expanded', 'false');
-  await expect(page.locator('.composer-slash-menu')).toBeHidden();
+  await expect(menu).toBeHidden();
+  await expect(body).not.toHaveAttribute('aria-activedescendant', /.*/);
+  await expect(body).not.toHaveAttribute('aria-expanded', /.*/);
+  await expect(body).toHaveValue('/');
+  await expect(body).toBeFocused();
 });
 
 test('phase 4 split/merge moderator panel has no serious axe violations', async ({ page }, info) => {

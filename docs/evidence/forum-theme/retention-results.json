@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-07",
+  "candidate": "5dc1b40f3b23d46d",
+  "deployed_pins": [
+    "c66e3b55dba6da68",
+    "3630440af0d45598",
+    "67ba8434286ff7e6"
+  ],
+  "unique_pinned_files": 30,
+  "verified_trees": [
+    "public/assets/dist",
+    ".build/static/assets/dist"
+  ],
+  "hash_mismatches": [],
+  "candidate_marked_deployed": false
+}

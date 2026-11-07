@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 
 final class ThemeBaselineFidelityTest extends TestCase
 {
-    public function test_policy_baselines_match_the_generated_imladris_runtime(): void
+    public function test_policy_baselines_match_the_generated_forum_runtime(): void
     {
-        $css = (string) file_get_contents(__DIR__ . '/../../../public/assets/imladris.css');
+        $css = (string) file_get_contents(__DIR__ . '/../../../public/assets/forum-theme.css');
         $root = $this->declarations($this->block($css, ':root'));
         $checked = 0;
         foreach (['light' => ':root', 'dark' => '[data-theme="dark"]'] as $variant => $selector) {
@@ -21,9 +21,8 @@ final class ThemeBaselineFidelityTest extends TestCase
                 if ($variant === 'dark' && !str_contains($block, $token . ':')) {
                     continue;
                 }
-                // Semantic roles point at primitives (var(--parchment-100)), so
-                // resolve the chain; translucent washes are flattened in the
-                // policy for contrast arithmetic and are not compared here.
+                // Resolve aliases as well as direct colours. The active baseline
+                // uses opaque surfaces so rendered pairs and gate arithmetic agree.
                 $resolved = $this->resolve($scope[$token] ?? '', $scope);
                 if (preg_match('/\A#[0-9a-fA-F]{6}\z/', $resolved) === 1) {
                     self::assertSame(strtolower($resolved), $value, "$variant $token");

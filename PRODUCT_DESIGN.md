@@ -4,7 +4,7 @@
 **Stack:** PHP + MySQL (server-rendered) with progressive-enhancement JavaScript
 **This document is the source of truth.** When a decision changes, update it here first. Code, tickets, and mockups defer to this file.
 
-> **Renamed 2026-08-27: this file was `DESIGN.md`.** It is the *product and technical* design document and keeps its place in the precedence chain (below `DECISIONS.md`, above `SCHEMA.md`). The root **`DESIGN.md`** is now a different, narrower document: the **Imladris visual design system** — tokens, type, components, and visual guardrails, in the portable [DESIGN.md format](https://github.com/google-labs-code/design.md). Cite this file as `PRODUCT_DESIGN §N`. On any product/technical conflict, this file wins; root `DESIGN.md` is authoritative only on visual decisions.
+> **Renamed 2026-08-27: this file was `DESIGN.md`.** It is the *product and technical* design document and keeps its place in the precedence chain (below `DECISIONS.md`, above `SCHEMA.md`). The root **`DESIGN.md`** is now a different, narrower document: the **Forum visual design system** — tokens, type, components, and visual guardrails, in the portable [DESIGN.md format](https://github.com/google-labs-code/design.md). Cite this file as `PRODUCT_DESIGN §N`. On any product/technical conflict, this file wins; root `DESIGN.md` is authoritative only on visual decisions.
 
 ---
 
@@ -59,7 +59,7 @@ The product maps classic forum concepts onto familiar messaging-app patterns:
 - **Threads → an email-style inbox** in the middle column (subject, author, snippet, time, reply count, unread/star).
 - **Posts → a chat-style message stream** on the right, with a composer pinned to the bottom.
 
-The original front-end explorations (`app.html` + `app.css`, and the retro tribute pages) were proposed as Phase 0 artifacts but were **not created**. Phase 1 proceeded directly as a server-rendered PHP application; the live visual system is documented in root `DESIGN.md` and `docs/design-system/imladris/`. The working brand name **"RetroBoards"** remains a placeholder, swappable throughout.
+The original front-end explorations (`app.html` + `app.css`, and the retro tribute pages) were proposed as Phase 0 artifacts but were **not created**. Phase 1 proceeded directly as a server-rendered PHP application; the live visual system is documented in root `DESIGN.md` and `docs/design-system/forum-accessibility.md`. The working brand name **"RetroBoards"** remains a placeholder, swappable throughout.
 
 ## 2. Goals & Non-Goals
 
@@ -347,7 +347,7 @@ Completing this repair does not mark those larger requirements complete.
 
 **Design system: a custom tokenised productivity UI.** Inspired by Fluent/Outlook density, Slack-style conversational affordances, and the *behaviour* of accessible primitives (dialogs, menus, popovers, comboboxes, command menus) — we adopt the **ideas** (tokens, density, accessible interaction patterns), **not** any React UI kit. Everything renders from CSS variables on our server-rendered, progressively-enhanced stack. Visual language: compact density, soft neutral surfaces, 1px dividers, clear unread/mention/status states, strong hover/focus, restrained rounded cards, sticky command bars, status chips, subtle motion — beauty from clarity and rhythm, not gradients or toy-like social UI.
 
-**Imladris runtime ownership.** The imported authoring bundle lives at `docs/design-system/imladris/`, but production consumes only its allowlisted tokens, self-hosted fonts, and reusable component CSS through generated `/assets/imladris.css`. Those rules are wrapped in low-priority cascade layers. The unlayered `/assets/app.css` remains the compatibility and feature layer, followed by WYSIWYG, theme-package, and operator-branding styles; design-system preview JavaScript, UI kits, documentation CSS, uploads, archived app snapshots, and cross-cutting reduced-motion timing declarations never ship. The latter remain application-owned because layered `!important` declarations reverse normal layer precedence and could defeat feature-specific motion shutdowns. This boundary lets the design system own foundations without replacing PHP templates or progressive-enhancement behavior. `composer verify:imladris` checks deterministic generated-asset drift, feature-flag parity and concrete composer/style contracts. Imported design-mirror changes retain their own review digest. Application templates, surface-spec wording and retained browser bundles do not require a blanket digest refresh; UI correctness is established by behavioral and focused browser evidence (ADR 0051).
+**Forum runtime ownership (ADR 0056).** The active sources live in `resources/forum/`. `composer build:forum` generates `/assets/forum-base.css` (retained structural components in the `forum.components` layer) and `/assets/forum-theme.css` (unlayered semantic tokens and presentation). `/assets/app.css` occupies the intermediate `application` layer, followed by the active theme, editor CSS, theme packages and operator branding. The default theme uses system fonts and has no font preload. Former Imladris authoring files and generated assets remain historical; they are not active runtime inputs. Existing PHP templates, progressive enhancement, feature flags and package safeguards remain authoritative. `composer check:forum` detects generated drift; focused browser evidence verifies visible behavior.
 
 Beyond the base palette, the token system carries **forum-state families** so unread, mention, solved, moderation, and decision states read clearly without noise:
 
@@ -364,7 +364,7 @@ presence.{online, away, offline}
 
 | Feature | Priority | Status | Notes |
 |---|---|---|---|
-| Single tokenised theme (CSS variables) | P0 | Live | Imladris foundations generate `/assets/imladris.css`; application compatibility rules and later theme/branding overrides retain behavior. |
+| Single tokenised theme (CSS variables) | P0 | Implemented; deployment tracked separately | Forum foundations generate `forum-base.css` and `forum-theme.css`; application rules and later package/branding overrides retain behavior. |
 | Retro 2002 theme as optional skin | P2 | Planned | The preserved `styles.css` look as a toggle. |
 | Admin branding (name, colors, logo) | P1 | Planned | Make "RetroBoards" → operator's brand. |
 | Plugin / theme system | P2 | Planned | Avoid decisions that preclude it. |

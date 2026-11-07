@@ -12,32 +12,32 @@ namespace App\Support;
  * package). Precedence per axis: operator override → active package → preset.
  *
  * The values are fixed vocabularies: the shell stamps them on <html> as data
- * attributes and app.css maps each one to tokens, so no operator text ever
- * reaches CSS. Every family named here is self-hosted (DESIGN.md: four serif
- * families, no sans), and every radius stays within the Twelve-Max Rule.
+ * attributes and the Forum theme maps them to tokens, so no operator text
+ * reaches CSS. Stored legacy keys remain valid; labels describe the active
+ * system-font presentation (ADR 0056).
  */
 final class BrandStyle
 {
     /** @var array<string,array{label:string,summary:string,rail:string,type:string,corners:string}> */
     public const PRESETS = [
         'classic' => [
-            'label' => 'Classic',
-            'summary' => 'Parchment and twilight surfaces, a sunken sidebar, Cormorant headings and the standard corners.',
+            'label' => 'Forum',
+            'summary' => 'Neutral surfaces, a contrasting sidebar, system sans-serif text and standard corners.',
             'rail' => 'sunken', 'type' => 'imladris', 'corners' => 'imladris',
         ],
         'retro' => [
             'label' => 'Retro',
-            'summary' => 'Amber and ember surfaces with the Classic sidebar, type and corners.',
+            'summary' => 'Warm surfaces with the standard sidebar, system sans-serif text and corners.',
             'rail' => 'sunken', 'type' => 'imladris', 'corners' => 'imladris',
         ],
         'ledger' => [
             'label' => 'Ledger',
-            'summary' => 'Cool mist and slate surfaces, a sidebar flush with the page, EB Garamond headings and crisp corners.',
+            'summary' => 'Cool surfaces, a sidebar flush with the page, system serif headings and crisp corners.',
             'rail' => 'flush', 'type' => 'book', 'corners' => 'crisp',
         ],
         'vellum' => [
             'label' => 'Vellum',
-            'summary' => 'Bright vellum and warm charcoal surfaces, a raised sidebar, Marcellus headings and soft corners.',
+            'summary' => 'Warm neutral surfaces, a raised sidebar, system sans-serif text and soft corners.',
             'rail' => 'raised', 'type' => 'lapidary', 'corners' => 'soft',
         ],
     ];
@@ -49,11 +49,11 @@ final class BrandStyle
         'raised' => 'Raised panel',
     ];
 
-    /** @var array<string,string> heading/body pairing => label (text is always EB Garamond) */
+    /** @var array<string,string> heading/body pairing => label (body text always uses the system sans-serif stack) */
     public const TYPES = [
-        'imladris' => 'Cormorant headings',
-        'book' => 'EB Garamond headings',
-        'lapidary' => 'Marcellus headings',
+        'imladris' => 'System sans-serif',
+        'book' => 'System serif headings',
+        'lapidary' => 'System sans-serif headings',
     ];
 
     /** @var array<string,string> corner scale => label */
@@ -112,7 +112,7 @@ final class BrandStyle
     /**
      * HTML attributes for an effective style. Without a package, values equal
      * to the built-in defaults are omitted, so an unstyled install renders
-     * exactly as before. While a package is served every resolved value is
+     * with the current Forum defaults. While a package is served every resolved value is
      * stamped: an override that restates a built-in default must still win
      * over the package's own tokens.
      *

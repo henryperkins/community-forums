@@ -11,8 +11,8 @@ use Tests\Support\TestCase;
  * Member-profile visual-fidelity contract against the Imladris user-profile
  * template and supplied Commend Star component.
  *
- * (The cover regard stat keeps the noun "Regard" per DESIGN §5.4, which outranks
- * the kit's "Commends earned" label in the precedence chain — so it is not changed.)
+ * The Forum theme uses plain "Reputation" and "Badges" labels (ADR 0056)
+ * while retaining the supplied badge glyph and the privacy contracts below.
  */
 final class AppProfileFidelityTest extends TestCase
 {
@@ -32,8 +32,9 @@ final class AppProfileFidelityTest extends TestCase
         $res = $this->get('/u/erestor');
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'Marks of esteem');     // sentence case
-        $this->assertDontSeeText($res, 'Marks of Esteem');  // not title case
+        $this->assertSeeText($res, '<p class="profile-badges-label">Badges</p>');
+        $this->assertDontSeeText($res, 'Marks of esteem');
+        $this->assertDontSeeText($res, 'Marks of Esteem');
         $this->assertSeeText($res, 'icon-commend-star badge-star');
         $this->assertSeeText($res, 'M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z');
         $this->assertSeeText($res, 'Welcome');              // the badge is still shown

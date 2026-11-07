@@ -31,6 +31,10 @@ final class AssetManifestTest extends TestCase
             $missing = new AssetManifest($root);
             self::assertMatchesRegularExpression('#^/assets/app\.js\?v=[a-f0-9]{16}$#', $missing->urls()['app.js']);
             self::assertMatchesRegularExpression('#^/assets/conversation-entry\.js\?v=[a-f0-9]{16}$#', $missing->urls()['conversation-entry.js']);
+            self::assertMatchesRegularExpression('#^/assets/forum-base\.css\?v=[a-f0-9]{16}$#', $missing->urls()['forum-base.css']);
+            self::assertMatchesRegularExpression('#^/assets/forum-theme\.css\?v=[a-f0-9]{16}$#', $missing->urls()['forum-theme.css']);
+            self::assertArrayNotHasKey('imladris.css', $missing->urls());
+            self::assertArrayNotHasKey('fonts/imladris/eb-garamond-latin-400-normal.woff2', $missing->urls());
             self::assertArrayNotHasKey('wysiwyg-composer.js', $missing->urls());
 
             file_put_contents($root . '/config/assets.json', json_encode([

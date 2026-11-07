@@ -77,8 +77,9 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
     <?php else: ?>
         <link rel="icon" href="data:,">
     <?php endif; ?>
-    <link rel="stylesheet" href="<?= $e($assetUrl('imladris.css')) ?>">
+    <link rel="stylesheet" href="<?= $e($assetUrl('forum-base.css')) ?>">
     <link rel="stylesheet" href="<?= $e($assetUrl('app.css')) ?>">
+    <link rel="stylesheet" href="<?= $e($assetUrl('forum-theme.css')) ?>">
     <?php if ($wysiwygComposerOn): ?><link rel="stylesheet" href="<?= $e($assetUrl('wysiwyg-composer.css')) ?>"><?php endif; ?>
     <?php if (!empty($themePackage['preview_css_digest'])): ?><link rel="stylesheet" href="/theme/preview.css?v=<?= $e($themePackage['preview_css_digest']) ?>"><?php elseif (!empty($themePackage['active_css_digest'])): ?><link rel="stylesheet" href="/theme/<?= $e($themePackage['active_css_digest']) ?>.css"><?php endif; ?>
     <?php if ($linkBrandStyles): ?><link rel="stylesheet" href="<?= $e($brandStylesUrl) ?>"><?php endif; ?>
@@ -124,25 +125,24 @@ if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
             'active_thread_board_id' => str_starts_with((string) ($request_path ?? ''), '/t/')
                 ? (int) ($thread['board_id'] ?? 0) : 0,
         ]) ?>
-        <main class="main" id="main">
+        <main class="main" id="main" tabindex="-1">
             <?= $this->partial('partials/subheader', ['compose_board' => $composeBoard]) ?>
             <?= $this->partial('partials/flash') ?>
             <?= $content ?>
         </main>
     </div>
 <?php elseif ($variant === 'admin'): ?>
-    <?php /* admin/_console owns the chrome, the <main id="main"> and the flash slot. */ ?>
+    <?php /* admin/_console owns the chrome, the <main id="main" tabindex="-1"> and the flash slot. */ ?>
     <?= $content ?>
 <?php elseif ($variant === 'auth'): ?>
-    <main class="auth-stage" id="main">
-        <svg class="auth-stage-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
+    <main class="auth-stage" id="main" tabindex="-1">
         <?php
         // The community's identity on every sign-in screen (ADR 0054): the
         // uploaded logo resolved exactly as the member chrome resolves it, on a
         // raised plate that follows the mode the logo was chosen for, so a logo
         // drawn for the light topbar stays legible on the constant-twilight
         // stage. No logo (missing, removed or branding off) keeps the house mark.
-        $authMark = '<svg class="auth-brand-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>'
+        $authMark = $this->partial('partials/brand_mark', ['class' => 'auth-brand-star'])
             . "\n            " . '<span class="auth-brand-name">' . $e($brand['name']) . '</span>';
         ?>
         <div class="auth-identity">
@@ -164,7 +164,7 @@ if ($variant === 'app' && str_starts_with($chromePath, '/t/')) {
         <?= $content ?>
     </main>
 <?php else: ?>
-    <main class="container" id="main">
+    <main class="container" id="main" tabindex="-1">
         <?= $this->partial('partials/subheader', ['compose_board' => $composeBoard]) ?>
         <?= $this->partial('partials/flash') ?>
         <?= $content ?>

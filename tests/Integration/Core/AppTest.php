@@ -119,7 +119,7 @@ final class AppTest extends TestCase
 
         $root = dirname(__DIR__, 3);
         $manifest = json_decode((string) file_get_contents($root . '/config/assets.json'), true, flags: JSON_THROW_ON_ERROR);
-        foreach (['app.css', 'imladris.css', 'app.js'] as $name) {
+        foreach (['forum-base.css', 'app.css', 'forum-theme.css', 'app.js'] as $name) {
             $url = $manifest['urls'][$name];
             self::assertMatchesRegularExpression('#^/assets/dist/[A-Za-z0-9_-]+-[A-Za-z0-9_-]+\.(css|js)$#', $url);
             self::assertStringContainsString('"' . $url . '"', $response->body());
