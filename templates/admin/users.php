@@ -169,9 +169,9 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
                                 </span>
                             </td>
                             <td data-label="Role">
-                                <span class="role-pill role-<?= $e($role) ?> member-directory-role is-<?= $e($role) ?>"><?= $e($role) ?></span>
+                                <span class="role-pill role-<?= $e($role) ?> member-directory-role is-<?= $e($role) ?>"><?= $e(label_text($role)) ?></span>
                                 <?php if ($moderatedBoards > 0): ?>
-                                    <span class="tag member-directory-board-mod" title="Moderates <?= $moderatedBoards ?> board<?= $moderatedBoards === 1 ? '' : 's' ?>">board mod</span>
+                                    <span class="tag member-directory-board-mod" title="Moderates <?= $moderatedBoards ?> board<?= $moderatedBoards === 1 ? '' : 's' ?>">Board mod</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="State"><span class="state state-<?= $e($state) ?> member-directory-state is-<?= $e($state) ?>"><?= $e(ucfirst(str_replace('_', ' ', $state))) ?></span></td>

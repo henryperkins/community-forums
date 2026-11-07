@@ -766,12 +766,13 @@ final class AppImladrisFidelityTest extends TestCase
     /**
      * ADR 0032: the topbar and the rail are the design system's ForumNav and
      * BoardRail, rendered in their own class vocabulary and styled by the layer;
-     * app.css restates none of the retired transfer chrome.
+     * app.css restates none of the retired transfer chrome. Since ADR 0057 the
+     * component layer is the generated Forum base (the Imladris build is retired).
      */
     public function test_member_chrome_wears_the_design_systems_vocabulary_and_app_css_restates_none_of_it(): void
     {
         $root = dirname(__DIR__, 3);
-        $runtime = (string) file_get_contents($root . '/public/assets/imladris.css');
+        $runtime = (string) file_get_contents($root . '/public/assets/forum-base.css');
         $application = (string) file_get_contents($root . '/public/assets/app.css');
 
         foreach (['.forum-bar {', '.forum-bar-surface {', '.forum-bar-search {', '.forum-bar-railtoggle {', '.board-rail {', '.board-rail-item {', '.board-rail-foot {', '.presence-widget {'] as $rule) {
@@ -806,7 +807,9 @@ final class AppImladrisFidelityTest extends TestCase
     {
         $root = dirname(__DIR__, 3);
         $source = (string) file_get_contents($root . '/docs/design-system/imladris/components.css');
-        $runtime = (string) file_get_contents($root . '/public/assets/imladris.css');
+        // The archived Imladris source still bounds the reviewed closure; the
+        // active component runtime is the generated Forum base (ADR 0057).
+        $runtime = (string) file_get_contents($root . '/public/assets/forum-base.css');
         $spacing = (string) file_get_contents($root . '/docs/design-system/imladris/tokens/spacing.css');
         $application = (string) file_get_contents($root . '/public/assets/app.css');
 
@@ -839,6 +842,37 @@ final class AppImladrisFidelityTest extends TestCase
             '/* Generated compatibility bridge: member-surfaces-production */',
             $application,
         );
-        self::assertStringContainsString(trim($memberCss), $application);
+        // Since the Imladris build was retired (ADR 0057) the bridge is
+        // maintained in app.css. It must still equal the archived closure once
+        // ADR 0057's two mechanical rewrites are reversed (metadata face and
+        // text floor), apart from the deliberate edits listed here.
+        $startMarker = '/* ══ Member surfaces — production transfer (2026-08-27) ══ */';
+        $bridgeStart = strpos($application, $startMarker);
+        $bridgeEnd = strpos($application, '/* ══ End member surfaces production transfer ══ */');
+        self::assertIsInt($bridgeStart);
+        self::assertIsInt($bridgeEnd);
+        $bridge = substr($application, $bridgeStart + strlen($startMarker), $bridgeEnd - $bridgeStart - strlen($startMarker));
+        self::assertStringNotContainsString('var(--font-mono)', $bridge);
+        $reversed = str_replace('var(--font-meta)', 'var(--font-mono)', $bridge);
+        $reversed = (string) preg_replace('/max\(var\(--text-floor\), ((?:[^()]|\([^()]*\))*)\)/', '$1', $reversed);
+        $deliberate = [
+            // ADR 0057: the eight-point star icon was removed.
+            ".chip .icon-commend-star,\n.badge .icon-eight-point-star,\n.chip .icon-eight-point-star { fill: currentColor; stroke: none; }"
+                => '.chip .icon-commend-star { fill: currentColor; stroke: none; }',
+            // ADR 0057: the empty-state mark is a muted inline Inbox icon.
+            "   rendered in the SVG's own stroke. The design uses the quiet four-point star,\n"
+                . "   filled, at 30px (ForumInbox.dc.html:236, 302) - already in the icon map as\n"
+                . "   `eight-point-star`, and inline, so the colour lands. A 56px rule left over\n"
+                . '   from the pre-Imladris inbox had also been sizing it. */'
+                => "   rendered in the SVG's own stroke. The mark is now an inline icon at 30px,\n"
+                . "   so the colour lands; the Forum theme draws it as a muted Inbox outline\n"
+                . "   (ADR 0057). A 56px rule left over from an earlier inbox had also been\n"
+                . '   sizing it. */',
+        ];
+        foreach (array_keys($deliberate) as $archived) {
+            self::assertSame(1, substr_count($memberCss, $archived), 'The archived text for a deliberate edit moved.');
+        }
+        self::assertSame(trim(strtr($memberCss, $deliberate)), trim($reversed));
+        self::assertDoesNotMatchRegularExpression('/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i', (string) preg_replace('#/\*.*?\*/#s', '', $bridge));
     }
 }

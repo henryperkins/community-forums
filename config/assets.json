@@ -1,11 +1,11 @@
 {
-  "version": "5dc1b40f3b23d46d",
+  "version": "0ab71f5ca65e7fa0",
   "urls": {
-    "forum-base.css": "/assets/dist/forum-base-style-CKKxU1F6.css",
-    "app.css": "/assets/dist/app-style-QOPBXP9w.css",
-    "forum-theme.css": "/assets/dist/forum-theme-style-C35sAGgP.css",
+    "forum-base.css": "/assets/dist/forum-base-style-DsiQn3Ye.css",
+    "app.css": "/assets/dist/app-style-diYLPve0.css",
+    "forum-theme.css": "/assets/dist/forum-theme-style-CNIV-nj8.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
-    "app.js": "/assets/dist/app-107ef98522c229d0.js",
+    "app.js": "/assets/dist/app-9b906acd1f6f64c8.js",
     "composer.js": "/assets/dist/composer-004f699d19dc5157.js",
     "passkeys.js": "/assets/dist/passkeys-abc14d1e680e3beb.js",
     "tour.js": "/assets/dist/tour-4573ee743ebaf07c.js",
@@ -14,11 +14,11 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "df5787b6f75d99a303e11f571ebfbe1600a3119e6d0c7821e857d7cc396b2ce4",
+      "sha256": "92a151f9610eb684388f901527c9949bce527f41a183fe4d802dacb42afdc865",
       "immutable": false
     },
     "/assets/app.js": {
-      "sha256": "82a49a2df9c21732725b798f79cff0ecd6a97b689765b4f68a0d42ec1d56dab6",
+      "sha256": "4a21a8707ef0ee9e5be81942701497a088283b0e47b67ff1ad9d133db76f7749",
       "immutable": false
     },
     "/assets/composer.js": {
@@ -33,6 +33,10 @@
       "sha256": "107ef98522c229d04c1c5ee0694357a1fd2dd086514506c0bdda752026e15eaf",
       "immutable": true
     },
+    "/assets/dist/app-9b906acd1f6f64c8.js": {
+      "sha256": "9b906acd1f6f64c80fd84bbebdb7c73ec03f5868b6f5d16647d39e3c893810e3",
+      "immutable": true
+    },
     "/assets/dist/app-e5669eff1f842115.js": {
       "sha256": "e5669eff1f842115b20b321fbff4b1ebc7f1d187a6ccbf8a189e1bc5dfd19adb",
       "immutable": true
@@ -43,6 +47,10 @@
     },
     "/assets/dist/app-style-D7aglA01.css": {
       "sha256": "c10ac5db5af53046b25ad01e6af9664b8bdbb2d0c22508b9c4e6990c6d61b11e",
+      "immutable": true
+    },
+    "/assets/dist/app-style-diYLPve0.css": {
+      "sha256": "5cd49db5135263e2422446bee6995b34cba60eb8f714c037ae57befb24f90ef4",
       "immutable": true
     },
     "/assets/dist/app-style-QOPBXP9w.css": {
@@ -113,8 +121,16 @@
       "sha256": "9933a3aced95dfcfba789466e40aaa448d4243f1dff4e918898d9855b955cab2",
       "immutable": true
     },
+    "/assets/dist/forum-base-style-DsiQn3Ye.css": {
+      "sha256": "b55ab9eb913c1c37116e8aad3dbc55fcf8190fd69af67bd7ce9b7c3861588899",
+      "immutable": true
+    },
     "/assets/dist/forum-theme-style-C35sAGgP.css": {
       "sha256": "9409ca0b32aaa07595e2f56dbb2e1c6df01835d8e24f480c0aa5c0f4cd64fe89",
+      "immutable": true
+    },
+    "/assets/dist/forum-theme-style-CNIV-nj8.css": {
+      "sha256": "9b3d799538defa568122a8678ab03d7ea04a2c651144b733fc86c1baa1983bfc",
       "immutable": true
     },
     "/assets/dist/imladris-style-DmYWEV0N.css": {
@@ -161,92 +177,12 @@
       "sha256": "5695624172f4209d6686552645ed60e69ba4cbf9d8ef61c8f32fa140c08d7369",
       "immutable": true
     },
-    "/assets/elven-star.svg": {
-      "sha256": "fefa6488e09008ee676c3ec1a6fdb2531eef297be22cc7e195cd71e660ff03b3",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/cormorant-garamond-latin-400-italic.woff2": {
-      "sha256": "e48e58027030df56869b795ca6f19b7012158275f7ad7cde1900b4a0b68d02e2",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/cormorant-garamond-latin-400-normal.woff2": {
-      "sha256": "8048ac209bec741e1c29cd0cfac5aac1c0c2ba8c3ddbd4a58fa9bd92ef5c63c2",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/cormorant-garamond-latin-500-italic.woff2": {
-      "sha256": "4fb55a7a6d564d428061fe12c82c896264bcc8b7f0b52840bf88e0db5b91256f",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/cormorant-garamond-latin-500-normal.woff2": {
-      "sha256": "8197bf53615ddc8c423f444c7f0eec63b7fa0ba093fcfbec60dfdd28429b0fc8",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/cormorant-garamond-latin-600-normal.woff2": {
-      "sha256": "ae062b6d5ae308e7edf61b28b07b9984bbb6e961b1f34d9b2c2f4389c33f21ea",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/cormorant-garamond-latin-700-normal.woff2": {
-      "sha256": "21a0fc1c5c22708cf4aa0c147fd32982e25bf9e21efec0ca31a4495ba41753eb",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/eb-garamond-latin-400-italic.woff2": {
-      "sha256": "1bd1b20fd55986b334ba42dbcb0d9bed7e2d08fd7a713000e8041bfafa37e8ec",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/eb-garamond-latin-400-normal.woff2": {
-      "sha256": "b63448e2680a0dbde70ebb2f3de78f6c515122835491f938e8a8595b46f29210",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/eb-garamond-latin-500-italic.woff2": {
-      "sha256": "7ad04da7123cee81dbb004e25bb63a59b1022796bb03d789df1406b514d0ac5c",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/eb-garamond-latin-500-normal.woff2": {
-      "sha256": "d2bb3f624516d0233ef8a03bd7b2be47489c36809a02e83ac1bc859e85f4874a",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/eb-garamond-latin-600-normal.woff2": {
-      "sha256": "ab02e032e749d28f6d231dc3258145710c3cc1709c85205773d508973454cd89",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/jetbrains-mono-latin-400-normal.woff2": {
-      "sha256": "14425ba9c695763c1547f48a206b7aa60350a33ae23de09f0407877f3fcd89eb",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/jetbrains-mono-latin-500-normal.woff2": {
-      "sha256": "cb182feeed4d798ff6961d3c79f7026279448fca0676438aaecb21f3fc39553a",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/jetbrains-mono-latin-600-normal.woff2": {
-      "sha256": "400c6bfda18d5d14acad1c15d6dcb9f8e13c015e7286317e0b9a482539bef147",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/LICENSES/OFL-cormorant-garamond.txt": {
-      "sha256": "6f5a41d57400577a50aae88475b11f292f3d7de78ee7d5113c69577331d8ad31",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/LICENSES/OFL-eb-garamond.txt": {
-      "sha256": "af751618923413517f388a73a903ff4334622ea4aa62dfe13a5861c6034fa2f2",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/LICENSES/OFL-jetbrains-mono.txt": {
-      "sha256": "60d55f23c6ce05a81099a762cb67ca2c9b6ea251c7912720998b4c89ebfd4faa",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/LICENSES/OFL-marcellus.txt": {
-      "sha256": "c77ba70be4679b87b26960538cdce281b8d61dcc837a40aad5afa8132ef22497",
-      "immutable": false
-    },
-    "/assets/fonts/imladris/marcellus-latin-400-normal.woff2": {
-      "sha256": "8a539799d12e3a144273288055490f57e1eee84da7a9145f085bc522e80719c3",
-      "immutable": false
-    },
     "/assets/forum-base.css": {
-      "sha256": "28a27d1c4b16b8d6de6e69fc394f4a1b94fb4429621c740f63ae27ec85542268",
+      "sha256": "2239dd5e2ec701355564a7d9b321718224861f1d4abdca7a3138e4b4a69b6119",
       "immutable": false
     },
     "/assets/forum-theme.css": {
-      "sha256": "62311b28ea3ed1597eb807124be8825192a32c021e90a64644089024bccae23e",
+      "sha256": "a416cce30aef82c79d980c535e1812170ae379957ae063a287dd51c7aaf17d48",
       "immutable": false
     },
     "/assets/passkeys.js": {
@@ -259,6 +195,22 @@
     }
   },
   "releases": [
+    {
+      "version": "0ab71f5ca65e7fa0",
+      "files": [
+        "/assets/dist/app-9b906acd1f6f64c8.js",
+        "/assets/dist/app-style-diYLPve0.css",
+        "/assets/dist/composer-004f699d19dc5157.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+        "/assets/dist/forum-base-style-DsiQn3Ye.css",
+        "/assets/dist/forum-theme-style-CNIV-nj8.css",
+        "/assets/dist/milkdown-adapter-DXUybFX0.js",
+        "/assets/dist/passkeys-abc14d1e680e3beb.js",
+        "/assets/dist/tour-4573ee743ebaf07c.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-XlKwRXnh.js"
+      ]
+    },
     {
       "version": "5dc1b40f3b23d46d",
       "files": [

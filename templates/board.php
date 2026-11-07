@@ -144,7 +144,7 @@ $this->start('subheader_leading');
 
         <?php if (empty($threads)): ?>
             <div class="board-empty">
-                <?= $this->partial('partials/icon', ['name' => 'eight-point-star', 'class' => 'board-empty-mark']) ?>
+                <?= $this->partial('partials/icon', ['name' => 'message-square', 'class' => 'board-empty-mark']) ?>
                 <p class="board-empty-headline">No topics here yet.</p>
                 <?php if (!empty($can_post)): ?>
                     <p class="board-empty-sub">Be the first to open one in #<?= $e($board['name']) ?>.</p>

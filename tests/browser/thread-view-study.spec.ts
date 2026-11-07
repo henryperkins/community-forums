@@ -512,15 +512,12 @@ test('Study layout matches desktop and mobile geometry', async ({ page }, info) 
     const box = element.getBoundingClientRect();
     return { width: box.width, height: box.height, borderWidth: style.borderTopWidth, borderRadius: style.borderRadius, background: style.backgroundColor };
   });
-  const starColors = await page.locator('.topic-tools-open .icon-eight-point-star, .topic-tools-head .icon-eight-point-star').evaluateAll((icons) => {
-    const probe = document.createElement('span');
-    probe.style.color = 'var(--gold-600)';
-    document.body.appendChild(probe);
-    const expected = getComputedStyle(probe).color;
-    probe.remove();
-    return { expected, actual: icons.map((icon) => getComputedStyle(icon).color) };
-  });
-  expect(starColors.actual.every((color) => color === starColors.expected)).toBe(true);
+  // The Topic tools mark is the conventional settings icon in the control's
+  // own ink, not a decorative gold star (ADR 0057).
+  const markColors = await page.locator('.topic-tools-open .icon-settings, .topic-tools-head .icon-settings').evaluateAll((icons) =>
+    icons.map((icon) => [getComputedStyle(icon).color, getComputedStyle(icon.parentElement!).color]));
+  expect(markColors.length).toBeGreaterThan(0);
+  expect(markColors.every(([icon, parent]) => icon === parent)).toBe(true);
   if (info.project.name === 'desktop') {
     expect(toolsBox!.width).toBeLessThanOrEqual(392);
     expect(closeStyles.width).toBe(28);
@@ -923,7 +920,7 @@ test('the star pill uses the commend star and never wraps the facts row', async 
   await expect(star.locator('svg')).toHaveAttribute('aria-hidden', 'true');
   await expect(star.locator('svg path')).toHaveAttribute(
     'd',
-    'M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z',
+    'M50 8 60.6 37.4 91.9 38.4 67.1 57.6 75.9 87.6 50 70 24.1 87.6 32.9 57.6 8.1 38.4 39.4 37.4Z',
   );
   // No second star glyph anywhere in the head.
   expect(await page.locator('.thread-study-head').innerText()).not.toMatch(/[★☆]/);

@@ -128,14 +128,15 @@
       "kind": "custom",
       "description": "A readable measure, clear paragraph spacing and underlined links.",
       "html": "<div class=\"prose\"><p>Read the <a href=\"/guidelines\">community guidelines</a>.</p></div>",
-      "css": ".prose { font-size: var(--text-prose); line-height: 1.65; max-inline-size: var(--measure-prose); } .prose a { text-decoration: underline; }"
+      "css": ".prose { font-family: var(--font-prose); font-size: var(--text-prose); line-height: 1.65; max-inline-size: var(--measure-prose); } .prose a { text-decoration: underline; }"
     }
   ],
   "narrative": {
     "northStar": "Make reading and participating familiar, clear and accessible.",
-    "overview": "The Forum theme replaces Imladris. Neutral surfaces, system typography, blue actions and ordinary forum language support the existing PHP-rendered Community Inbox.",
+    "overview": "The Forum theme replaces Imladris (ADR 0056) and retires its remaining typography, marks and build (ADR 0057). Neutral surfaces, system interface type, the reader's own sans-serif for discussions, blue actions and ordinary forum language support the existing PHP-rendered Community Inbox.",
     "keyCharacteristics": [
-      "System fonts and relative text sizes",
+      "System interface fonts and relative text sizes",
+      "Discussion prose in the reader's default sans-serif",
       "Independent light and dark palettes",
       "Visible focus and control boundaries",
       "Responsive rows and bounded reading measure"
@@ -143,6 +144,8 @@
     "rules": [
       "WCAG 2.2 AA target; verification status must be explicit.",
       "Primary controls use 44px targets.",
+      "Functional text is sentence case with normal tracking and at least --text-floor (.875rem).",
+      "Metadata uses --font-meta; --font-mono is for code and exact identifiers only.",
       "Prose links are underlined.",
       "Preserve native HTML and progressive enhancement.",
       "Operator branding and stored preference keys retain their contracts."
@@ -153,7 +156,8 @@
       "Use semantic tokens and familiar action labels."
     ],
     "donts": [
-      "Do not restore legacy font preloads or fantasy-only UI labels.",
+      "Do not restore legacy font preloads, Imladris marks or fantasy-only UI labels.",
+      "Do not set tracked capitals or sub-floor sizes for labels, chips or headers.",
       "Do not claim conformance from automated scans alone.",
       "Do not rewrite authored content as part of theme migration."
     ]

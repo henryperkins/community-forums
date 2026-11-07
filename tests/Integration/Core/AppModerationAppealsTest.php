@@ -66,6 +66,7 @@ final class AppModerationAppealsTest extends TestCase
         self::assertStringContainsString('/appeals/posts/' . $this->replyId, $page->body());
         self::assertStringContainsString('name="reason"', $page->body());
         self::assertStringContainsString('Reply to remove', $page->body());
+        self::assertStringContainsString('<span class="badge">Post removed</span>', $page->body());
         self::assertStringContainsString('Submit appeal', $page->body());
     }
 
@@ -83,7 +84,7 @@ final class AppModerationAppealsTest extends TestCase
 
         $this->assertStatus(200, $page);
         self::assertStringContainsString('/appeals/modlog/' . $logId, $page->body());
-        self::assertStringContainsString('warn', $page->body());
+        self::assertStringContainsString('<span class="badge">Warning</span>', $page->body());
         self::assertStringContainsString('Mind the local rules.', $page->body());
         self::assertStringContainsString('Submit appeal', $page->body());
     }
@@ -107,7 +108,7 @@ final class AppModerationAppealsTest extends TestCase
 
         $this->assertStatus(200, $page);
         self::assertStringContainsString('/appeals/modlog/' . $logId, $page->body());
-        self::assertStringContainsString('clear_avatar', $page->body());
+        self::assertStringContainsString('<span class="badge">Avatar removed</span>', $page->body());
         self::assertStringContainsString('Submit appeal', $page->body());
     }
 

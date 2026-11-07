@@ -54,7 +54,7 @@ $count = count($serverDrafts);
                                 <p class="account-draft-snippet"><?= $e(mb_strimwidth((string) $draft['body'], 0, 240, '...')) ?></p>
                                 <span class="account-draft-meta">
                                     saved <?= $e(human_datetime((string) $draft['updated_at'])) ?>
-                                    <span class="account-draft-chip">r<?= (int) $draft['revision'] ?></span>
+                                    <span class="account-draft-chip">Revision <?= (int) $draft['revision'] ?></span>
                                 </span>
                             </span>
                             <span class="account-draft-actions">
@@ -71,7 +71,7 @@ $count = count($serverDrafts);
                 </ul>
             <?php endif; ?>
 
-            <div class="account-draft-section local-drafts" aria-labelledby="local-drafts-heading">
+            <div class="account-draft-section local-drafts" role="group" aria-labelledby="local-drafts-heading">
                 <h3 class="account-subhead" id="local-drafts-heading">Saved in this browser</h3>
                 <p class="account-note">Device-local drafts can include offline edits or work that has not synced yet.</p>
                 <div data-local-drafts-list>

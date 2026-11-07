@@ -29,7 +29,7 @@
                     <?php $oldReasonRendered = $oldReasonRendered || $oldReason !== ''; ?>
                     <li class="report-row is-open">
                         <div class="report-head">
-                            <span class="badge">post removed</span>
+                            <span class="badge"><?= $e(moderation_action_label('delete_post')) ?></span>
                             <span class="muted">
                                 <a href="/t/<?= (int) $post['thread_id'] ?>-<?= $e((string) $post['thread_slug']) ?>"><?= $e((string) $post['thread_title']) ?></a>
                                 <?php if (!empty($post['deleted_at'])): ?> · <?= $e(human_datetime((string) $post['deleted_at'])) ?><?php endif; ?>
@@ -49,7 +49,7 @@
                     <?php $oldReasonRendered = $oldReasonRendered || $oldReason !== ''; ?>
                     <li class="report-row is-open">
                         <div class="report-head">
-                            <span class="badge"><?= $e((string) $log['action']) ?></span>
+                            <span class="badge"><?= $e(moderation_action_label((string) $log['action'])) ?></span>
                             <span class="muted"><?= $e(human_datetime((string) $log['created_at'])) ?></span>
                         </div>
                         <?php if (($log['reason'] ?? '') !== ''): ?><blockquote class="report-excerpt"><?= $e((string) $log['reason']) ?></blockquote><?php endif; ?>
@@ -81,10 +81,11 @@
                 <?php foreach ($appeals as $appeal): ?>
                     <li class="report-row">
                         <div class="report-head">
-                            <span class="badge"><?= $e((string) $appeal['status']) ?></span>
+                            <span class="badge"><?= $e(label_text((string) $appeal['status'])) ?></span>
                             <span class="muted"><?= $e((string) $appeal['target_type']) ?> #<?= (int) $appeal['target_id'] ?> · <?= $e(human_datetime($appeal['created_at'])) ?></span>
                         </div>
-                        <?php if (($appeal['target_summary'] ?? '') !== ''): ?><p><?= $e((string) $appeal['target_summary']) ?></p><?php endif; ?>
+                        <?php $appealSummary = (string) ($appeal['target_summary'] ?? ''); if ($appealSummary !== '' && $appealSummary === (string) ($appeal['original_action'] ?? '')) { $appealSummary = moderation_action_label($appealSummary); } ?>
+                        <?php if ($appealSummary !== ''): ?><p><?= $e($appealSummary) ?></p><?php endif; ?>
                         <blockquote class="report-excerpt"><?= $e((string) $appeal['reason']) ?></blockquote>
                         <?php if (($appeal['resolution_note'] ?? '') !== ''): ?><p class="resolution-note"><strong>Resolution</strong> <?= $e((string) $appeal['resolution_note']) ?></p><?php endif; ?>
                     </li>

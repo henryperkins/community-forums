@@ -6,7 +6,7 @@
     <section class="dm-threadpane">
         <div class="dm-empty">
             <div class="dm-empty-inner">
-                <span class="star" aria-hidden="true">✦</span>
+                <?= $this->partial('partials/icon', ['name' => 'message-square', 'class' => 'dm-empty-mark']) ?>
                 <h2><?= !empty($first_run) ? 'Start a conversation' : 'Choose a conversation' ?></h2>
                 <p><?= !empty($first_run) ? 'Send a private message to another member. Only those named can read your messages.' : 'Open a conversation from the list, or start a new message.' ?></p>
                 <?= $this->partial('partials/dm_empty_actions', ['new_user_throttled' => $new_user_throttled ?? false]) ?>

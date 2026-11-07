@@ -3,7 +3,7 @@
     <p class="profile-badges-label">Badges</p>
     <ul class="badge-row">
         <?php foreach ($badges as $b): ?>
-            <?php // The supplied Imladris Commend Star replaces seed emoji. ?>
+            <?php // One star mark for every badge, rather than seed emoji. ?>
             <li>
                 <details class="badge-info">
                     <summary class="badge-chip">

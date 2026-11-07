@@ -127,7 +127,7 @@ $unplacedFlash = $testMessage === '' ? $flashMessage : '';
         <h2>Queue status</h2>
         <ul class="stat-cards notification-stat-cards">
             <?php foreach (['queued', 'sent', 'failed', 'suppressed', 'bounced', 'complained'] as $status): ?>
-                <li class="stat-card"><span class="stat-num"><?= (int) ($status_counts[$status] ?? 0) ?></span><span class="stat-label"><?= $e($status) ?></span></li>
+                <li class="stat-card"><span class="stat-num"><?= (int) ($status_counts[$status] ?? 0) ?></span><span class="stat-label"><?= $e(label_text((string) $status)) ?></span></li>
             <?php endforeach; ?>
         </ul>
     </section>

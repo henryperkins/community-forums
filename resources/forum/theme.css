@@ -16,6 +16,18 @@ a:hover { text-decoration-color: currentColor; }
 :where(.prose, .post-body, .formatted-content, .page-content, .callout, .field-help, .form-help, .muted) a,
 .forum-directory__hero a, .forum-directory__peek a, .presence-all { text-decoration: underline; }
 :focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; box-shadow: 0 0 0 2px var(--focus-contrast); }
+
+/* Retained-layer normalization (ADR 0057). The layered component and
+   application rules still set capitals and letter-spacing on functional text.
+   Unlayered declarations outrank every cascade layer, so this low-specificity
+   reset removes that ornament there. Descendants inherit rather than reset, so
+   any Forum, package or branding rule that sets either property still applies
+   to the element it targets and to everything inside it. Labels are written in
+   sentence case at the source (label_text()). Code type, metadata type and the
+   smallest size are tokens instead: --font-mono, --font-meta, --text-floor. */
+:where(body) { text-transform: none; letter-spacing: normal; }
+:where(body *), :where(body *)::before, :where(body *)::after { text-transform: inherit; letter-spacing: inherit; }
+:where(td, th, time, .reaction-n, .regard-n, [class*="-count"], [class*="-number"], [class*="-num"]) { font-variant-numeric: tabular-nums; }
 ::placeholder { color: var(--text-faint); opacity: 1; }
 .eyebrow, [class$="-eyebrow"], .chip, .state,
 .board-rail-cat, .forum-directory__group h2, .presence-title,
@@ -38,6 +50,13 @@ a:hover { text-decoration-color: currentColor; }
     font-weight: 600; line-height: 1.35; letter-spacing: normal;
     text-transform: none; border-radius: var(--radius-md);
 }
+/* A minimum height must not leave a link-styled control's label at its top.
+   align-content centres block and inline-block content without changing their
+   display; flex and grid controls already centre their own items. */
+.btn, .btn-primary, .btn-secondary, .linkbtn, .create-trigger, .star-btn,
+.topic-tools-open, .pager a, .pager button, .board-mute-toggle,
+.forum-bar-signin, .forum-bar-signup, .admin-tab, .content-category-delete,
+:is(.directory-viewbar__choices, .directory-viewbar__peek, .search-scope-options, .search-order-options) :is(a, button) { align-content: center; }
 .btn, .btn-primary { background: var(--accent); color: var(--accent-contrast); }
 .btn:hover, .btn-primary:hover { background: var(--brand-primary-hover, var(--brand-hover)); color: var(--brand-primary-hover-contrast, var(--accent-contrast)); }
 .btn-secondary, .btn-ghost, .btn.btn-ghost, .btn.secondary, .star-btn,
@@ -72,11 +91,18 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
 .board-rail-cat { padding-block: 1.25rem .375rem; font-size: .875rem; color: var(--text-body); }
 .board-rail-item, .board-rail-route { min-height: 44px; padding: .625rem .75rem; color: var(--text-body); font-size: 1rem; line-height: 1.4; letter-spacing: normal; border-radius: var(--radius-md); }
 .board-rail-route-label { font-size: 1rem; letter-spacing: normal; }
-.board-rail-name { white-space: normal; overflow-wrap: anywhere; }
+.board-rail-name { white-space: normal; overflow-wrap: break-word; min-width: 0; }
+/* The composer's board picker states its choice beneath the name, so a name
+   never breaks mid-word to make room for the note. */
+.compose-board-picker { flex-direction: column; align-items: flex-start; gap: .125rem; }
+.compose-board-picker .board-rail-name { flex: none; max-width: 100%; }
 .board-rail-item.is-active, .board-rail-route.is-active { border-inline-start-color: var(--accent); background: var(--brand-subtle); color: var(--on-brand-subtle); font-weight: 600; }
 .board-rail-route-sub, .board-rail-count, .presence-count, .presence-note,
 .presence-person-meta, .presence-person-name, .presence-all, .presence-sub, .presence-staff, .presence-you, .presence-empty, .presence-more { font-size: .875rem; }
 .presence-title { color: var(--text-strong); font-size: 1rem; }
+.presence-title a { color: var(--accent); }
+/* The name gives way to an ellipsis; the You and Staff tags stay whole. */
+.presence-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .monogram { font-family: var(--font-ui); font-weight: 600; background: var(--brand-subtle); color: var(--on-brand-subtle); box-shadow: none; }
 .monogram--gilt { box-shadow: none; }
 .identity-menu-panel { border: 1px solid var(--border-strong); box-shadow: var(--shadow-md); }
@@ -139,7 +165,7 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
 
 /* Reading stays comfortable in both densities. No display face in prose. */
 .prose, .post-body, .formatted-content, .living-brief-body, .composer-preview {
-    font-family: var(--font-body); font-size: var(--text-prose); line-height: 1.65;
+    font-family: var(--font-prose); font-size: var(--text-prose); line-height: 1.65;
     max-inline-size: var(--measure-prose); text-align: start; overflow-wrap: anywhere;
 }
 .prose p, .post-body p, .formatted-content p { margin-block: 0 1em; }
@@ -168,7 +194,7 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
 .profile-tier, .profile-meta, .profile-handle { font-size: .875rem; line-height: 1.5; letter-spacing: normal; text-transform: none; }
 .post-actions button, .post-actions a, .reaction-picker button,
 .reaction-chip, .react-pill, .composer-toolbar button { min-height: 44px; font-size: .875rem; }
-.composer-input, .composer-box textarea, .composer-rich-editor { font-family: var(--font-body); font-size: 1.125rem; line-height: 1.65; }
+.composer-input, .composer-box textarea, .composer-rich-editor { font-family: var(--font-prose); font-size: 1.125rem; line-height: 1.65; }
 .composer-box, .composer-shell, .scribe-panel { border-radius: var(--radius-lg); box-shadow: none; }
 .composer-help, .composer-hint, .composer-status, .composer-footer { font-size: .875rem; }
 .compose-cancel { display: inline-flex; align-items: center; min-height: 44px; font-size: 1rem; }
@@ -217,6 +243,14 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
 .profile-cover .dm-menu-pop :focus-visible { outline-color: var(--focus-ring); box-shadow: 0 0 0 2px var(--focus-contrast); }
 .profile-cover::before, .profile-cover::after, .profile-cover-star { display: none; }
 
+/* Conventional marks (ADR 0057): a five-point star for starring and commends,
+   a settings mark for topic tools, a sparkle only for generated Living Brief
+   content, and neutral, muted empty-state marks. */
+.inbox-empty-star, .search-state-icon, .board-empty-mark, .dm-empty-mark { color: var(--text-muted); opacity: 1; }
+.board-empty-mark.icon, .dm-empty-mark.icon { width: 30px; height: 30px; }
+.living-brief-mark .icon-sparkle { width: 12px; height: 12px; }
+.topic-tools-open .icon, .topic-tools-mark .icon { width: 16px; height: 16px; color: currentColor; }
+
 /* Stored style keys are retained for compatibility; the old font families are
    retired. These are optional heading variations on a sans-serif UI. */
 :root[data-type-pairing="imladris"], .brand-preview[data-type-pairing="imladris"] { --font-display: var(--font-ui); }
@@ -248,8 +282,14 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
     .forum-directory .directory-viewbar { display: none; }
 }
 @media (max-height: 480px) {
-    /* A short viewport (including high browser zoom) must retain reading room. */
+    /* A short viewport (including high browser zoom) must retain reading room.
+       The reply or guest dock joins the end of the topic instead of covering
+       up to half the screen and the posts that keyboard focus moves to. */
     .forum-bar { position: relative; }
+    .thread-dock { position: static; max-block-size: none; }
+    /* Nothing is stuck to the topic's viewport now, so reserving the bar's and
+       dock's height would leave focus and fragment scrolling no room at all. */
+    html:has(body[data-route="thread"]) { scroll-padding-block: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }

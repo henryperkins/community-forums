@@ -197,8 +197,8 @@ qualification; the broad hosted matrix is optional (ADR 0051).
 2. Run `composer test` once on the final application candidate. Run
    `npm run check:assets` and `npm run test:assets` when asset sources,
    build dependencies, Worker routing, manifests or retention changed. The full
-   PHP suite includes Imladris generation and CI contracts; unchanged subsets do
-   not need another pass. Docs-only changes need appropriate document review.
+   PHP suite includes Forum CSS generation and CI contracts; unchanged subsets
+   do not need another pass. Docs-only changes need appropriate document review.
 3. For UI changes, run focused browser journeys for the affected surface and
    viewport/browser modes, including no-JS or accessibility where relevant.
    Add prototype, production-container upload, migration or recovery checks

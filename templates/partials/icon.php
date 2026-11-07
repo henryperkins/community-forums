@@ -22,8 +22,8 @@ $iconStroke = [
     'panel-right'     => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/>',
     'users'           => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     'user'            => '<path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/>',
-    // Copied from the Imladris account-settings rail. This profile path is
-    // intentionally distinct from the generic user glyph above.
+    // The account-settings rail's profile mark, intentionally distinct from the
+    // generic user glyph above.
     'settings-profile'=> '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     // Lucide settings-2: the account menu's Settings, distinct from Profile's person.
     'settings'        => '<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
@@ -50,7 +50,7 @@ $iconStroke = [
     'chevron-down'    => '<path d="M6 9l6 6 6-6"/>',
     'lock'            => '<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
     'star'            => '<path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/>',
-    // Copied from the Imladris user-profile moderator strip.
+    // The user-profile moderator strip's mark.
     'shield'          => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
     'eye'             => '<path d="M2 12c3-5 6-7 10-7s7 2 10 7c-3 5-6 7-10 7s-7-2-10-7Z"/><circle cx="12" cy="12" r="3"/>',
     'sun'             => '<circle cx="12" cy="12" r="4.6"/><path d="M12 1.5v2.2M12 20.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
@@ -62,22 +62,26 @@ $iconStroke = [
     'monitor'         => '<rect x="3" y="3" width="18" height="14" rx="1.5"/><path d="M8 21h8M12 17v4"/>',
     'archive'         => '<path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>',
     'pause'           => '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
-    // The clock-rewind the Imladris thread view marks "Catch me up" with
-    // (ThreadView.dc.html:197): a dial turned back, not a plain clock.
+    // The clock-rewind that marks "Catch me up": a dial turned back, not a
+    // plain clock.
     'history'         => '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
+    // Neutral empty-state marks (ADR 0057).
+    'inbox'           => '<path d="M3 13h5l1.5 3h5l1.5-3h5"/><path d="M5.5 5h13l2.5 8v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5z"/>',
+    'message-square'  => '<path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/>',
 ];
 $iconFilled = [
     'more-horizontal' => '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',
-    // Solid, not the Lucide outline: at the 9px the board row's Pinned mark
-    // renders it, a stroked pin turns to mush. Taken from the Imladris
-    // board-page template.
+    // Solid, not the Lucide outline: at the small size the board row's Pinned
+    // mark renders it, a stroked pin turns to mush.
     'pin'             => '<path d="M14 2l8 8-3 1-2 6-4-4-6 6-1-1 6-6-4-4 6-2z"/>',
     'star-filled'     => '<path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/>',
 ];
 $iconCustomFilled = [
-    'eight-point-star' => '<path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z"/>',
-    // Supplied verbatim by ImladrisDesignSystem/assets/commend-star.svg.
-    'commend-star' => '<path d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"/>',
+    // The one star for starring a topic and for commends: a conventional
+    // five-point star (ADR 0057). The is-outline class strokes it while unset.
+    'commend-star' => '<path d="M50 8 60.6 37.4 91.9 38.4 67.1 57.6 75.9 87.6 50 70 24.1 87.6 32.9 57.6 8.1 38.4 39.4 37.4Z"/>',
+    // A four-point sparkle marks generated Living Brief content.
+    'sparkle' => '<path d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"/>',
 ];
 ?>
 <?php if (isset($iconCustomFilled[$iconName])): ?>

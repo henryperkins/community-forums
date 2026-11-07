@@ -54,8 +54,8 @@ final class AdminInvitationController extends Controller
         } catch (ValidationException $e) {
             $errors = $e->errors;
             if (($errors['domain'] ?? null) === 'Bind to an email address or a domain, not both.') {
-                // Presentation copy follows the Imladris design while the
-                // service remains reusable outside this console.
+                // Presentation copy belongs to this console while the
+                // service remains reusable outside it.
                 $errors['domain'] = 'Bind to an email address or a domain — not both.';
             }
             return $this->consoleView($errors, $e->old, 422);

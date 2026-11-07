@@ -110,7 +110,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                                     <span class="member-record-body">
                                         <?= ($bn['type'] ?? '') === 'post' ? 'read-only (suspension)' : 'full ban' ?> · <?= $e($bn['reason']) ?>
                                         <?php if (!empty($bn['lifted_at'])): ?>
-                                            <span class="pill">lifted <?= $e(human_date((string) $bn['lifted_at'])) ?></span>
+                                            <span class="pill">Lifted <?= $e(human_date((string) $bn['lifted_at'])) ?></span>
                                         <?php elseif (!empty($bn['expires_at'])): ?>
                                             <span class="member-record-ban-period">· until <?= $e(human_date((string) $bn['expires_at'])) ?></span>
                                         <?php else: ?>

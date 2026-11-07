@@ -30,7 +30,6 @@ async function fixture(t) {
   await put('public/assets/forum-base.css', '@layer forum.components,application;@font-face{font-family:fixture;src:url(./fonts/fixture.woff2)}');
   await put('public/assets/forum-theme.css', ':root{--font-body:system-ui}');
   await put('public/assets/fonts/fixture.woff2', 'font fixture');
-  await put('public/assets/elven-star.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
   for (const name of ['conversation-entry', 'app', 'composer', 'passkeys', 'tour']) {
     await put(`public/assets/${name}.js`, `window[${JSON.stringify(name + 'Loaded')}] = true;`);
   }

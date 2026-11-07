@@ -14,7 +14,7 @@
  *   inbox_action bool    exposes the form to the inbox's `s` shortcut
  *   form_class   string  extra classes for the form, when it is itself a layout cell
  *
- * One glyph in both: the four-point commend star. The pill keeps it filled and
+ * One glyph in both: the five-point star. The pill keeps it filled and
  * lets its own fill carry the state; the icon draws it in outline until starred,
  * so the two states differ in shape and not only in ink.
  */

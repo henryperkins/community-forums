@@ -9,6 +9,14 @@
     --font-body: var(--font-ui);
     --font: var(--font-ui);
     --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    /* Metadata (times, counts, bylines, breadcrumbs) uses the interface face;
+       --font-mono is reserved for code and exact identifiers (ADR 0057). */
+    --font-meta: var(--font-ui);
+    /* Posts, messages and the composer use the reader's own default sans-serif.
+       system-ui is meant for interface text, cannot be customised on some
+       systems and can pick unsuitable faces for some locales (CSS Fonts 4,
+       MDN); browsers let readers choose their sans-serif face (ADR 0057). */
+    --font-prose: sans-serif;
     --weight-regular: 400;
     --weight-medium: 500;
     --weight-semibold: 600;
@@ -28,6 +36,9 @@
     --text-meta: .875rem;
     --text-eyebrow: .875rem;
     --text-chip: .875rem;
+    /* Smallest functional text. Retained-layer sizes are written as
+       max(var(--text-floor), <size>) so they scale with the member preference. */
+    --text-floor: .875rem;
     --measure-prose: 65ch;
     --measure-narrow: 60ch;
     --measure-wide: 75ch;

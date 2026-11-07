@@ -149,13 +149,11 @@ try {
   // Only this reviewed closure is published. In particular, never stage all of
   // public/: it contains index.php, readiness files, and may contain uploads.
   const published = new Map();
-  for (const name of [...sourceNames, 'elven-star.svg']) {
+  // Fonts referenced by CSS are fingerprinted into dist/ by Vite. The retired
+  // Imladris web fonts and star mark are no longer published (ADR 0057);
+  // retained releases keep their own fingerprinted copies.
+  for (const name of sourceNames) {
     published.set(`/assets/${name}`, await readSource(`assets/${name}`));
-  }
-  for (const font of await filesWithin(path.join(root, 'public/assets/fonts'))) {
-    if (font.endsWith('.woff2') || /\/LICENSES\/[^/]+\.txt$/.test(font)) {
-      published.set(`/assets/fonts/${font}`, await readSource(`assets/fonts/${font}`));
-    }
   }
   const generated = new Map();
   for (const file of await filesWithin(temporary)) {

@@ -3,7 +3,7 @@ description: "Move New topic out of the member header into a shared row under it
 agent: agent
 ---
 
-> Historical task prompt. Current theme, cascade and release guidance is in AGENTS.md and ADR 0056. Imladris digest/baseline instructions below are superseded.
+> Historical task prompt. Current theme, cascade and release guidance is in AGENTS.md and ADRs 0056–0057. The Imladris build, runtime CSS and digest it mentions were retired by ADR 0057; do not run or recreate them.
 
 
 # Create control in a shared row under the header

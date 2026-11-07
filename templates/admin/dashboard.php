@@ -11,7 +11,7 @@
                 </div>
                 <span class="status-legend"><i aria-hidden="true"></i> Live</span>
             </div>
-            <div class="admin-dashboard-grid" aria-label="Queue health summary">
+            <div class="admin-dashboard-grid" role="group" aria-label="Queue health summary">
                 <?php foreach ($queue_cards as $card): ?>
                     <?php $tag = !empty($card['href']) ? 'a' : 'div'; ?>
                     <<?= $tag ?> class="card queue-card queue-status-<?= $e($card['status']) ?><?= empty($card['href']) ? ' is-static' : '' ?>" data-queue-status="<?= $e($card['status']) ?>"<?= !empty($card['href']) ? ' href="' . $e($card['href']) . '"' : '' ?>>

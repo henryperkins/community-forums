@@ -255,7 +255,7 @@ test.describe('desktop', () => {
     expect(seen.card).toBe('rgb(236, 228, 210)');   // --surface-sunken
     expect(seen.option).toBe('rgb(250, 246, 236)'); // --surface-raised
     expect(seen.cardRadius).toBe('7px');            // --radius-md
-    expect(seen.eyebrowText).toBe('Poll· choose one');
+    expect(seen.eyebrowText).toBe('Poll· Choose one');
     expect(seen.eyebrowLines).toBe(1);
     expect(seen.statusPills, 'the eyebrow carries the state; no second pill').toBe(0);
 

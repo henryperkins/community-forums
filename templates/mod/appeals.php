@@ -29,11 +29,12 @@ $failedAppealId = (int) ($old['appeal_id'] ?? 0);
                     <?php $isFailedRow = $failedAppealId === (int) $appeal['id']; ?>
                     <li class="report-row is-open">
                         <div class="report-head">
-                            <span class="badge"><?= $e((string) $appeal['status']) ?></span>
+                            <span class="badge"><?= $e(label_text((string) $appeal['status'])) ?></span>
                             <span class="muted">by <?= $e((string) ($appeal['appellant_username'] ?? 'unknown')) ?> · <?= $e(human_datetime($appeal['created_at'])) ?></span>
                         </div>
-                        <p class="report-target"><?= $e((string) $appeal['target_type']) ?> #<?= (int) $appeal['target_id'] ?> · <?= $e((string) ($appeal['original_action'] ?? 'moderation action')) ?></p>
-                        <?php if (($appeal['target_summary'] ?? '') !== ''): ?><blockquote class="report-excerpt"><?= $e((string) $appeal['target_summary']) ?></blockquote><?php endif; ?>
+                        <p class="report-target"><?= $e((string) $appeal['target_type']) ?> #<?= (int) $appeal['target_id'] ?> · <?= $e(($appeal['original_action'] ?? '') !== '' ? moderation_action_label((string) $appeal['original_action']) : 'Moderation action') ?></p>
+                        <?php $appealSummary = (string) ($appeal['target_summary'] ?? ''); if ($appealSummary !== '' && $appealSummary === (string) ($appeal['original_action'] ?? '')) { $appealSummary = moderation_action_label($appealSummary); } ?>
+                        <?php if ($appealSummary !== ''): ?><blockquote class="report-excerpt"><?= $e($appealSummary) ?></blockquote><?php endif; ?>
                         <p class="report-note"><?= $e((string) $appeal['reason']) ?></p>
                         <form method="post" action="/mod/appeals/<?= (int) $appeal['id'] ?>/resolve" class="appeal-resolve">
                             <?= $this->csrfField() ?>

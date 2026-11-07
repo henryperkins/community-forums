@@ -151,8 +151,10 @@ final class AppThreadViewStudyTest extends TestCase
         $this->assertStatus(200, $page);
         self::assertStringContainsString('data-topic-tools-open', $page->body());
         self::assertStringContainsString('data-topic-tools', $page->body());
-        self::assertStringContainsString('icon-eight-point-star', $page->body());
-        self::assertStringContainsString('<path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z"/>', $page->body());
+        // Topic tools wear the conventional settings mark; the retired
+        // eight-point Imladris star is gone (ADR 0057).
+        self::assertStringContainsString('icon-settings', $page->body());
+        self::assertStringNotContainsString('icon-eight-point-star', $page->body());
         self::assertStringContainsString('icon-x', $page->body());
         self::assertStringContainsString('data-topic-tools-section="watch"', $page->body());
         self::assertStringContainsString('data-topic-tools-section="standing"', $page->body());

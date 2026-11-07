@@ -90,7 +90,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                     <a class="reference-card" href="<?= $e($card['url']) ?>">
                         <span class="ref-mark" aria-hidden="true">&#10077;</span>
                         <span class="ref-body">
-                            <span class="ref-type"><?= $refIsBoard ? $e($refMeta) : $e($card['type']) ?> · referenced</span>
+                            <span class="ref-type"><?= $refIsBoard ? $e($refMeta) : $e(label_text((string) $card['type'])) ?> · referenced</span>
                             <strong><?= $e($card['title']) ?></strong>
                             <?php if (!$refIsBoard && $refMeta !== ''): ?><span class="ref-snippet">&ldquo;<?= $e($refMeta) ?>&rdquo;</span><?php endif; ?>
                         </span>

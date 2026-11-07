@@ -248,6 +248,6 @@ final class AppImladrisFidelityHighImpactTest extends TestCase
         $compose = $this->get('/compose')->body();
         self::assertStringContainsString('icon-arrow-up', $compose);
         $search = $this->get('/search')->body();
-        self::assertStringContainsString('icon-commend-star', $search);
+        self::assertStringContainsString('icon-search search-state-icon', $search);
     }
 }

@@ -136,7 +136,7 @@ $selectedIds = array_fill_keys($selected_thread_ids ?? [], true);
         </button>
         <div data-inbox-reading-content>
             <div class="inbox-empty">
-                <?= $this->partial('partials/icon', ['name' => 'eight-point-star', 'class' => 'inbox-empty-star']) ?>
+                <?= $this->partial('partials/icon', ['name' => 'inbox', 'class' => 'inbox-empty-star']) ?>
                 <p class="inbox-empty-title">Choose a topic</p>
                 <p class="muted">Choose a topic to read it here. Your place in the list is kept.</p>
             </div>

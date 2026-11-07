@@ -482,11 +482,16 @@
             id.className = 'presence-person-id';
             var nameEl = document.createElement('span');
             nameEl.className = 'presence-name';
-            nameEl.appendChild(document.createTextNode(name));
+            // Mirror partials/presence_person.php: the name sits in its own
+            // span so a long name truncates while the You/Staff tags stay whole.
+            var nameText = document.createElement('span');
+            nameText.className = 'presence-name-text';
+            nameText.textContent = name;
+            nameEl.appendChild(nameText);
             if (u.is_self) {
                 var you = document.createElement('span');
                 you.className = 'presence-you';
-                you.textContent = 'you';
+                you.textContent = 'You';
                 nameEl.appendChild(you);
             }
             if (u.is_staff) {

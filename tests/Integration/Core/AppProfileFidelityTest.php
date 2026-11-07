@@ -36,7 +36,7 @@ final class AppProfileFidelityTest extends TestCase
         $this->assertDontSeeText($res, 'Marks of esteem');
         $this->assertDontSeeText($res, 'Marks of Esteem');
         $this->assertSeeText($res, 'icon-commend-star badge-star');
-        $this->assertSeeText($res, 'M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z');
+        $this->assertSeeText($res, 'M50 8 60.6 37.4 91.9 38.4 67.1 57.6 75.9 87.6 50 70 24.1 87.6 32.9 57.6 8.1 38.4 39.4 37.4Z');
         $this->assertSeeText($res, 'Welcome');              // the badge is still shown
         $this->assertDontSeeText($res, 'b-dot');
         $this->assertDontSeeText($res, '✦');
