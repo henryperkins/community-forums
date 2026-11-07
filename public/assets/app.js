@@ -1742,7 +1742,11 @@
             if (dot) { dot.remove(); }
             if (queueUnread) {
                 Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-scope-count="unread"]'), function (count) {
-                    count.textContent = String(Math.max(0, (parseInt(count.textContent || '', 10) || 0) - 1));
+                    var left = Math.max(0, (parseInt(count.textContent || '', 10) || 0) - 1);
+                    count.textContent = String(left);
+                    // An emptied scope recedes as the server renders one.
+                    var choice = count.closest ? count.closest('a') : null;
+                    if (choice && !choice.classList.contains('is-active')) { choice.classList.toggle('is-empty', left === 0); }
                 });
                 Array.prototype.forEach.call(document.querySelectorAll('[data-inbox-unread-count]'), function (badge) {
                     decrementUnreadBadge(badge, 'data-inbox-unread-count', badge.classList.contains('forum-bar-count'));
@@ -1974,7 +1978,19 @@
             });
 
             inboxList.addEventListener('click', function (event) {
-                var link = event.target.closest ? event.target.closest('[data-inbox-preview-url]') : null;
+                if (!event.target.closest) { return; }
+                var link = event.target.closest('[data-inbox-preview-url]');
+                if (!link) {
+                    // The whole row reads its topic, as a mail client's does: the
+                    // excerpt, the meta line and the row's empty space open the
+                    // preview its title opens. Controls keep their own clicks, and
+                    // selecting a phrase of the excerpt is not a request to open it.
+                    // The title stays the one link, for keyboards and readers alike.
+                    var row = event.target.closest('[data-inbox-row]');
+                    if (!row || event.target.closest('a[href], button, input, label, select, textarea, summary, details, form')) { return; }
+                    if (window.getSelection && String(window.getSelection()) !== '') { return; }
+                    link = linkIn(row);
+                }
                 if (!link || !inboxList.contains(link)) { return; }
                 if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) { return; }
                 event.preventDefault();

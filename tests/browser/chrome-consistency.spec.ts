@@ -168,7 +168,13 @@ test('the inbox reading pane keeps every formatting command reachable inside the
     await page.goto('/inbox?scope=watching');
     await page.locator(`[data-inbox-row] a[data-inbox-preview-url][href="${fixture.topic}"]`).click();
     await expect(page.locator('[data-inbox-reading-content]')).toContainText('Chrome regression body.');
-    await page.locator('[data-inbox-reading] .composer-toolbar').scrollIntoViewIfNeeded();
+    // The pane's reply box rests on one line, as the topic dock does, until
+    // someone answers; its formatting row belongs to the open box.
+    const reply = page.locator('[data-inbox-reading] .reply-composer');
+    await expect(reply.locator('.composer-toolbar')).toBeHidden();
+    await reply.locator('.composer-input:visible, .ProseMirror:visible').first().click();
+    await expect(reply).toHaveClass(/\bis-expanded\b/);
+    await reply.locator('.composer-toolbar').scrollIntoViewIfNeeded();
   };
   const formattingRow = () => page.evaluate(() => {
     const pane = document.querySelector('[data-inbox-reading]')!.getBoundingClientRect();
@@ -181,32 +187,29 @@ test('the inbox reading pane keeps every formatting command reachable inside the
     return { pane: pane.width, names: shown.map(button => button.name), clipped: shown.filter(button => !button.inside).map(button => button.name) };
   });
 
-  // With the board rail open the pane is what the queue leaves inside --maxw:
-  // a narrow column, so the row keeps its essentials and names its overflow.
-  await openPreview();
-  const narrow = await formattingRow();
-  expect(narrow.pane).toBeLessThan(480);
-  expect(narrow.names).toEqual(['Bold', 'Italic', 'Bullet list', 'Link', 'More formatting']);
-  expect(narrow.clipped).toEqual([]);
-  await page.locator('[data-inbox-reading] .composer-more-toggle').click();
-  const overflow = page.locator('[data-inbox-reading] .composer-format-overflow');
-  await expect(overflow.getByRole('button')).toHaveText(['Strike', 'Inline code', 'Quote', 'Heading', 'Numbered list', 'Code block', 'Spoiler']);
-  const pane = (await page.locator('[data-inbox-reading]').boundingBox())!;
-  const menu = (await overflow.boundingBox())!;
-  expect(menu.x).toBeGreaterThanOrEqual(pane.x);
-  expect(menu.x + menu.width).toBeLessThanOrEqual(pane.x + pane.width);
-  await capture(page, info, 'reading-pane-formatting-overflow');
+  const wholeRow = ['Bold', 'Italic', 'Strike', 'Inline code', 'Quote', 'Heading', 'Bullet list', 'Numbered list', 'Code block', 'Spoiler', 'Link'];
 
-  // A closed rail gives the pane room for the whole row, so nothing is tucked away.
+  // With the board rail open the queue is the --list-w column (410px) and the
+  // pane takes the rest of --maxw, about 600px: room for the whole row. Below
+  // 30rem the pane would keep the essentials and name its overflow (the
+  // container rule AppInboxRemediationTest pins); the split no longer gets there.
+  await openPreview();
+  const railOpen = await formattingRow();
+  expect(railOpen.pane).toBeGreaterThan(480);
+  expect(railOpen.names).toEqual(wholeRow);
+  expect(railOpen.clipped).toEqual([]);
+  await capture(page, info, 'reading-pane-formatting-row');
+
+  // A closed rail only widens it.
   const saved = page.waitForResponse(response => response.request().resourceType() === 'fetch'
     && response.request().redirectedFrom()?.url().endsWith('/settings/member-surfaces') === true);
   await page.locator('[data-panel-form="rail"] button').click();
   await saved;
   await openPreview();
-  const wide = await formattingRow();
-  expect(wide.pane).toBeGreaterThan(480);
-  expect(wide.names).toEqual(['Bold', 'Italic', 'Strike', 'Inline code', 'Quote', 'Heading', 'Bullet list', 'Numbered list', 'Code block', 'Spoiler', 'Link']);
-  expect(wide.clipped).toEqual([]);
+  const railClosed = await formattingRow();
+  expect(railClosed.pane).toBeGreaterThan(railOpen.pane);
+  expect(railClosed.names).toEqual(wholeRow);
+  expect(railClosed.clipped).toEqual([]);
 });
 
 test('plain error headers expose only real pane targets and preserve member preferences', async ({ page }, info) => {

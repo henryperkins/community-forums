@@ -31,9 +31,12 @@ $countText = (int) $total . ((int) $total === 1 ? ' topic' : ' topics');
             <span class="inbox-compact-meta"><span class="inbox-scope-count"><span data-inbox-current-count><?= (int) $total ?></span> <span data-inbox-count-label><?= (int) $total === 1 ? 'topic' : 'topics' ?></span></span><span aria-hidden="true"> · </span><span><?= $e($orderLabel['short']) ?></span></span>
             <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
         </summary>
+        <?php /* The panel reads in the order its trigger does: which topics, then
+                 in what sequence. Sort is the rarer change, and the trigger
+                 already names it, so it waits below the scopes. */ ?>
         <div class="inbox-menu-panel inbox-scope-menu-panel">
-            <?= $this->partial('partials/inbox_choices', ['kind' => 'order'] + $choices) ?>
             <?= $this->partial('partials/inbox_choices', ['kind' => 'scope'] + $choices) ?>
+            <?= $this->partial('partials/inbox_choices', ['kind' => 'order'] + $choices) ?>
         </div>
     </details>
 </nav>

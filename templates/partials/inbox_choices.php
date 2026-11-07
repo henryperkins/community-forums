@@ -13,11 +13,17 @@
         <?php if ($visibleGroup !== []): ?>
             <span class="inbox-scope-group-label"><?= $e($groupLabel) ?></span>
             <?php foreach ($visibleGroup as $item): ?>
-                <a href="<?= $e(\App\Support\InboxView::query($item, $order)) ?>"<?= $item === $scope ? ' class="is-active" aria-current="page"' : '' ?>>
+                <?php
+                $itemCount = (int) ($scope_counts[$item] ?? 0);
+                // An empty scope stays a destination (its empty state says so),
+                // but it recedes, so the scopes holding topics stand out.
+                $itemClass = $item === $scope ? ' class="is-active" aria-current="page"' : ($itemCount === 0 ? ' class="is-empty"' : '');
+                ?>
+                <a href="<?= $e(\App\Support\InboxView::query($item, $order)) ?>"<?= $itemClass ?>>
                     <span><?= $e(\App\Support\InboxView::LABELS[$item]) ?></span>
                     <span class="inbox-choice-state">
                         <?php if ($item === $scope): ?><?= $this->partial('partials/icon', ['name' => 'check']) ?><?php endif; ?>
-                        <span data-inbox-scope-count="<?= $e($item) ?>"><?= (int) ($scope_counts[$item] ?? 0) ?></span>
+                        <span data-inbox-scope-count="<?= $e($item) ?>"><?= $itemCount ?></span>
                     </span>
                 </a>
             <?php endforeach; ?>

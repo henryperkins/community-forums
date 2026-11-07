@@ -122,6 +122,12 @@ test('the archived status word is readable in both inbox themes', async ({ page 
 
     const row = page.locator('[data-inbox-row]').filter({ hasText: 'Retention windows for anonymised IPs' });
     await expect(row.locator('.chip-archived')).toHaveText('Archived');
+    // The pointer is left where the sign-in button was. Beside the reading pane
+    // the 410px queue's taller rows put this one under it, and a hovered row
+    // eases its background between registers when the theme flips in place,
+    // so axe sampled a mid-transition grey. Measure the chip at rest.
+    await page.mouse.move(0, 0);
+    await expect.poll(() => row.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
 
     for (const theme of ['light', 'dark']) {
       await page.evaluate((value) => document.documentElement.setAttribute('data-theme', value), theme);

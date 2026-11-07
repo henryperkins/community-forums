@@ -651,6 +651,12 @@ final class ThreadUserRepository
      * Attach the top deterministic reason label shown by the UI. Page-size
      * bounded, and every check stays inside the same read-gated result set.
      *
+     * `for_you_reason_direct` marks the three reasons that call on the member
+     * personally — an assignment, a mention, a reply to their topic. Only those
+     * take the gold cue in the queue; a subscription the member set up once
+     * (watching, following, starring) states its reason quietly, so gold still
+     * marks where to look when every For You row carries a reason.
+     *
      * @param array<int,array<string,mixed>> $rows
      * @return array<int,array<string,mixed>>
      */
@@ -658,6 +664,7 @@ final class ThreadUserRepository
     {
         foreach ($rows as &$row) {
             $threadId = (int) $row['id'];
+            $row['for_you_reason_direct'] = true;
             if ($workflowEnabled && (int) ($row['assigned_user_id'] ?? 0) === $userId) {
                 $row['for_you_reason'] = 'Assigned to you';
                 continue;
@@ -670,6 +677,7 @@ final class ThreadUserRepository
                 $row['for_you_reason'] = 'Replies to your topic';
                 continue;
             }
+            $row['for_you_reason_direct'] = false;
             if ($this->hasThreadSubscription($userId, $threadId)) {
                 $row['for_you_reason'] = 'Watched topic';
                 continue;

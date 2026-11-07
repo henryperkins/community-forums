@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\NotificationRepository;
+use App\Repository\SubscriptionRepository;
 use App\Repository\UserPreferenceRepository;
+use DOMDocument;
+use DOMXPath;
 use Tests\Support\TestCase;
 
 /**
@@ -123,12 +127,14 @@ final class AppInboxRemediationTest extends TestCase
     }
 
     /**
-     * Inside the shared frame the reading pane is about 340px wide with the
-     * board rail open. The composer's narrow layout was keyed to the viewport
-     * alone, so on a desktop the pane's formatting row clipped Spoiler and Link
-     * off its edge without offering "More formatting" (COMPOSER.md, Responsive
-     * overflow), and its action bar clipped the identity and the Anonymous
-     * label away. The pane applies the phone's layout on its own width.
+     * While the queue took up to 660px of the shared frame, the reading pane was
+     * about 340px wide with the board rail open. The composer's narrow layout was
+     * keyed to the viewport alone, so on a desktop the pane's formatting row
+     * clipped Spoiler and Link off its edge without offering "More formatting"
+     * (COMPOSER.md, Responsive overflow), and its action bar clipped the identity
+     * and the Anonymous label away. The pane applies the phone's layout on its
+     * own width, which still holds wherever the pane is narrower than 30rem; the
+     * --list-w queue now leaves it about 600px, where the full row fits.
      */
     public function test_the_reading_pane_lays_out_the_composer_on_its_own_width(): void
     {
@@ -150,6 +156,127 @@ final class AppInboxRemediationTest extends TestCase
             self::assertStringContainsString('.reply-composer .composer-actions-start { display: contents; }', $narrow);
             self::assertStringContainsString('.reply-composer .composer-anonymous-chip { flex: none; }', $narrow);
         }
+    }
+
+    /**
+     * The 2026-11-07 critique of /inbox. An open reading pane was clipped and
+     * pinned to 100% height by rules left from when it embedded a whole topic
+     * with its own scroller: the wheel scrolled the shell off the page instead,
+     * and every later reply and the reply box were cut away. The queue took up
+     * to 660px of the shared frame and left the pane about 340px, and the pane's
+     * reply box never took the topic dock's one-line rest, so its Minimize did
+     * nothing. And a positional rule printed every count, and every unselected
+     * Sort label in the compact menu, in faint 10.56px mono.
+     */
+    public function test_the_reading_pane_scrolls_itself_beside_a_list_width_queue(): void
+    {
+        $css = file_get_contents(self::CSS);
+        self::assertIsString($css);
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+
+        self::assertSame(0, preg_match('/\.inbox-reading\.is-open[^{]*\{[^}]*overflow\s*:\s*hidden/', $css), 'An open reading pane must keep its own scroller.');
+        // The pane itself takes the shell's height, which bounds its scroller;
+        // nothing inside it may be pinned to that height.
+        self::assertStringContainsString('.inbox-reading.is-open { height: 100%; }', $css);
+        self::assertSame(0, preg_match('/\.inbox-reading\.is-open\s+[^\s{][^{]*\{[^}]*height\s*:\s*100%/', $css), 'Nothing inside an open reading pane may be pinned to the pane height.');
+        self::assertStringContainsString('body.is-reading-open .inbox-shell { grid-template-columns: minmax(360px, var(--list-w)) minmax(0, 1fr); }', $css);
+        self::assertStringContainsString(':is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded)', $css);
+
+        // The positional rule lives in the generated bridge, which must stay a
+        // copy of its Imladris source, so the class-based rules answer it at
+        // equal specificity from after the bridge: counts by class, labels in
+        // the menu's own type.
+        $raw = (string) file_get_contents(self::CSS);
+        $end = strpos($raw, '/* ══ End member surfaces production transfer ══ */');
+        self::assertIsInt($end, 'The generated bridge keeps its end marker.');
+        $after = (string) preg_replace('#/\*.*?\*/#s', '', substr($raw, $end));
+        self::assertStringContainsString('.inbox-scope-menu-panel a > span:not(.inbox-choice-state) { color: inherit; font: inherit; }', $after);
+        self::assertStringContainsString('.inbox-scope-menu-panel a > span.inbox-choice-state { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-chip); }', $after);
+        self::assertStringContainsString('.thread-row-inbox .thread-row-chips .chip-reason:not(.is-direct) {', $after);
+    }
+
+    /**
+     * Every For You row states why it is there, so gold on every reason stopped
+     * marking where to look (the One Gold Rule). A direct call — an assignment,
+     * a mention, a reply to your topic — keeps the gold cue; a subscription the
+     * member set up once states its reason in the quiet tag.
+     */
+    public function test_only_a_direct_call_wears_the_gold_reason_cue(): void
+    {
+        $reader = $this->makeUser(['username' => 'reason_reader']);
+        $mentioned = $this->makeThread($this->board, $this->author, 'A topic that calls on the reader');
+        $watched = $this->makeThread($this->board, $this->author, 'A topic the reader watches');
+
+        $postId = $this->posting()->reply($this->userEntity($this->author), (int) $mentioned['thread_id'], [
+            'body' => 'The council would value your view.',
+        ]);
+        (new NotificationRepository($this->db))->create([
+            'user_id' => (int) $reader['id'],
+            'type' => 'mention',
+            'actor_id' => (int) $this->author['id'],
+            'thread_id' => (int) $mentioned['thread_id'],
+            'post_id' => $postId,
+        ]);
+        (new SubscriptionRepository($this->db))->set((int) $reader['id'], 'thread', (int) $watched['thread_id'], true, true, 'instant');
+
+        $this->actingAs($reader);
+        $dom = $this->dom($this->get('/inbox', ['scope' => 'for_you', 'order' => 'active'])->body());
+        $cue = static function (DOMXPath $dom, int $threadId): \DOMElement {
+            $chip = $dom->query('//*[@data-inbox-row][@data-thread-id="' . $threadId . '"]//span[contains(concat(" ", @class, " "), " chip-reason ")]')->item(0);
+            self::assertInstanceOf(\DOMElement::class, $chip, 'Every For You row states its reason.');
+            return $chip;
+        };
+
+        $direct = $cue($dom, (int) $mentioned['thread_id']);
+        self::assertSame('Mentioned you', trim($direct->textContent));
+        self::assertStringContainsString(' is-direct', $direct->getAttribute('class'));
+
+        $quiet = $cue($dom, (int) $watched['thread_id']);
+        self::assertSame('Watched topic', trim($quiet->textContent));
+        self::assertStringNotContainsString('is-direct', $quiet->getAttribute('class'));
+    }
+
+    /**
+     * The compact menu's trigger reads "For You · N topics · Activity", but its
+     * panel opened on Sort. It now reads in the trigger's order, with Snoozed
+     * still second (ADR 0044). A scope holding nothing stays a destination but
+     * recedes, unless it is the scope being shown.
+     */
+    public function test_the_view_menus_list_scopes_first_and_quiet_the_empty_ones(): void
+    {
+        $reader = $this->makeUser(['username' => 'quiet_reader']);
+        $topic = $this->makeThread($this->board, $this->author, 'The one topic the reader starred');
+        $this->actingAs($reader);
+        $this->post('/t/' . (int) $topic['thread_id'] . '/star', ['return' => '/inbox']);
+
+        $dom = $this->dom($this->get('/inbox', ['scope' => 'for_you', 'order' => 'active'])->body());
+        $panel = $dom->query('//details[contains(concat(" ", @class, " "), " inbox-compact-menu ")]/div[contains(concat(" ", @class, " "), " inbox-menu-panel ")]')->item(0);
+        self::assertInstanceOf(\DOMElement::class, $panel);
+        $groups = [];
+        foreach ($dom->query('./span[contains(concat(" ", @class, " "), " inbox-scope-group-label ")]', $panel) as $label) {
+            $groups[] = trim($label->textContent);
+        }
+        self::assertSame('Your queue', $groups[0]);
+        self::assertSame('Sort', $groups[count($groups) - 1]);
+        self::assertSame('/inbox?scope=for_you&order=active', $dom->query('./a', $panel)->item(0)?->getAttribute('href'));
+        self::assertSame('/inbox?scope=snoozed&order=active', $dom->query('./a', $panel)->item(1)?->getAttribute('href'));
+
+        $classOf = static fn (DOMXPath $dom, string $scope): string => (string) $dom->query('//*[@data-inbox-scope-menu]//a[@href="/inbox?scope=' . $scope . '&order=active"]')->item(0)?->getAttribute('class');
+        self::assertSame('is-active', $classOf($dom, 'for_you'));
+        self::assertSame('', $classOf($dom, 'starred'), 'A scope holding a topic keeps the full ink.');
+        self::assertSame('is-empty', $classOf($dom, 'mentions'));
+        self::assertSame(1, $dom->query('//details[contains(concat(" ", @class, " "), " inbox-compact-menu ")]//a[@href="/inbox?scope=mentions&order=active" and @class="is-empty"]')->length);
+
+        // An empty scope being shown is the current choice, not a receding one.
+        $shown = $this->dom($this->get('/inbox', ['scope' => 'mentions', 'order' => 'active'])->body());
+        self::assertSame('is-active', $classOf($shown, 'mentions'));
+    }
+
+    private function dom(string $html): DOMXPath
+    {
+        $document = new DOMDocument();
+        @$document->loadHTML($html);
+        return new DOMXPath($document);
     }
 
     /**

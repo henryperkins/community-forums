@@ -12,6 +12,7 @@ $describedBy = $loginError !== '' ? ' aria-describedby="login-error"' : '';
 <div class="auth-card">
     <span class="auth-eyebrow">Welcome back</span>
     <h1>Log in</h1>
+    <?php if (!empty($inbox_requested)): ?><p class="auth-lede">Your Inbox is personal to your account. Log in to see it, or <a href="/">read the boards</a> without one.</p><?php endif; ?>
     <?php if ($loginError !== ''): ?><p class="field-error auth-error" id="login-error" role="alert"><?= $e($loginError) ?></p><?php endif; ?>
     <form method="post" action="/login" class="auth-form">
         <?= $this->csrfField() ?>

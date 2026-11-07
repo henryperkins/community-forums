@@ -114,7 +114,7 @@ if ($inboxPresentation) {
                 <a class="thread-title" href="<?= $e($topicUrl) ?>" data-inbox-preview-url="/inbox/preview/<?= $threadId ?>"><?= $e($title) ?></a>
                 <?php /* The queue leads with why the topic is here, then the topic's own marks. */ ?>
                 <span class="thread-row-chips">
-                    <?php if (!empty($t['for_you_reason'])): ?><span class="chip chip-reason"><?= $e($t['for_you_reason']) ?></span><?php endif; ?>
+                    <?php if (!empty($t['for_you_reason'])): ?><span class="chip chip-reason<?= !empty($t['for_you_reason_direct']) ? ' is-direct' : '' ?>"><?= $e($t['for_you_reason']) ?></span><?php endif; ?>
                     <?php if ($pinned): ?><span class="chip chip-pinned">Pinned</span><?php endif; ?>
                     <?php if ($statusChip !== null): ?><span class="chip <?= $e($statusChip[0]) ?>"><?= $e($statusChip[1]) ?></span><?php endif; ?>
                     <?php if ($locked): ?><span class="chip chip-locked">Locked</span><?php endif; ?>

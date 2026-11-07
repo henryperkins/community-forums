@@ -51,6 +51,17 @@ async function signIn(page: Page, email = 'erestor@retro.test') {
   await page.waitForURL((u) => !u.pathname.startsWith('/login'));
 }
 
+/** The top bar's Reading pane toggle, persisted, so the next load renders the same queue. */
+async function setReadingPane(page: Page, open: boolean) {
+  const toggle = page.locator('[data-panel-form="reading"] button[type="submit"]');
+  if ((await toggle.getAttribute('aria-pressed')) === String(open)) return;
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST' && new URL(r.url()).pathname === '/settings/member-surfaces'),
+    toggle.click(),
+  ]);
+  await expect(toggle).toHaveAttribute('aria-pressed', String(open));
+}
+
 async function setAppearance(page: Page, field: 'theme' | 'density', value: string) {
   await page.goto('/settings/appearance');
   await page.locator(`input[name="${field}"][value="${value}"]`).check({ force: true });
@@ -72,33 +83,43 @@ function contrast(a: string, b: string): number {
 /**
  * The inclusion cue answers "why am I being shown this?". `.chip-reason` had no
  * rules at all, so it fell through to the evergreen status pill and shouted a
- * whole sentence in caps.
+ * whole sentence in caps. Every For You row carries one, so since 2026-11-07
+ * only a direct call (assigned, mentioned, a reply to your topic) keeps the
+ * gold; a watch, a follow or your own star reads as the quiet sunken tag. The
+ * cue carries no glyph: the star is the bookmark's alone (2026-10-08).
  */
-test('the inclusion cue is gold and in sentence case, unlike the status pills', async ({ page }) => {
+test('the inclusion cue is in sentence case, and gold only for a direct call', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1200 });
   await signIn(page);
   await setAppearance(page, 'density', 'compact');
   await page.goto('/inbox?scope=for_you&order=active');
 
-  const reason = page.locator('[data-inbox-row] .thread-row-chips .chip-reason').first();
-  await expect(reason).toBeVisible();
-  const seen = await reason.evaluate((el) => {
+  const cue = (el: Element) => {
     const s = getComputedStyle(el);
-    return { transform: s.textTransform, size: s.fontSize, color: s.color, text: el.textContent?.trim() };
-  });
-  expect(seen.transform).toBe('none');
-  expect(seen.text).toMatch(/^[A-Z][a-z]/);
+    return { transform: s.textTransform, color: s.color, background: s.backgroundColor, text: el.textContent?.trim() };
+  };
+  const direct = page.locator('[data-inbox-row] .thread-row-chips .chip-reason.is-direct').first();
+  const passive = page.locator('[data-inbox-row] .thread-row-chips .chip-reason:not(.is-direct)').first();
+  await expect(direct).toHaveText(/^(Assigned to you|Mentioned you|Replies to your topic)$/);
+  await expect(passive).toHaveText(/^(Watched topic|Watched board|Starred by you|Followed board|Followed tag)$/);
+
+  const gold = await direct.evaluate(cue);
+  expect(gold.transform).toBe('none');
+  expect(gold.text).toMatch(/^[A-Z][a-z]/);
   // Gold ink, not the evergreen the base .chip carries.
-  expect(seen.color).toBe('rgb(126, 95, 34)');
+  expect(gold.color).toBe('rgb(126, 95, 34)');
+
+  const quiet = await passive.evaluate(cue);
+  expect(quiet.transform).toBe('none');
+  // Muted ink on the sunken parchment: no gold in the ink or the ground.
+  expect(quiet.color).toBe('rgb(81, 92, 82)');
+  expect(quiet.background).toBe('rgb(236, 228, 210)');
+  expect(contrast(quiet.color, quiet.background)).toBeGreaterThanOrEqual(4.5);
+  await expect(page.locator('[data-inbox-row] .thread-row-chips .chip-reason svg')).toHaveCount(0);
 
   // A status pill on the same row keeps the lapidary uppercase register.
   const status = page.locator('[data-inbox-row] .thread-row-chips .chip-pinned, [data-inbox-row] .thread-row-chips .chip-decision_made').first();
   await expect(status).toHaveCSS('text-transform', 'uppercase');
-
-  // And the brand star inside the cue is filled, not the hollow Lucide stroke
-  // `.chip svg` would otherwise impose on it.
-  const star = reason.locator('svg');
-  await expect(star).toHaveCSS('fill', 'rgb(126, 95, 34)');
 
   await page.screenshot({ path: shot('01-queue-desktop-light.png') });
 });
@@ -140,6 +161,10 @@ test('commends appear in the commended order and nowhere else', async ({ page })
   await page.goto('/inbox?scope=for_you&order=active');
   await expect(page.locator('[data-inbox-row] .thread-meta-commends')).toHaveCount(0);
 
+  // The one-line promise is the full-width queue's. Beside an open reading pane
+  // the queue is the 410px rail, whose meta shares its line with the star and
+  // menu and may wrap (2026-11-07); that row is pinned by inbox-reading-hardening.spec.ts.
+  await setReadingPane(page, false);
   await page.goto('/inbox?scope=for_you&order=commended');
   await expect(page.locator('[data-inbox-row] .thread-meta-commends').first()).toBeVisible();
 
@@ -150,6 +175,7 @@ test('commends appear in the commended order and nowhere else', async ({ page })
   expect(box.height).toBeLessThan(lineHeight * 1.8);
 
   await page.screenshot({ path: shot('02-queue-commended-order.png') });
+  await setReadingPane(page, true);
 });
 
 /**
@@ -342,11 +368,13 @@ test('compact density applies the register the design states', async ({ page }) 
     const meta = getComputedStyle(el.querySelector('.thread-meta')!);
     const chips = getComputedStyle(el.querySelector('.thread-row-chips')!);
     return {
-      pad: row.paddingTop, gap: row.gap, title: title.fontSize,
+      pad: row.paddingTop, gap: row.columnGap, title: title.fontSize,
       metaTop: meta.marginTop, metaSize: meta.fontSize, chipGap: chips.gap,
     };
   });
   expect(seen.pad).toBe('4px');
+  // Between the row's columns, in either geometry: the full-width flex row and,
+  // beside an open reading pane, the queue's grid (whose lines stack ungapped).
   expect(seen.gap).toBe('9px');
   expect(seen.title).toBe('15.84px');   // .99rem
   expect(seen.metaTop).toBe('1px');

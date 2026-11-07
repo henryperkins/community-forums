@@ -84,7 +84,9 @@ final class AuthGateStylesContractTest extends TestCase
                 self::assertDoesNotMatchRegularExpression('/(^|;)\s*color\s*:/', $body, $selector);
             }
         }
-        self::assertMatchesRegularExpression('/text-decoration:\s*underline/', self::rule(self::css(), '.auth-links a, .callout a, .muted a, .empty a, .directory-guest-note a'));
+        // The sign-in note an Inbox link earns (.auth-lede, 2026-11-07) is muted
+        // prose as well, so its "read the boards" link shares the underline.
+        self::assertMatchesRegularExpression('/text-decoration:\s*underline/', self::rule(self::css(), '.auth-links a, .auth-lede a, .callout a, .muted a, .empty a, .directory-guest-note a'));
     }
 
     public function test_a_button_hover_deepens_its_own_fill(): void

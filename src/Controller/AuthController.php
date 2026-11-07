@@ -37,8 +37,13 @@ final class AuthController extends Controller
         if ($this->currentUser() !== null) {
             return $this->redirect($this->authenticatedHome());
         }
+        $requested = self::localPath($request->query('next'), '');
         return $this->view('auth/login', [
-            'next' => self::localPath($request->query('next'), $this->authenticatedHome()),
+            'next' => $requested !== '' ? $requested : $this->authenticatedHome(),
+            // A shared /inbox link sends a guest here. Say why, and that the
+            // boards stay open to them, only when the Inbox asked: a plain
+            // visit to /login also lands there afterwards without asking.
+            'inbox_requested' => preg_match('#^/inbox(?:[/?\#]|$)#', $requested) === 1,
             'errors' => [],
             'old' => [],
         ]);

@@ -509,7 +509,11 @@ test('long unbroken topic text stays within its content column at default and la
         await expect(link).toBeVisible();
         await capture(page, info.project.name, `unbroken-title-${width}-${theme}`);
         const geometry = await link.evaluate(element => {
-          const main = element.closest('.thread-row-main')!;
+          // Beside an open reading pane (1440px) the row's wrapper renders no box
+          // of its own (display: contents) and the title line is the title's
+          // column in the row grid, so that is the column it must stay within.
+          let main = element.closest('.thread-row-main')!;
+          if (getComputedStyle(main).display === 'contents') main = element.closest('.thread-title-line')!;
           const box = main.getBoundingClientRect();
           const rowStyle = getComputedStyle(element.closest('[data-inbox-row]')!);
           const range = document.createRange();

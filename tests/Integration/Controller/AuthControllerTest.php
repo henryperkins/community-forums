@@ -87,6 +87,31 @@ final class AuthControllerTest extends TestCase
         $this->assertRedirect($response, '/inbox');
     }
 
+    /**
+     * A shared /inbox link sends a guest to the sign-in page. Only then does it
+     * say why, and that the boards stay open without an account: a plain visit
+     * to /login lands in the Inbox afterwards too, without having asked for it.
+     */
+    public function test_login_explains_a_sign_in_the_inbox_asked_for(): void
+    {
+        $note = 'Your Inbox is personal to your account.';
+        $this->assertRedirect($this->get('/inbox'), '/login?next=%2Finbox');
+
+        foreach (['/inbox', '/inbox?scope=unread&order=newest'] as $next) {
+            $page = $this->get('/login', ['next' => $next]);
+            $this->assertStatus(200, $page);
+            $this->assertSeeText($page, $note);
+            $this->assertSeeText($page, '<a href="/">read the boards</a>');
+            // The redirect target itself is still carried through the form.
+            $this->assertSeeText($page, 'name="next" value="' . htmlspecialchars($next, ENT_QUOTES) . '"');
+        }
+
+        $this->assertDontSeeText($this->get('/login'), $note);
+        foreach (['/', '/inboxes', '/settings/account', '//evil.example/inbox'] as $next) {
+            $this->assertDontSeeText($this->get('/login', ['next' => $next]), $note);
+        }
+    }
+
     public function test_authenticated_login_and_register_pages_redirect_to_the_inbox(): void
     {
         $this->actingAs($this->makeUser());

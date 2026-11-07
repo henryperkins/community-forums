@@ -561,10 +561,12 @@ test('canonical mobile composer keeps formatting and anonymous controls containe
 });
 
 test('the Inbox reading pane reply box keeps its identity, Anonymous choice and Discard usable', async ({ page }, info) => {
-  test.skip(info.project.name !== 'desktop', 'the reading pane is a narrow column from 1280px');
+  test.skip(info.project.name !== 'desktop', 'the reading pane is a column from 1280px');
   await login(page);
   const { reading, form } = await openShortcutInboxTopic(page);
-  expect((await reading.boundingBox())!.width).toBeLessThan(480);
+  // Beside the 410px queue the pane takes the rest of the frame, about 590px
+  // at 1280 with the board rail open, no longer the 340px column it was.
+  expect((await reading.boundingBox())!.width).toBeGreaterThanOrEqual(560);
   const editor = form.locator('.ProseMirror:visible, textarea[name="body"]:visible').first();
   await editor.focus();
   await expect(form).toHaveClass(/\bis-expanded\b/);

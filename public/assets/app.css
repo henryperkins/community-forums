@@ -1260,6 +1260,18 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-actions-start .composer-anonymous-chip { overflow: hidden; }
 .composer-attach-toggle { min-width: 30px; padding-inline: 5px; font-size: 1rem; }
 .composer-emoji-toggle { min-width: 30px; padding-inline: 5px; font-size: 1rem; }
+/* The trigger draws a stroked face in the formatting row's own line rather
+   than printing a colour emoji into the chrome (PRODUCT.md, Emoji). */
+.composer-emoji-toggle { display: inline-flex; align-items: center; justify-content: center; }
+.composer-emoji-toggle svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
 /* Editor mode and minimise are tertiary: they ride at the quiet end of the
    formatting row and must not read as peers of Preview, Cancel or Send. */
 .composer-mode-toggle,
@@ -1435,7 +1447,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-emoji-dialog.is-below { top: calc(100% + 7px); bottom: auto; }
 .composer-emoji-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .composer-emoji-title,
-.composer-emoji-group-title { margin: 0; font-family: var(--font-label); color: var(--text-strong); }
+.composer-emoji-group-title { margin: 0; font-family: var(--font-label); font-weight: var(--weight-regular); color: var(--text-strong); }
 .composer-emoji-title { font-size: .95rem; }
 .composer-emoji-close {
     display: inline-flex;
@@ -1591,6 +1603,9 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .tour-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
 .tour-actions .tour-progress { margin-right: auto; color: var(--text-muted); font-size: 0.85em; }
 .tour-highlight { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+/* Beside its target, tour.js supplies left/top; the bottom-centre rest above is
+   what remains whenever the target is too large or there is no room. */
+.tour-popover.is-anchored { bottom: auto; transform: none; }
 [data-reduced-motion="1"] .tour-popover { box-shadow: none; }
 .subnav-action { align-self: center; }
 
@@ -1963,9 +1978,11 @@ body[data-route="thread"] .thread-conversation {
 .thread-dock #reply.is-expanded [data-composer-after-box] { flex: 0 1 auto; min-block-size: 0; max-block-size: min(22dvh, 8rem); overflow-y: auto; }
 .composer [data-composer-after-box]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .thread-dock #reply.is-expanded .composer-upload-tray { min-block-size: 0; max-block-size: 5rem; overflow-y: auto; }
-.inbox-reading.is-open { overflow: hidden; }
-.inbox-reading.is-open [data-inbox-reading-content],
-.inbox-reading.is-open .thread-conversation { height: 100%; min-height: 0; }
+/* The inbox reading pane scrolls itself at every width (.inbox-reading's own
+   overflow-y: auto). It once embedded the whole topic with an inner scroller
+   and docked reply, so an open pane was clipped and pinned to 100% height;
+   the preview has no inner scroller, and that clip hid every later reply and
+   the reply box while the wheel scrolled the shell off the page instead. */
 @media (max-width: 860px) {
     /* Let the shell grow with a document-scrolling topic so the sticky header
        remains inside its containing block all the way through the stream. */
@@ -1976,20 +1993,22 @@ body[data-route="thread"] .thread-conversation {
         min-height: calc(100dvh - var(--topbar-h) - 32px);
     }
     .thread-dock { margin-top: 8px; padding-top: 8px; }
-    .inbox-reading.is-open {
-        height: calc(100vh - var(--topbar-h));
-        height: calc(100dvh - var(--topbar-h));
-        padding: 10px 14px 14px;
-    }
-    .inbox-reading.is-open [data-inbox-reading-content] { height: calc(100% - 48px); }
+    /* No side inset of its own: the content column already pads by 18px, and the
+       two together left a 360px phone's reply box too narrow for its "More
+       formatting" control. The back link keeps its place by its own margin. */
+    .inbox-reading.is-open { padding: 10px 0 14px; }
+    .has-js .inbox-reading.is-open .inbox-mobile-back { margin-inline: 14px; }
 }
 /* The topic dock rests at every width: one line until someone is answering.
    .is-expanded keeps a draft or a validation error open. Before wireExpansion
-   installs, native focus and typed text expose the full form. Messages keeps
-   its own rest inside the 860px block below — a desktop conversation is not
-   this reading column. */
+   installs, native focus and typed text expose the full form. The Inbox
+   reading pane's reply box is the same dock (composer.js stamps it and shows
+   its Minimize at 860px and below), so it rests here too; outside these rules
+   it stayed fully open and Minimize changed nothing anyone could see.
+   Messages keeps its own rest inside the 860px block below — a desktop
+   conversation is not this reading column. */
 @media (scripting: enabled) {
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-box {
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-box {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
@@ -1997,16 +2016,16 @@ body[data-route="thread"] .thread-conversation {
         padding: var(--space-1);
         border-radius: var(--radius-lg);
     }
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-upload-tray,
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-start,
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-end > :not(.composer-send),
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-meta-row,
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) [data-composer-after-box],
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-source-toggle { display: none; }
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-input,
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer {
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-header,
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-format-slot,
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-upload-tray,
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-start,
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-end > :not(.composer-send),
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-meta-row,
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) [data-composer-after-box],
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-source-toggle { display: none; }
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-input,
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer {
         grid-column: 1;
         grid-row: 1;
         width: 100%;
@@ -2017,23 +2036,23 @@ body[data-route="thread"] .thread-conversation {
         resize: none;
         overflow: hidden;
     }
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer .ProseMirror {
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .wysiwyg-composer .ProseMirror {
         height: 44px; min-height: 44px; max-height: 44px; padding: 10px 12px; overflow: hidden;
     }
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-bar {
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-actions-bar {
         grid-column: 2;
         grid-row: 1;
         padding: 0;
         border: 0;
     }
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send {
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send {
         width: auto;
         min-width: 0;
         height: 44px;
         padding: 0 14px;
         border-radius: var(--radius-md);
     }
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send-word {
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send-word {
         position: static;
         width: auto;
         height: auto;
@@ -2041,7 +2060,7 @@ body[data-route="thread"] .thread-conversation {
         overflow: visible;
         clip: auto;
     }
-    .thread-dock .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send-mark { display: none; }
+    :is(.thread-dock, .inbox-preview-reply) .reply-composer:not(.is-expanded):is([data-composer-dock="1"], :not(:focus-within):not(:has(.composer-input:not(:placeholder-shown)))) .composer-send-mark { display: none; }
 }
 @media (max-width: 860px) and (scripting: enabled) {
     /* A Messages conversation's .dm-composer is the same shared dock (COMPOSER.md
@@ -2835,6 +2854,10 @@ body[data-route="thread"] .thread-conversation {
     margin-top: 4px;
     width: 100%;
 }
+/* The passkey sign-in is a second way in, not part of the password form: it
+   stands apart from Log in rather than sitting flush against its edge. */
+.passkey-signin { margin-top: var(--space-3); }
+.passkey-signin .btn { width: 100%; }
 .auth-error {
     text-align: center;
     margin: 0 0 14px;
@@ -2949,6 +2972,7 @@ textarea.textarea-engraved {
    --brand, a fill token that is green-500 by night and measured 2.86:1 on
    the twilight card. */
 .auth-links a,
+.auth-lede a,
 .callout a,
 .muted a,
 .empty a,
@@ -17129,16 +17153,98 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
     .composer-shell.is-submitting .composer-send .icon { animation: none; }
 }
 /* ══ End member surfaces production transfer ══ */
+/* ══ Inbox triage and reading, kept outside the generated bridge above ══════
+   The bridge is a byte-for-byte copy of the Imladris source section
+   (AppImladrisFidelityTest), so what the 2026-11-07 critique changed in it is
+   restated here, where the unlayered register wins by source order at equal
+   specificity (ADR 0029 follow-up). */
+
+/* The queue is the --list-w rail (410px); the topic being read takes the rest.
+   Inside the shared --maxw frame the bridge's minmax(430px, 660px) queue left
+   the pane about 340px with the board rail open, a reading column narrower than
+   a phone's, while the queue's titles sat on half-empty lines. */
+@media (min-width: 1280px) {
+    body.is-reading-open .inbox-shell { grid-template-columns: minmax(360px, var(--list-w)) minmax(0, 1fr); }
+    body.is-reading-open .inbox-list { padding-inline: var(--space-4); }
+}
+/* position: relative makes the pane the containing block for whatever is
+   absolutely placed inside it. The reply box's live region is a visually hidden
+   span placed against <body> otherwise, beyond this scroller's reach: on a phone
+   it stretched the document by the depth of the topic, so the page scrolled as
+   well as the pane. */
+.inbox-reading { position: relative; }
+/* A 44px target that does not move the ruled line: the negative block margin
+   gives back exactly the height the target adds, and the hit area spills into
+   the attribution's own bottom padding rather than over anything else. */
+.inbox-preview-open {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-block: -12px;
+}
+.inbox-preview-reply > .eyebrow { font-size: var(--text-eyebrow); }
+
+/* Counts are styled by class (.inbox-choice-state, ADR 0044), never by
+   position. The bridge's `a > span:last-child` count rule outranked ADR 0044's
+   chip size and held every count at faint 10.56px mono; the compact menu
+   shares the panel class, so it also caught every unselected Sort label there
+   (a lone span, with no check after it). A label keeps the menu row's type. */
+.inbox-scope-menu-panel a > span:not(.inbox-choice-state) { color: inherit; font: inherit; }
+.inbox-scope-menu-panel a > span.inbox-choice-state { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-chip); }
+/* A scope holding no topics stays a full 44px destination, in faint ink, so
+   the few that hold topics stand out of a twelve-row list. Never the current
+   scope, which keeps its own wash. */
+.inbox-menu-panel > a.is-empty,
+.inbox-menu-panel > a.is-empty > .inbox-choice-state { color: var(--text-faint); }
+
+/* With enhancement the whole row opens its preview (app.js), so it says so. */
+.has-js [data-inbox] .thread-row-inbox { cursor: pointer; }
+.inbox-select-all input { accent-color: var(--accent); }
+/* A native checkbox paints in the document's color scheme, which stays light,
+   so in twilight every unchecked box down the queue was a white square. The
+   queue's boxes take the dark scheme in both dark registers. */
+[data-theme="dark"] :is(.thread-row-select, .inbox-select-all) input { color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+    [data-theme="system"] :is(.thread-row-select, .inbox-select-all) input { color-scheme: dark; }
+}
+/* Every For You row carries a reason, so the bridge's gold on all of them
+   stopped marking where to look (the One Gold Rule). A subscription the member
+   set up once (a watched topic or board, a followed board or tag, their own
+   star) reads as the quiet sunken tag; a direct call (assigned, mentioned, a
+   reply to their topic) keeps the design's gold. */
+.thread-row-inbox .thread-row-chips .chip-reason:not(.is-direct) {
+    border-color: var(--border-hair);
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+}
+/* 10px between the meta's items, but 2px between its lines: wherever the line
+   wraps (a phone, the narrow queue beside the reading pane) the bridge's
+   uniform 10px gap opened a hole inside one row's metadata wider than the gap
+   between rows. */
+.thread-row-inbox .thread-meta { row-gap: 2px; }
+/* Every Inbox control is a 44px target (ADR 0044), its pager included; the
+   shared numbered strip measured 30 by 39px. Scoped to the Inbox: the board,
+   topic and tag pagers keep their own geometry. */
+[data-inbox] .pagination .page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+}
+
 
 /* The inbox reading pane's composer, kept outside the generated bridge above.
-   From 1280px the pane is the column the queue leaves inside the --maxw frame,
-   about 340px with the board rail open, and the composer lays out there as it
-   does on a narrow screen. Its formatting row keeps the essentials and the named
-   "More formatting" overflow (COMPOSER.md, Responsive overflow), or Spoiler and
-   Link clip off the pane's edge with no way to reach them. Unlike the phone rule
-   the row stays unclipped, so the desktop hover tips above it still show. The
-   meta row takes the phone's two columns, and the action bar wraps as the phone
-   reply box's does, or the identity and the Anonymous label are clipped away. */
+   From 1280px the pane is the column the --list-w queue leaves inside the --maxw
+   frame, about 600px with the board rail open, where the full formatting row
+   fits. Should the pane ever be narrower than 30rem (it was about 340px while the
+   queue took up to 660px), the composer lays out there as it does on a narrow
+   screen. Its formatting row keeps the essentials and the named "More formatting"
+   overflow (COMPOSER.md, Responsive overflow), or Spoiler and Link clip off the
+   pane's edge with no way to reach them. Unlike the phone rule the row stays
+   unclipped, so the desktop hover tips above it still show. The meta row takes
+   the phone's two columns, and the action bar wraps as the phone reply box's
+   does, or the identity and the Anonymous label are clipped away. */
 .inbox-reading { container: inbox-reading / inline-size; }
 @container inbox-reading (max-width: 30rem) {
     .composer-toolbar-action:not(.is-essential),
@@ -17972,6 +18078,37 @@ html[data-dm-switch="1"] .dm-shell[data-dm-conversation] [data-dm-messages] {
     .thread-row-inbox .thread-row-menu { grid-column: 4; grid-row: 2; }
     .thread-row-inbox .thread-meta { font-size: var(--text-fine); }
     html:not(.has-js) .thread-row-menu[open] { grid-column: 1 / -1; grid-row: 3; }
+}
+/* Beside an open reading pane the queue is the --list-w rail (410px), where
+   the desktop row's avatar and trailing star and menu left a title about 100px
+   and broke it a word to a line. There the row drops the avatar and gives the
+   title and excerpt its full width; the star and menu stand on the meta line,
+   the way a mail client's narrow list carries its flag, so the row spends no
+   line of its own on two 44px targets. */
+@media (min-width: 1280px) {
+    body.is-reading-open .thread-row-inbox > .monogram,
+    body.is-reading-open .thread-row-inbox > .avatar-wrap { display: none; }
+    body.is-reading-open .thread-row.thread-row-inbox {
+        display: grid;
+        grid-template-columns: 44px 7px minmax(0, 1fr) 44px 44px;
+        grid-template-areas:
+            "select dot head head head"
+            "select dot snip snip snip"
+            "select dot meta star menu";
+        /* The density's own gap (10px, 9px compact) separates the columns; the
+           title, excerpt and meta lines stack as the flex row stacked them. */
+        row-gap: 0;
+        align-items: start;
+    }
+    body.is-reading-open .thread-row-inbox .thread-row-main { display: contents; }
+    body.is-reading-open .thread-row-inbox .thread-row-select { grid-area: select; }
+    body.is-reading-open .thread-row-inbox .unread-slot { grid-area: dot; }
+    body.is-reading-open .thread-row-inbox .thread-title-line { grid-area: head; min-width: 0; }
+    body.is-reading-open .thread-row-inbox .thread-snippet { grid-area: snip; min-width: 0; }
+    body.is-reading-open .thread-row-inbox .thread-meta { grid-area: meta; align-self: center; min-width: 0; }
+    body.is-reading-open .thread-row-inbox .thread-row-star { grid-area: star; }
+    body.is-reading-open .thread-row-inbox .thread-row-menu { grid-area: menu; }
+    html:not(.has-js) body.is-reading-open .thread-row-menu[open] { grid-column: 1 / -1; grid-row: 4; }
 }
 
 /* ══ Presence: rail rows, the /users-online directory, dots ══════════════════

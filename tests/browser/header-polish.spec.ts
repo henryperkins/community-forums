@@ -275,8 +275,12 @@ test('the tour\'s first steps say what is true at every width', async ({ page },
   await page.evaluate(() => (document.querySelector('[data-tour-replay]') as HTMLElement).click());
   const popover = page.locator('.tour-popover');
   await expect(popover).toBeVisible();
-  await expect(popover).toContainText('This is your community home. Select it any time to come back here.');
+  // It names what it points at (on a phone the lockup may be the mark alone)
+  // and where it leads: "come back here" was untrue wherever the tour began
+  // away from the board index, as this replay on Settings does (2026-11-07).
+  await expect(popover).toContainText('Select the community’s name or mark, at the top of every page, to see all of its boards.');
   await expect(popover).not.toContainText('Click the name');
+  await expect(popover).not.toContainText('come back here');
   await page.screenshot({ path: shot('tour-welcome.png', info.project.name) });
   await popover.getByRole('button', { name: 'Next' }).click();
   await expect(popover).toContainText('Find topics and people from search, at the top of every page.');

@@ -149,6 +149,102 @@ and 1920px and the pane's formatting row in both rail states, and
 and Discard stay usable in the pane and on phones. Its existing Discard
 journey, red on the unchanged tree, now passes.
 
+### Follow-up resolution — 2026-11-07, the /inbox critique
+
+A heuristic critique of the shipped surface
+(`.impeccable/critique/2026-11-07T10-59-44Z__templates-inbox-php.md`, 24 of 40)
+was checked against the code and the rendered app before anything changed.
+Its mechanical findings were real, and are fixed:
+
+- **The reading pane could not scroll.** Rules left from when the pane embedded
+  a whole topic with its own scroller still clipped an open pane
+  (`overflow: hidden`) and pinned its content to the pane's height. The wheel
+  scrolled the shell off the page instead, and later replies and the reply box
+  were cut away. Both rules are gone; the pane keeps its own `overflow-y: auto`
+  at every width. It is also the containing block for what is absolutely placed
+  inside it, because the reply box's visually hidden live region, placed against
+  `<body>`, stretched a phone's document by the depth of the topic.
+- **The topic being read had the least room.** From 1280px the queue took
+  `minmax(430px, 660px)` of the shared frame, the design reference's own basis,
+  and left the pane about 340px with the board rail open. The queue is now the
+  `--list-w` rail, the 410px topic list DESIGN.md has always stated, and the pane
+  takes the rest, about 600px. Beside the pane the row drops its monogram and
+  carries its star and menu on the meta line, so the title keeps the row's
+  width. This is kept against the design reference's 660px basis, whose own note
+  concedes that its reading pane has no floor.
+- **The pane's reply box never rested.** The topic dock's one-line rest was
+  scoped to `.thread-dock`, so the pane's box stayed fully open and the
+  Minimize that `composer.js` shows at 860px and below changed nothing. The rest
+  now covers `.inbox-preview-reply` as well. "Open full topic" is a 44px target,
+  and the reply eyebrow takes `--text-eyebrow`.
+- **The menus printed by position.** `.inbox-scope-menu-panel a > span:last-child`
+  outranked this ADR's count rule and also caught every unselected Sort label in
+  the compact menu, which shares the panel class: both printed in faint 10.56px
+  mono. Labels keep the menu's type and counts are styled by class. The compact
+  panel lists the scopes before Sort, the order its trigger reads; Snoozed stays
+  second (ADR 0044). A scope holding no topics stays a 44px destination in faint
+  ink unless it is the current one.
+- **Smaller defects.** Twilight queue checkboxes take the dark colour scheme, not
+  glaring white. The composer's Emoji trigger is a stroked glyph rather than a
+  colour emoji in the chrome (PRODUCT.md), and its picker title asks Marcellus
+  for the 400 it ships. The whole queue row opens its preview while its controls
+  keep their own clicks and the title stays its one link. Queue meta lines wrap
+  2px apart rather than 10px, so phone rows are 8px shorter. The Inbox pager is
+  a 44px target, as ADR 0044 asks of every Inbox control. The tour's card stands
+  beside its target, not at the foot of the screen; each step tries its targets
+  in written order, so the Boards step lights the rail rather than the whole
+  shell; and its first step names the lockup and where it leads, because "come
+  back here" was untrue wherever the tour began away from the board index.
+  The passkey sign-in stands apart from Log in.
+
+Two findings were the owner's to decide, and were decided on 2026-11-07:
+
+- **Gold is rationed to a direct call.** Every For You row carries its reason,
+  so a gold cue on all of them stopped marking where to look (the One Gold Rule).
+  Assigned to you, Mentioned you and Replies to your topic keep the design's gold;
+  a watched topic or board, a followed board or tag and the member's own star
+  state their reason in the quiet sunken tag. `ThreadUserRepository` marks the
+  three as `for_you_reason_direct`. This is kept against the design reference,
+  which draws every reason in gold.
+- **The sign-in page says why.** A guest who follows a shared `/inbox` link is
+  told that the Inbox is personal to an account and that the boards can be read
+  without one. The note appears only when the Inbox asked for the sign-in.
+
+Left as they are, and why:
+
+- **Hiding vocabulary and Snoozed's place.** "Til tomorrow", the "Show in Inbox"
+  switch, the bulk "Hide from Inbox" verb and one Snoozed scope holding both
+  kinds of hiding, second in its group, are ADR 0044's decisions. Revisiting them
+  is an owner call, not a remediation.
+- **`/register` drops `next`.** Registration lands in the Inbox already, so the
+  `/inbox` journey is unaffected. Carrying an arbitrary destination through
+  registration and email verification is a separate change.
+- **Page-wide `j`, `k` and `?`.** Single-key shortcuts act only while the queue
+  or the preview has focus, which WCAG 2.1.4 accepts without an off switch; a
+  page-wide key would need one. Inbox help lists them.
+- **No undo for "Mark this page read".** An undo needs each topic's previous read
+  position kept on the server.
+- **The open reply box's 36px Send and 28px desktop tools.** These are the shared
+  composer's sizes on the topic page too, above WCAG 2.5.8's 24px; the resting
+  dock's Send is 44px. A change belongs to the composer, not to this surface.
+- **Permanent selection boxes and the repeated unread count** remain design
+  questions for the owner.
+
+The generated member-surfaces bridge in `app.css` must stay a copy of its
+Imladris source (`AppImladrisFidelityTest`), so every change to a rule inside it
+is restated in one block after it, where the unlayered register wins by source
+order. `inbox-reading-hardening.spec.ts` measures each fix on both projects: all
+17 of its checks fail on the pre-fix tree (`a2789ba0`) and pass after it.
+`AppInboxRemediationTest` adds the reason cue's two tones, the menus' order and
+empty scopes, and stylesheet gates that fail against the pre-fix stylesheet;
+`AuthControllerTest` pins the sign-in note, and `AuthGateStylesContractTest`
+admits its link to the shared underline rule. Six existing browser specs follow
+the new geometry and copy (`forum-inbox-remediation`, `chrome-consistency`,
+`community-inbox-theme`, `inbox-controls-polish`, `header-polish`,
+`topic-row-consolidation`). Results, the browser failures that HEAD shares
+under the same conditions, and the release record are in
+`docs/evidence/inbox-critique-2026-11-07/README.md`.
+
 ## A note on method
 
 ADR 0028 records that source parity is not visual parity. This surface adds the

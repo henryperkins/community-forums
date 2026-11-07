@@ -2,6 +2,42 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-07] - Inbox reading pane and triage hardening
+
+- Fix the Inbox reading pane at every width. An open pane no longer clips its
+  topic and pins it to the pane's height, so the wheel or a swipe scrolls the
+  pane instead of dragging the whole shell off the page, and later replies and
+  the reply box stay reachable. On phones the reply box's live region no longer
+  stretches the page behind the pane.
+- Give the topic being read the room. From 1280px the queue is the 410px list
+  rail (DESIGN.md) and the pane takes the rest: about 600px with the board rail
+  open, where it was about 340px. Beside the pane the queue row drops its
+  monogram, gives its title the row's width and carries its star and menu on
+  the meta line.
+- Rest the pane's reply box on one line, as the topic dock does, with a 44px
+  Reply; Minimize on phones now folds it. "Open full topic" is a 44px target and
+  "Add your counsel" takes the eyebrow size.
+- Print every Show and Sort menu label in the menu's own type and every count at
+  the chip size. A positional rule had set every count, and every unselected
+  Sort label in the compact menu, in faint 10.56px mono. The compact menu lists
+  the views before Sort, the order its trigger reads (Snoozed stays second), and
+  a view holding no topics recedes in faint ink.
+- Keep the gold reason cue in For You for a direct call: Assigned to you,
+  Mentioned you and Replies to your topic. Watched, followed and starred topics
+  state their reason in the quiet tag (owner decision).
+- Draw twilight queue checkboxes in the dark colour scheme, and the composer's
+  Emoji control as a stroked glyph rather than a printed emoji. The whole queue
+  row opens its preview while its controls keep their own clicks. Queue meta
+  lines wrap 2px apart, so phone rows are shorter, and the Inbox pager has 44px
+  targets.
+- Stand the welcome tour's card beside what it describes instead of at the foot
+  of the screen. Its first step names the community's name or mark and where it
+  leads, and the Boards step lights the board rail rather than the whole page.
+- Tell a guest sent to sign in by an Inbox link why, with a link to the boards
+  (owner decision), and space the passkey sign-in apart from Log in.
+- Carry the verified `3630440af0d45598` asset release record. Qualification:
+  `docs/evidence/inbox-critique-2026-11-07/README.md`; ADR 0029 follow-up.
+
 ## [2026-11-07] - Inbox shares the member shell
 
 - Remove the inbox's full-bleed exception so `/inbox` uses the same centred

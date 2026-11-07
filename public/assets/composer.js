@@ -286,7 +286,10 @@
         orderedList: ['M5 6h1v3', 'M5 13c2-1 2 2 0 3h2', 'M10 7h9', 'M10 12h9', 'M10 17h9'],
         codeblock: ['M5 6h14v12H5z', 'm9 10-2 2 2 2', 'm6-4 2 2-2 2'],
         spoiler: ['M3 12s3-5 9-5 9 5 9 5-3 5-9 5-9-5-9-5', 'M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4'],
-        link: ['M10 14 8.5 15.5a3 3 0 0 1-4-4L7 9a3 3 0 0 1 4 0', 'm14 10 1.5-1.5a3 3 0 0 1 4 4L17 15a3 3 0 0 1-4 0', 'm9 15 6-6']
+        link: ['M10 14 8.5 15.5a3 3 0 0 1-4-4L7 9a3 3 0 0 1 4 0', 'm14 10 1.5-1.5a3 3 0 0 1 4 4L17 15a3 3 0 0 1-4 0', 'm9 15 6-6'],
+        // The emoji picker's trigger is chrome, and chrome carries no emoji
+        // (PRODUCT.md): a stroked face in the toolbar's own line, not a glyph.
+        emoji: ['M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0z', 'M8.75 14.25s1.25 1.75 3.25 1.75 3.25-1.75 3.25-1.75', 'M9.5 10h.01', 'M14.5 10h.01']
     };
 
     function applyAction(ta, key) {
@@ -2906,7 +2909,7 @@
         var trigger = document.createElement('button');
         trigger.type = 'button';
         trigger.className = 'composer-emoji-toggle';
-        trigger.textContent = '😊';
+        trigger.appendChild(actionIcon('emoji'));
         trigger.setAttribute('aria-label', 'Emoji');
         trigger.setAttribute('aria-haspopup', 'dialog');
         trigger.setAttribute('aria-expanded', 'false');
