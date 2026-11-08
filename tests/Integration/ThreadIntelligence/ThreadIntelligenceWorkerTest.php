@@ -659,6 +659,44 @@ final class ThreadIntelligenceWorkerTest extends TestCase
         self::assertSame('queued', $services['jobs']->find($other['thread_id'])['state']);
     }
 
+    public function test_an_app_key_change_clears_the_latch_for_exactly_one_provider_request(): void
+    {
+        // ADR 0059: the latch fingerprint is keyed by APP_KEY. After a key change
+        // the next run makes one request; if the failure persists it latches
+        // again under the new key and later runs make none.
+        $this->enableFlags();
+        $first = $this->seedThread();
+        $this->due($first);
+        $provider = new FakeThreadIntelligenceProvider();
+        $authentication = static fn (): ThreadIntelligenceProviderException => new ThreadIntelligenceProviderException(
+            ThreadIntelligenceFailureCode::AUTHENTICATION,
+            null,
+            true,
+        );
+        $provider->queueException($authentication());
+        $this->runWorker($this->services($provider)['worker']);
+        self::assertSame(1, $provider->callCount());
+
+        $items = $this->config->all();
+        $items['app']['key'] = str_repeat('2b', 32);
+        $this->config = new \App\Core\Config($items);
+        $rotated = $this->services($provider);
+        self::assertFalse($rotated['settings']->providerHealth()['blocked']);
+
+        $second = $this->seedThread();
+        $this->due($second);
+        $third = $this->seedThread();
+        $this->due($third);
+        $provider->queueException($authentication());
+        $this->runWorker($rotated['worker']);
+        self::assertSame(2, $provider->callCount(), 'one request after the key change');
+        self::assertTrue($rotated['settings']->providerHealth()['blocked'], 'latched again under the new key');
+        self::assertSame('queued', $rotated['jobs']->find($third['thread_id'])['state']);
+
+        $this->runWorker($rotated['worker']);
+        self::assertSame(2, $provider->callCount(), 'no further requests while the failure persists');
+    }
+
     public function test_evidence_too_large_is_an_audited_no_call_review_outcome(): void
     {
         $this->enableFlags();

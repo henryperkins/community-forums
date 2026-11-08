@@ -18,13 +18,16 @@ final class VerificationRepository
     {
     }
 
-    /** @return int new verification id */
-    public function create(int $userId, string $type, string $tokenHash, string $expiresAt, ?string $newEmail = null): int
+    /**
+     * @param ?string $hmacKeyId HMAC key id that keyed $tokenHash, for HMAC-keyed types (ADR 0059)
+     * @return int new verification id
+     */
+    public function create(int $userId, string $type, string $tokenHash, string $expiresAt, ?string $newEmail = null, ?string $hmacKeyId = null): int
     {
         return $this->db->insert(
-            'INSERT INTO verifications (user_id, type, token_hash, new_email, expires_at)
-             VALUES (?, ?, ?, ?, ?)',
-            [$userId, $type, $tokenHash, $newEmail, $expiresAt],
+            'INSERT INTO verifications (user_id, type, token_hash, hmac_key_id, new_email, expires_at)
+             VALUES (?, ?, ?, ?, ?, ?)',
+            [$userId, $type, $tokenHash, $hmacKeyId, $newEmail, $expiresAt],
         );
     }
 

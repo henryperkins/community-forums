@@ -13,6 +13,7 @@ use App\Repository\PostRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
+use App\Security\AppKeyRing;
 use App\Service\EmailPreferenceService;
 use App\Service\EmailDomainVerifier;
 use App\Service\NotificationVisibilityService;
@@ -22,6 +23,8 @@ use Throwable;
  * a transport success followed by a process/database crash can still be delivered twice. */
 final class NotificationEmailWorker
 {
+    private AppKeyRing $keys;
+
     public function __construct(
         private EmailDeliveryRepository $deliveries,
         private EmailSuppressionRepository $suppress,
@@ -34,7 +37,9 @@ final class NotificationEmailWorker
         private ?EmailPreferenceService $emailPrefs = null,
         private ?NotificationVisibilityService $visibility = null,
         private ?\App\Service\DigestService $digests = null,
+        ?AppKeyRing $keys = null,
     ) {
+        $this->keys = $keys ?? AppKeyRing::fromConfig($config);
         $db = $posts->database();
         $this->visibility ??= new NotificationVisibilityService($db);
         $this->emailPrefs ??= new EmailPreferenceService(new \App\Repository\UserPreferenceRepository($db));
@@ -105,7 +110,10 @@ final class NotificationEmailWorker
                         continue;
                     }
                     $messageId = $this->mailer->send($email, $rendered['subject'], $rendered['text'], $rendered['html']);
-                    $this->deliveries->markSent($id, $messageId);
+                    // Links are signed here, at send time, so a queued or retried message
+                    // carries the key active when it is actually sent. Record that key: the
+                    // last send under a key bounds how long its links must keep working.
+                    $this->deliveries->markSent($id, $messageId, $rendered['unsubscribe_key_id'] ?? null);
                     $stats['sent']++;
                 } catch (\App\Core\ValidationException $e) {
                     $this->deliveries->markFailed($id, $row['kind'] === 'digest' ? 'invalid_digest_payload' : $e->first());
@@ -155,7 +163,8 @@ final class NotificationEmailWorker
 
         $appUrl = (string) $this->config->get('app.url', '');
         $url = rtrim($appUrl, '/') . '/t/' . (int) $post['thread_id'] . '-' . $post['thread_slug'] . '#p' . $postId;
-        $unsub = UnsubscribeController::link($appUrl, (string) $row['email'], (string) $this->config->get('app.key', ''));
+        $key = $this->keys->active();
+        $unsub = UnsubscribeController::link($appUrl, (string) $row['email'], $key->hmacKey());
         $siteName = $this->siteName();
         $subject = 'New activity on ' . $siteName;
         $text = "There's new activity in a thread you're following on {$siteName}.\n\n" . $url
@@ -164,7 +173,7 @@ final class NotificationEmailWorker
             . '<p><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">View the thread</a></p>'
             . '<p style="font-size:12px;color:#888"><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
 
-        return ['subject' => $subject, 'text' => $text, 'html' => $html];
+        return ['subject' => $subject, 'text' => $text, 'html' => $html, 'unsubscribe_key_id' => $key->hmacId];
     }
 
     /**
@@ -238,7 +247,8 @@ final class NotificationEmailWorker
         $url = rtrim($appUrl, '/') . '/';
         // A broadcast announcement is bulk mail; carry a one-click unsubscribe
         // link like every other email path (CAN-SPAM / deliverability).
-        $unsub = UnsubscribeController::link($appUrl, (string) ($row['email'] ?? ''), (string) $this->config->get('app.key', ''));
+        $key = $this->keys->active();
+        $unsub = UnsubscribeController::link($appUrl, (string) ($row['email'] ?? ''), $key->hmacKey());
         $text = $siteName . " announcement\n\n" . $message . "\n\n" . $url
             . "\n\nUnsubscribe from these emails: " . $unsub;
         $html = '<p><strong>' . htmlspecialchars($siteName, ENT_QUOTES) . ' announcement</strong></p>'
@@ -246,7 +256,7 @@ final class NotificationEmailWorker
             . '<p><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">View the forum</a></p>'
             . '<p style="font-size:12px;color:#888"><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
 
-        return ['subject' => $subject, 'text' => $text, 'html' => $html];
+        return ['subject' => $subject, 'text' => $text, 'html' => $html, 'unsubscribe_key_id' => $key->hmacId];
     }
 
     /** Security mail has a narrow, server-owned payload and no member preference CTA. */

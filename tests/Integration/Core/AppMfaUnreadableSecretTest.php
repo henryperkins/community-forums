@@ -347,8 +347,8 @@ final class AppMfaUnreadableSecretTest extends TestCase
     {
         $wrapped = (new SecretBox($key))->encrypt($secret);
         $this->db->run(
-            'UPDATE user_totp_credentials SET secret_ciphertext = ?, secret_nonce = ?, secret_tag = ? WHERE user_id = ?',
-            [$wrapped['ciphertext'], $wrapped['nonce'], $wrapped['tag'], (int) $user['id']],
+            'UPDATE user_totp_credentials SET secret_ciphertext = ?, secret_nonce = ?, secret_tag = ?, secret_key_id = ? WHERE user_id = ?',
+            [$wrapped['ciphertext'], $wrapped['nonce'], $wrapped['tag'], $wrapped['key_id'], (int) $user['id']],
         );
     }
 

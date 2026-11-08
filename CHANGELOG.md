@@ -2,6 +2,36 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-08] - APP_KEY key ring
+
+- Add a key ring for rotating `APP_KEY` (ADR 0059).
+  - `APP_PREVIOUS_KEY_1` to `_3` hold earlier keys byte for byte. Each may
+    decrypt TOTP secrets and vault versions.
+  - A previous key may also verify recovery codes, email-change links, the OAuth
+    state cookie and unsubscribe opt-outs only when its HMAC key id is listed in
+    `APP_PREVIOUS_KEY_VERIFY_IDS`, so a compromised key can be kept decrypt-only.
+  - The encryption and HMAC derivations are unchanged, including historical
+    spellings of a hex key (case, extra digits, whitespace).
+- Add `php bin/console key:check`, which prints each key's ids and permissions,
+  never the key. It exits 1 on a configuration error or a missing `APP_KEY`. At
+  runtime invalid entries are ignored and reported once.
+- Migration `0087` records the key behind each TOTP secret, vault version,
+  recovery-code batch, email-change confirmation and sent message's unsubscribe
+  link. Rows written before it stay "unknown". A legacy recovery-code batch is
+  attributed only after one of its codes verifies.
+- A link signed with a previous key still opts out but no longer offers
+  Re-subscribe, which needs the active key. Signed-in members whose own
+  unsubscribe is in effect can turn notification emails back on from
+  notification settings. Bounces and complaints stay with the operator.
+- Unsubscribe links are signed when a message is actually sent, and the signing
+  key is recorded then, so queued or retried mail carries the key active at
+  send time.
+- Derived identifiers stay on the active key. A key change alters passkey
+  sign-in decoys, the provider safety identifier, and the Thread Intelligence
+  latch, which then allows one provider request. These effects are documented
+  and pinned by tests. Evidence:
+  [key ring evidence](docs/evidence/app-key-keyring-2026-11-08/README.md).
+
 ## [2026-11-08] - Two-factor sign-in with an unreadable authenticator secret
 
 - When a member's stored authenticator (TOTP) secret cannot be opened with the

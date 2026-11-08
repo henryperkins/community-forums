@@ -1,0 +1,26 @@
+[08-Nov-2026 07:53:13 UTC] [RetroBoards] Two-factor secret (enabled) for user #247 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:13 UTC] [RetroBoards] Two-factor secret (enabled) for user #247 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:13 UTC] [RetroBoards] Two-factor secret (enabled) for user #256 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:13 UTC] [RetroBoards] Ignoring invalid key configuration: APP_PREVIOUS_KEY_VERIFY_IDS entry 2 is not a 16-character lowercase hex HMAC key id. APP_PREVIOUS_KEY_VERIFY_IDS lists ffffffffffffffff, which is not the HMAC key id of any configured previous key.
+[08-Nov-2026 07:53:13 UTC] [RetroBoards] Two-factor secret (enabled) for user #281 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:13 UTC] [RetroBoards] Two-factor secret (enabled) for user #283 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:13 UTC] [RetroBoards] Two-factor secret (enabled) for user #283 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #285 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #285 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #285 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #285 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #285 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #290 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #290 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #290 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #290 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #290 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #290 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #290 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #290 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #292 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #292 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (pending enrollment) for user #294 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #296 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #296 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:14 UTC] [RetroBoards] Two-factor secret (enabled) for user #298 cannot be opened with the configured APP_KEY.

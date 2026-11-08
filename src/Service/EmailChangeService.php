@@ -18,6 +18,8 @@ use App\Repository\SessionRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Repository\VerificationRepository;
+use App\Security\AppKey;
+use App\Security\AppKeyRing;
 use App\Security\ReauthGate;
 use App\Security\WriteGate;
 use App\Service\OAuth\NormalizedIdentity;
@@ -30,6 +32,8 @@ final class EmailChangeService
     private const TYPE = 'email_change';
     private const UNAVAILABLE = 'That email address is unavailable. Choose another address.';
     private const INVALID_LINK = 'This email change link is invalid or expired. Request a new link from account settings.';
+
+    private AppKeyRing $keys;
 
     public function __construct(
         private Database $db,
@@ -47,7 +51,9 @@ final class EmailChangeService
         private ?PasskeyService $passkeys = null,
         private ?EmailDomainVerifier $domainVerifier = null,
         private ?SettingRepository $settings = null,
+        ?AppKeyRing $keys = null,
     ) {
+        $this->keys = $keys ?? AppKeyRing::fromConfig($config);
     }
 
     /** Validate the candidate and sending readiness before starting a provider round trip. */
@@ -89,9 +95,10 @@ final class EmailChangeService
                 }
 
                 $this->verifications->invalidateOutstanding($fresh->id(), self::TYPE);
+                $active = $this->keys->active();
                 return $this->verifications->create(
-                    $fresh->id(), self::TYPE, $this->tokenHash($fresh, $rawToken),
-                    gmdate('Y-m-d H:i:s', time() + $ttl), $email,
+                    $fresh->id(), self::TYPE, $this->tokenHash($fresh, $rawToken, $active),
+                    gmdate('Y-m-d H:i:s', time() + $ttl), $email, $active->hmacId,
                 );
             });
         } catch (ValidationException $error) {
@@ -225,7 +232,7 @@ final class EmailChangeService
     private function assertMailReady(string $email): void
     {
         $error = null;
-        if ((string) $this->config->get('app.key', '') === '') {
+        if ($this->keys->active()->hmacKey() === '') {
             $error = 'Email changes are unavailable until the forum operator configures the application key.';
         } elseif (!$this->mailer->isConfigured()) {
             $error = 'Email sending is not configured. Contact the forum operator before changing your email address.';
@@ -252,19 +259,27 @@ final class EmailChangeService
     /** @return array<string,mixed>|null */
     private function findForActor(User $actor, string $rawToken): ?array
     {
-        if (preg_match('/^[a-f0-9]{64}$/D', $rawToken) !== 1 || (string) $this->config->get('app.key', '') === '') {
+        if (preg_match('/^[a-f0-9]{64}$/D', $rawToken) !== 1 || $this->keys->active()->hmacKey() === '') {
             return null;
         }
-        $row = $this->verifications->findValid($this->tokenHash($actor, $rawToken), self::TYPE);
-        return $row !== null && (int) $row['user_id'] === $actor->id() ? $row : null;
+        // The active key, then previous keys permitted to verify (ADR 0059). A row
+        // attributed to one key is only accepted under that key.
+        foreach ($this->keys->verificationKeys() as $key) {
+            $row = $this->verifications->findValid($this->tokenHash($actor, $rawToken, $key), self::TYPE);
+            if ($row !== null && (int) $row['user_id'] === $actor->id()
+                && ($row['hmac_key_id'] === null || (string) $row['hmac_key_id'] === $key->hmacId)) {
+                return $row;
+            }
+        }
+        return null;
     }
 
-    private function tokenHash(User $actor, string $rawToken): string
+    private function tokenHash(User $actor, string $rawToken, AppKey $key): string
     {
         // JSON preserves field boundaries and distinguishes an OAuth-only account
         // from a password-bearing one without persisting the credential snapshot.
         $bound = json_encode([self::TYPE, $actor->id(), $actor->email(), $actor->passwordHash(), $rawToken], JSON_THROW_ON_ERROR);
-        return hash_hmac('sha256', $bound, (string) $this->config->get('app.key', ''));
+        return $key->hmac($bound);
     }
 
     /** @param array<string,mixed> $row @return array{id:int,new_email:string,expires_at:string} */

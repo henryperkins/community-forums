@@ -24,6 +24,13 @@ final class EmailSuppressionRepository
         ) !== false;
     }
 
+    /** The stored suppression reason for this address, or null when it is not suppressed. */
+    public function reasonFor(string $email): ?string
+    {
+        $reason = $this->db->fetchValue('SELECT reason FROM email_suppressions WHERE email = ? LIMIT 1', [strtolower($email)]);
+        return is_string($reason) ? $reason : null;
+    }
+
     public function suppress(string $email, string $reason): void
     {
         $this->db->run(

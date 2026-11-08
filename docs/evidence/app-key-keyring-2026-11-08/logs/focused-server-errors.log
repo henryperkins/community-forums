@@ -1,0 +1,30 @@
+[08-Nov-2026 07:53:17 UTC] [RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[08-Nov-2026 07:53:17 UTC] [RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[08-Nov-2026 07:53:17 UTC] [RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[08-Nov-2026 07:53:20 UTC] [RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[08-Nov-2026 07:53:22 UTC] [RetroBoards] Two-factor secret (enabled) for user #606 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:22 UTC] [RetroBoards] Two-factor secret (enabled) for user #606 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:23 UTC] [RetroBoards] Two-factor secret (enabled) for user #615 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:23 UTC] [RetroBoards] Ignoring invalid key configuration: APP_PREVIOUS_KEY_VERIFY_IDS entry 2 is not a 16-character lowercase hex HMAC key id. APP_PREVIOUS_KEY_VERIFY_IDS lists ffffffffffffffff, which is not the HMAC key id of any configured previous key.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #692 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #694 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #694 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #696 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #696 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #696 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #696 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #696 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #701 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #701 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #701 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #701 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #701 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #701 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #701 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #701 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #703 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #703 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (pending enrollment) for user #705 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #707 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #707 cannot be opened with the configured APP_KEY.
+[08-Nov-2026 07:53:24 UTC] [RetroBoards] Two-factor secret (enabled) for user #709 cannot be opened with the configured APP_KEY.

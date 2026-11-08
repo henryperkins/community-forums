@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Security;
 
+use App\Security\AppKeyRing;
 use App\Security\SecretBox;
 use App\Security\SecretUnavailableException;
 use PHPUnit\Framework\TestCase;
@@ -11,12 +12,43 @@ use RuntimeException;
 
 final class SecretBoxTest extends TestCase
 {
-    public function test_round_trips_under_the_same_key(): void
+    public function test_round_trips_under_the_same_key_and_returns_encryption_key_id(): void
     {
         $box = new SecretBox(str_repeat('1a', 32));
         $sealed = $box->encrypt('JBSWY3DPEHPK3PXP');
 
+        self::assertMatchesRegularExpression('/\A[0-9a-f]{16}\z/', $sealed['key_id']);
+        self::assertSame($box->keyRing()->active()->encryptionId, $sealed['key_id']);
         self::assertSame('JBSWY3DPEHPK3PXP', $box->decrypt($sealed['ciphertext'], $sealed['nonce'], $sealed['tag']));
+        self::assertSame('JBSWY3DPEHPK3PXP', $box->decrypt($sealed['ciphertext'], $sealed['nonce'], $sealed['tag'], $sealed['key_id']));
+    }
+
+    public function test_previous_key_opens_both_attributed_and_legacy_records_even_when_decrypt_only(): void
+    {
+        $k1 = str_repeat('1a', 32);
+        $k2 = str_repeat('2b', 32);
+        $sealedUnderK1 = (new SecretBox($k1))->encrypt('JBSWY3DPEHPK3PXP');
+
+        $ring = AppKeyRing::build($k2, [1 => $k1], '');
+        $box = new SecretBox($ring);
+
+        $openedAttributed = $box->open($sealedUnderK1['ciphertext'], $sealedUnderK1['nonce'], $sealedUnderK1['tag'], $sealedUnderK1['key_id']);
+        self::assertSame('JBSWY3DPEHPK3PXP', $openedAttributed['plaintext']);
+        self::assertSame($sealedUnderK1['key_id'], $openedAttributed['key_id']);
+
+        $openedLegacy = $box->open($sealedUnderK1['ciphertext'], $sealedUnderK1['nonce'], $sealedUnderK1['tag'], null);
+        self::assertSame('JBSWY3DPEHPK3PXP', $openedLegacy['plaintext']);
+        self::assertSame($sealedUnderK1['key_id'], $openedLegacy['key_id']);
+    }
+
+    public function test_a_record_attributed_to_an_unconfigured_key_id_fails_without_trying_other_keys(): void
+    {
+        $k1 = str_repeat('1a', 32);
+        $sealed = (new SecretBox($k1))->encrypt('JBSWY3DPEHPK3PXP');
+
+        $this->expectException(SecretUnavailableException::class);
+        $this->expectExceptionMessage('encryption key deadbeefcafebabe is not configured');
+        (new SecretBox($k1))->decrypt($sealed['ciphertext'], $sealed['nonce'], $sealed['tag'], 'deadbeefcafebabe');
     }
 
     public function test_a_record_sealed_under_another_key_is_unavailable(): void

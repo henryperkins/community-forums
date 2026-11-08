@@ -12,6 +12,8 @@ use App\Domain\User;
 use App\Repository\MfaRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\UserRepository;
+use App\Security\AppKey;
+use App\Security\AppKeyRing;
 use App\Security\ReauthGate;
 use App\Security\SecretBox;
 use App\Security\SecretUnavailableException;
@@ -23,6 +25,8 @@ final class MfaService
     /** Shown when the stored TOTP secret cannot be opened (sealed under a key this deployment lacks). */
     private const TOTP_UNAVAILABLE = 'Authenticator codes cannot be checked for this account right now.';
 
+    private AppKeyRing $keys;
+
     public function __construct(
         private MfaRepository $mfa,
         private UserRepository $users,
@@ -32,7 +36,9 @@ final class MfaService
         private WriteGate $writeGate,
         private ModerationLogRepository $audit,
         private Config $config,
+        ?AppKeyRing $keys = null,
     ) {
+        $this->keys = $keys ?? $secrets->keyRing();
     }
 
     public function enabledForUser(int $userId): bool
@@ -101,7 +107,7 @@ final class MfaService
 
         $codes = $this->generateRecoveryCodes();
         $this->mfa->enableTotp($user->id(), $step);
-        $this->mfa->replaceRecoveryCodes($user->id(), array_map(fn (string $c): string => $this->recoveryHash($c), $codes));
+        $this->storeRecoveryCodes($user->id(), $codes);
         $this->log($user->id(), 'mfa_totp_enabled', ['enabled' => false], ['enabled' => true, 'recovery_codes' => count($codes)]);
         return $codes;
     }
@@ -165,7 +171,7 @@ final class MfaService
         }
 
         $codes = $this->generateRecoveryCodes();
-        $this->mfa->replaceRecoveryCodes($user->id(), array_map(fn (string $c): string => $this->recoveryHash($c), $codes));
+        $this->storeRecoveryCodes($user->id(), $codes);
         $this->log($user->id(), 'mfa_recovery_codes_rotated', null, ['recovery_codes' => count($codes)]);
         return $codes;
     }
@@ -227,8 +233,36 @@ final class MfaService
             }
         }
 
-        $method = $this->mfa->consumeRecoveryCodeHash($userId, $this->recoveryHash($code)) ? 'recovery' : null;
-        return ['method' => $method, 'totp_unavailable' => $secret === null];
+        return ['method' => $this->consumeRecoveryCode($userId, $code) ? 'recovery' : null, 'totp_unavailable' => $secret === null];
+    }
+
+    /**
+     * Try the code under each key permitted to verify (ADR 0059): the active key,
+     * then previous keys listed in APP_PREVIOUS_KEY_VERIFY_IDS. Each attempt is one
+     * atomic conditional UPDATE, and at most one key's hash can match a code. A
+     * legacy code that matches proves its batch's key, which is then recorded.
+     */
+    private function consumeRecoveryCode(int $userId, string $code): bool
+    {
+        foreach ($this->keys->verificationKeys() as $key) {
+            $hash = $this->recoveryHash($code, $key);
+            if ($this->mfa->consumeRecoveryCodeHash($userId, $hash, $key->hmacId)) {
+                $this->mfa->attributeRecoveryBatch($userId, $hash, $key->hmacId);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @param list<string> $codes */
+    private function storeRecoveryCodes(int $userId, array $codes): void
+    {
+        $active = $this->keys->active();
+        $this->mfa->replaceRecoveryCodes(
+            $userId,
+            array_map(fn (string $c): string => $this->recoveryHash($c, $active), $codes),
+            $active->hmacId,
+        );
     }
 
     /**
@@ -254,6 +288,7 @@ final class MfaService
             (string) $row['secret_ciphertext'],
             (string) $row['secret_nonce'],
             (string) $row['secret_tag'],
+            isset($row['secret_key_id']) ? (string) $row['secret_key_id'] : null,
         );
     }
 
@@ -268,10 +303,10 @@ final class MfaService
         return $codes;
     }
 
-    private function recoveryHash(string $code): string
+    private function recoveryHash(string $code, AppKey $key): string
     {
         $normalized = preg_replace('/[^A-Z0-9]/', '', strtoupper($code)) ?? '';
-        return hash_hmac('sha256', $normalized, (string) $this->config->get('app.key', ''));
+        return $key->hmac($normalized);
     }
 
     /** @param mixed $before @param mixed $after */

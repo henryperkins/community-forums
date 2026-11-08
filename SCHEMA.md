@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.49 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-11-07
+**Status:** v1.50 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-11-08
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -565,6 +565,7 @@ CREATE TABLE verifications (
   user_id    BIGINT UNSIGNED NOT NULL,
   type       ENUM('email_verify','email_change','password_reset') NOT NULL,
   token_hash CHAR(64)        NOT NULL,
+  hmac_key_id CHAR(16)       NULL,                          -- migration 0087 (ADR 0059): HMAC key id that keyed an email_change token_hash; NULL = unkeyed type or written before 0087
   new_email  VARCHAR(255)    NULL,                          -- change target, or issuance contact for new reset/verify tokens; NULL legacy rows
   created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   expires_at DATETIME        NOT NULL,
@@ -786,6 +787,7 @@ CREATE TABLE email_deliveries (
   next_attempt_at DATETIME NULL,                             -- NULL = immediately claimable when status='queued'
   error      VARCHAR(255) NULL,
   message_id VARCHAR(191) NULL,
+  unsubscribe_key_id CHAR(16) NULL,                           -- migration 0087 (ADR 0059): HMAC key id that signed the unsubscribe link, recorded when the message is handed to the transport; NULL = no link, not yet sent, or sent before 0087
   idempotency_key VARCHAR(191) NULL,                          -- PRODUCT_DESIGN §9.6: post_id+':'+user_id for 'instant' fan-out; 'digest:{user_id}:{local-date}' for digests; 'announcement:{version}:{user_id}' for system broadcasts; NULL only for test sends
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   sent_at    DATETIME NULL,
@@ -793,7 +795,8 @@ CREATE TABLE email_deliveries (
   UNIQUE KEY uq_deliv_idem (idempotency_key),                 -- dedupes one send per (post,recipient); InnoDB allows multiple NULLs
   KEY idx_deliv_user (user_id, created_at),
   KEY idx_deliv_status (status, created_at),
-  KEY idx_deliv_retry (status, next_attempt_at, id)
+  KEY idx_deliv_retry (status, next_attempt_at, id),
+  KEY idx_deliv_unsub_key (unsubscribe_key_id, sent_at)       -- migration 0087: last send per signing key (unsubscribe overlap boundary)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
@@ -1225,8 +1228,8 @@ New tables — **identity / auth** (`0051`–`0054`, §8.2 #14/#15/#16 plus ADR 
 - `provider_aliases(id, alias, provider_key, created_at)` with unique `alias`; maps historical provider strings to canonical keys so the enum→registry migration never duplicates/orphans an identity. Seeds google/apple/github.
 - `invitations(id, token_hash, created_by, email, domain, onboarding_role_id, onboarding_board_id, max_uses, used_count, expires_at, revoked_at, revoked_by, created_at)` with unique `token_hash` (sha256 — **no raw token column**) and creator/revoker/role/board FKs; an invitation is onboarding evidence, not authority (`onboarding_role_id` is non-privileged only, enforced in code). Animated by Increment 9 (2026-07-08) through the accepted `invitations` flag: admin console issuance/revoke + invite-mode registration; `onboarding_role_id` is stored but **never applied** by Inc 9 redemption (no approved onboarding-role policy — `docs/phase5/invitation-defaults.md`), while `onboarding_board_id` grants board membership atomically with account creation.
 - `invitation_redemptions(id, invitation_id, user_id, ip, redeemed_at)` with FKs; `ip` packed via `inet_pton` (project convention). Redemption is atomic and cannot exceed `max_uses`.
-- `user_totp_credentials(id, user_id, secret_ciphertext, secret_nonce, secret_tag, algorithm, digits, period_seconds, enabled_at, verified_at, disabled_at, last_used_step, created_at, updated_at)` with unique `user_id`; TOTP secrets are AES-256-GCM encrypted with the application key, never stored plaintext, and `last_used_step` prevents replay.
-- `user_recovery_codes(id, user_id, batch_id, code_hash, used_at, created_at)` with unique `code_hash`; raw recovery codes are shown once and stored only as HMAC hashes.
+- `user_totp_credentials(id, user_id, secret_ciphertext, secret_nonce, secret_tag, secret_key_id, algorithm, digits, period_seconds, enabled_at, verified_at, disabled_at, last_used_step, created_at, updated_at)` with unique `user_id`; TOTP secrets are AES-256-GCM encrypted with the application key, never stored plaintext, and `last_used_step` prevents replay. `secret_key_id` (`0087`, §5D) names the encryption key that sealed the secret.
+- `user_recovery_codes(id, user_id, batch_id, code_hash, hmac_key_id, used_at, created_at)` with unique `code_hash`; raw recovery codes are shown once and stored only as HMAC hashes. `hmac_key_id` (`0087`, §5D) names the HMAC key; legacy batches stay `NULL` until a verified code proves their key.
 - `mfa_login_challenges(id, user_id, token_hash, next_path, ip, user_agent, created_at, expires_at, consumed_at)` with unique hash-only token storage; challenges are one-time, short-lived, and consumed before session creation.
 
 ---
@@ -1268,7 +1271,8 @@ Indexes: `UNIQUE KEY uq_service_secret_ref (secret_ref)`, `KEY idx_service_secre
 | `nonce` | VARBINARY(12) NOT NULL | per-encryption random nonce |
 | `tag` | VARBINARY(16) NOT NULL | GCM auth tag |
 | `cipher` | VARCHAR(32) NOT NULL DEFAULT 'aes-256-gcm' | forward-compat label |
-| `key_version` | INT UNSIGNED NOT NULL DEFAULT 1 | forward-compat; only v1 now |
+| `key_version` | INT UNSIGNED NOT NULL DEFAULT 1 | legacy constant, never read; `key_id` names the key |
+| `key_id` | CHAR(16) NULL | migration `0087` (§5D): encryption key id that sealed this version; NULL = written before `0087` |
 | `state` | ENUM('current','retired','destroyed') NOT NULL DEFAULT 'current' | |
 | `created_at` | DATETIME NOT NULL | UTC |
 | `retire_after` | DATETIME NULL | grace deadline; set when retired |
@@ -1302,6 +1306,30 @@ permissions, resource limits, and storage quota. Outbound hosts are denied by
 default and entrypoints may not escape the package root. Bubblewrap is the
 primary local isolation profile; unsupported hosts fail closed and workers leave
 jobs queued.
+
+---
+
+## 5D. Application-key attribution (migration 0087, ADR 0059)
+
+APP_KEY rotation through a key ring needs to know which key protects each stored
+secret or verifier. Five nullable `CHAR(16)` key ids record that. `NULL` always
+means "written before `0087`": the key is unknown, and readers try every key that
+may decrypt or verify. A legacy recovery-code batch is attributed only after one
+of its codes verifies under a key, never by assumption.
+
+| Column | Identifies |
+|---|---|
+| `user_totp_credentials.secret_key_id` | encryption key id that sealed the TOTP secret |
+| `service_secret_versions.key_id` | encryption key id that sealed the vault version |
+| `user_recovery_codes.hmac_key_id` | HMAC key id that keyed `code_hash` |
+| `verifications.hmac_key_id` | HMAC key id that keyed an `email_change` `token_hash` |
+| `email_deliveries.unsubscribe_key_id` | HMAC key id that signed the unsubscribe link, recorded at send time |
+
+An encryption id is the first 16 hex digits of HMAC-SHA256 keyed by the AES key
+over a fixed label; an HMAC id is the same keyed by the exact configured string.
+Neither reveals the key. `KEY idx_deliv_unsub_key (unsubscribe_key_id, sent_at)`
+serves the last-send boundary for the unsubscribe overlap. Every `ALTER` is
+`information_schema`-guarded; `down()` drops the index, then the columns.
 
 ---
 
@@ -1361,6 +1389,7 @@ The following candidates remain unspecced/uncommitted as of 2026-09-23. A mentio
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.50 | 2026-11-08 | Migration `0087_app_key_attribution` (ADR 0059, §5D): nullable `CHAR(16)` key ids on `user_totp_credentials.secret_key_id`, `service_secret_versions.key_id`, `user_recovery_codes.hmac_key_id`, `verifications.hmac_key_id` and `email_deliveries.unsubscribe_key_id`, plus `email_deliveries` index `idx_deliv_unsub_key (unsubscribe_key_id, sent_at)`. `NULL` = written before `0087`; legacy recovery codes stay unattributed until a verified code proves their key. `service_secret_versions.key_version` is unchanged and still unread. Guarded `ALTER`s; additive. |
 | v1.49 | 2026-11-07 | Migration `0086` sets `reactions.emoji` to `utf8mb4_bin`, preserving `VARCHAR(48) NOT NULL` and existing values while distinguishing supplementary-plane emoji in unique keys, toggles and grouped counts. The ALTER is guarded for safe replay; `down()` retains the correction because a lossy collation could collapse distinct reactions. Other emoji catalogue keys are normalized ASCII shortcodes, not Unicode reaction keys. |
 | v1.48 | 2026-10-31 | Added migration `0085`'s `branding_drafts` (table #118, §3): one private unpublished branding document per administrator with its base revision (ADR 0054 increment 2b). Draft uploads reuse `attachments` with `visibility = 'private'` until published; no attachment schema change. |
 | v1.47 | 2026-10-31 | Added migration `0084`'s append-only `branding_revisions` (table #117, §3) for versioned branding, history and restore (ADR 0054). The live pointer is the existing `settings.brand_revision` key; brand media stays referenced by `/media/{id}` paths and is never purged. |
