@@ -1,0 +1,19 @@
+{
+  "base": "b0038b5b9ae5f48e4213312ed29f76c46b690ebc",
+  "original_layout_revision": "a308e1b167189422086b35838c03069a85610566",
+  "patch_sha256": "a65293a10ef9682d6fc92792e2580d9015c2ea5f0a5e2f98d6ff1c9f3b57cca2",
+  "files": {
+    "config/assets.json": "466f495ed83249371e09d490665e24d422edd5710ec0c5126387ac3dbe381268",
+    "public/assets/dist/forum-theme-style-CNIV-nj8.css": "9b3d799538defa568122a8678ab03d7ea04a2c651144b733fc86c1baa1983bfc",
+    "public/assets/dist/forum-theme-style-Dp3f7HoX.css": "ccaf67715a389d56b2af9fe0050adcd1eaac2621f5f6766867717c3df015721e",
+    "public/assets/forum-theme.css": "caac57532f9187f93988a3df400b94bb4404cb0c933d681b1d1331c3f7c8f254",
+    "resources/forum/theme.css": "6ce2ca140196907b2ec0b270f78397a4af8f318cc28daa623bce4e97a6d9f7ec",
+    "templates/admin/registries.php": "dcb7ceab5157e87d2557ad0fa455becd1cf7f5b038c302389ee5afc9889918ba",
+    "tests/browser/registry-blocklist-layout-fixture.php": "c21550452fd83b9abd717ec848fbba2a8664c232f9d3a84f95f530187ab8915d",
+    "tests/browser/registry-blocklist-layout.spec.ts": "a5c5d84de6b456c8a74296662008e83925cb3b097eaec52941cafda8d0173070",
+    "docs/evidence/registry-blocklist-layout-2026-11-08/logs/run-env.py": "c94ff5be492fb51fb137dde7b78dc0d80ef242d0ec7228cbc4f828d3e2211b1d",
+    "tests/diagnostics/test_blocklist_evidence_runner.py": "c3689a175ed29492014178ea7d41eccd85d2a9c81ff089631a13cf3c1deda1a6",
+    "docs/evidence/registry-blocklist-retention-2026-11-08/verify-assets.mjs": "8267df6969b1b907ab3704a62860547b67cc20d001de96c29dede9a782304ab2",
+    "docs/evidence/registry-blocklist-retention-2026-11-08/live-check-current.py": "938dbf4f63fa8acee76cca6727db310c8d8c50c79bbd5c34f55d846cd1b77eeb"
+  }
+}

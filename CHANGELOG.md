@@ -2,6 +2,19 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-08] - Readable registry blocklist rows
+
+- Keep blocked package identifiers and reasons readable on narrow screens;
+  move password/removal controls below the text when space is tight, with
+  a 44px password target. Other package lists keep their existing layout.
+- Retain native-form regressions at 320px, 390px and desktop in both themes
+  and JavaScript modes. Verification:
+  [local evidence](docs/evidence/registry-blocklist-layout-2026-11-08/README.md).
+- Depend on the live-release retention correction before this asset-changing
+  release; keep the live Forum stylesheet and use runtime credentials for the
+  evidence runner. Fresh checks and the shared-credential response are in the
+  [retention follow-up](docs/evidence/registry-blocklist-retention-2026-11-08/README.md).
+
 ## [2026-11-08] - Registry form error isolation
 
 - Keep registry validation errors and nonsecret drafts with the submitted action

@@ -1,0 +1,17 @@
+{
+  "keyring": {
+    "path": "/home/azureuser/community-forums",
+    "head": "b62a12a7d15c5480259bbaf4cb9d4d131d9bac90",
+    "status": ""
+  },
+  "registry_forms": {
+    "path": "/home/azureuser/rb-wt-registry-form-errors",
+    "head": "ef3fe102c62df660fe60bb43702aea063bc26c63",
+    "status": ""
+  },
+  "blocklist": {
+    "path": "/home/azureuser/rb-wt-registry-blocklist",
+    "head": "eeceed780aa9ec92e2a85e9554020a6c6d85d503",
+    "status": ""
+  }
+}

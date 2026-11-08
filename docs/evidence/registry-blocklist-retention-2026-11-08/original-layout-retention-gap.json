@@ -1,0 +1,12 @@
+{
+  "revision": "a308e1b167189422086b35838c03069a85610566",
+  "verified_live_release": "0ab71f5ca65e7fa0",
+  "files_checked": 11,
+  "missing": [
+    {
+      "url": "/assets/dist/forum-theme-style-CNIV-nj8.css",
+      "missing_from_allowlist": true,
+      "missing_from_git_tree": true
+    }
+  ]
+}

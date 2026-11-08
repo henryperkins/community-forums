@@ -1,0 +1,226 @@
+
+> test:assets
+> node --test tests/worker/*.test.mjs
+
+TAP version 13
+# Subtest: confirmed releases keep recent pages and lazy imports working, then retire the oldest release
+ok 1 - confirmed releases keep recent pages and lazy imports working, then retire the oldest release
+  ---
+  duration_ms: 3993.855504
+  type: 'test'
+  ...
+# Subtest: repeated local builds and source reverts preserve the deployed baseline
+ok 2 - repeated local builds and source reverts preserve the deployed baseline
+  ---
+  duration_ms: 3821.249939
+  type: 'test'
+  ...
+# Subtest: recording a release requires the exact previously built version and never happens during checks
+ok 3 - recording a release requires the exact previously built version and never happens during checks
+  ---
+  duration_ms: 2830.744486
+  type: 'test'
+  ...
+# Subtest: a write failure preserves published assets and permits a normal retry
+ok 4 - a write failure preserves published assets and permits a normal retry
+  ---
+  duration_ms: 1856.447952
+  type: 'test'
+  ...
+# Subtest: a static-install failure preserves published assets and permits a normal retry
+ok 5 - a static-install failure preserves published assets and permits a normal retry
+  ---
+  duration_ms: 1864.269859
+  type: 'test'
+  ...
+# Subtest: a manifest-install failure preserves published assets and permits a normal retry
+ok 6 - a manifest-install failure preserves published assets and permits a normal retry
+  ---
+  duration_ms: 1857.243159
+  type: 'test'
+  ...
+# Subtest: a overlay-static-install failure preserves published assets and permits a normal retry
+ok 7 - a overlay-static-install failure preserves published assets and permits a normal retry
+  ---
+  duration_ms: 1870.429407
+  type: 'test'
+  ...
+# Subtest: overlayfs directory backups permit publication without losing deployed files
+ok 8 - overlayfs directory backups permit publication without losing deployed files
+  ---
+  duration_ms: 1244.294038
+  type: 'test'
+  ...
+# Subtest: the real Workers Assets binding serves GET, conditional 304, HEAD and safe 404 responses
+ok 9 - the real Workers Assets binding serves GET, conditional 304, HEAD and safe 404 responses
+  ---
+  duration_ms: 383.498823
+  type: 'test'
+  ...
+# Subtest: fingerprinted CSS, scripts, lazy chunks and fonts bypass the container and are immutable
+ok 10 - fingerprinted CSS, scripts, lazy chunks and fonts bypass the container and are immutable
+  ---
+  duration_ms: 55.229994
+  type: 'test'
+  ...
+# Subtest: only the genuine current version makes source asset URLs immutable
+ok 11 - only the genuine current version makes source asset URLs immutable
+  ---
+  duration_ms: 1.466247
+  type: 'test'
+  ...
+# Subtest: conditional requests retain 304 and validators, and HEAD retains its empty body
+ok 12 - conditional requests retain 304 and validators, and HEAD retains its empty body
+  ---
+  duration_ms: 1.145231
+  type: 'test'
+  ...
+# Subtest: range responses and their status survive without exposing Set-Cookie
+ok 13 - range responses and their status survive without exposing Set-Cookie
+  ---
+  duration_ms: 0.407319
+  type: 'test'
+  ...
+# Subtest: missing/private assets and unsupported methods never fall through to PHP or an SPA
+ok 14 - missing/private assets and unsupported methods never fall through to PHP or an SPA
+  ---
+  duration_ms: 0.537001
+  type: 'test'
+  ...
+# Subtest: branding, package themes and application routes retain dynamic response semantics
+ok 15 - branding, package themes and application routes retain dynamic response semantics
+  ---
+  duration_ms: 0.321168
+  type: 'test'
+  ...
+# Subtest: published manifest verifies asset bytes and active Forum CSS avoids legacy font downloads
+ok 16 - published manifest verifies asset bytes and active Forum CSS avoids legacy font downloads
+  ---
+  duration_ms: 29.034894
+  type: 'test'
+  ...
+# Subtest: requests on the canonical origin pass through untouched
+ok 17 - requests on the canonical origin pass through untouched
+  ---
+  duration_ms: 43.680218
+  type: 'test'
+  ...
+# Subtest: any other hostname is redirected to the same path and query on the canonical origin
+ok 18 - any other hostname is redirected to the same path and query on the canonical origin
+  ---
+  duration_ms: 1.046475
+  type: 'test'
+  ...
+# Subtest: plain http on the canonical host is upgraded to the canonical scheme
+ok 19 - plain http on the canonical host is upgraded to the canonical scheme
+  ---
+  duration_ms: 0.507918
+  type: 'test'
+  ...
+# Subtest: unsafe methods keep their method and body through a 308
+ok 20 - unsafe methods keep their method and body through a 308
+  ---
+  duration_ms: 1.685823
+  type: 'test'
+  ...
+# Subtest: a stray request port is dropped and a non-default canonical port is carried over
+ok 21 - a stray request port is dropped and a non-default canonical port is carried over
+  ---
+  duration_ms: 0.480426
+  type: 'test'
+  ...
+# Subtest: loopback hosts (wrangler dev) and an unusable APP_URL fail open
+ok 22 - loopback hosts (wrangler dev) and an unusable APP_URL fail open
+  ---
+  duration_ms: 0.39134
+  type: 'test'
+  ...
+# Subtest: certificate-validation paths on a non-canonical host go to the origin instead of redirecting
+ok 23 - certificate-validation paths on a non-canonical host go to the origin instead of redirecting
+  ---
+  duration_ms: 1.201765
+  type: 'test'
+  ...
+# (node:434982) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+# (Use `node --trace-deprecation ...` to show where the warning was created)
+# Subtest: production deploy leaves the independently provisioned SaaS zone route untouched
+ok 24 - production deploy leaves the independently provisioned SaaS zone route untouched
+  ---
+  duration_ms: 8.278969
+  type: 'test'
+  ...
+# Subtest: production retires the container without losing its migration history or active edge bindings
+ok 25 - production retires the container without losing its migration history or active edge bindings
+  ---
+  duration_ms: 1.223346
+  type: 'test'
+  ...
+# Subtest: the assertion is an RS256 JWT signed by the service account, asking for an ID token for the service
+ok 26 - the assertion is an RS256 JWT signed by the service account, asking for an ID token for the service
+  ---
+  duration_ms: 108.09461
+  type: 'test'
+  ...
+# Subtest: a token is reused until five minutes before it expires, then renewed
+ok 27 - a token is reused until five minutes before it expires, then renewed
+  ---
+  duration_ms: 11.080247
+  type: 'test'
+  ...
+# Subtest: a burst of requests shares one token exchange
+ok 28 - a burst of requests shares one token exchange
+  ---
+  duration_ms: 2.629627
+  type: 'test'
+  ...
+# Subtest: a failed exchange rejects and is not cached
+ok 29 - a failed exchange rejects and is not cached
+  ---
+  duration_ms: 9.347146
+  type: 'test'
+  ...
+# Subtest: a missing or malformed key fails before any network call
+ok 30 - a missing or malformed key fails before any network call
+  ---
+  duration_ms: 0.840403
+  type: 'test'
+  ...
+# Subtest: dynamic requests reach the service on the same path and query, carrying body, visitor IP and token
+ok 31 - dynamic requests reach the service on the same path and query, carrying body, visitor IP and token
+  ---
+  duration_ms: 10.778387
+  type: 'test'
+  ...
+# Subtest: paths that look like another authority stay on the service, with the token never leaving it
+ok 32 - paths that look like another authority stay on the service, with the token never leaving it
+  ---
+  duration_ms: 4.267424
+  type: 'test'
+  ...
+# Subtest: /healthz, which Cloud Run reserves, reaches the app as /healthz/; other paths are untouched
+ok 33 - /healthz, which Cloud Run reserves, reaches the app as /healthz/; other paths are untouched
+  ---
+  duration_ms: 3.663865
+  type: 'test'
+  ...
+# Subtest: without CF-Connecting-IP a client-sent X-Forwarded-For is dropped, not passed on
+ok 34 - without CF-Connecting-IP a client-sent X-Forwarded-For is dropped, not passed on
+  ---
+  duration_ms: 2.84342
+  type: 'test'
+  ...
+# Subtest: the app's redirects and cookies go back to the browser unchanged
+ok 35 - the app's redirects and cookies go back to the browser unchanged
+  ---
+  duration_ms: 2.81277
+  type: 'test'
+  ...
+1..35
+# tests 35
+# suites 0
+# pass 35
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 19498.557815
