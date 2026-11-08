@@ -1,0 +1,26 @@
+{
+  "server": {
+    "pid": 410318,
+    "address": "127.0.0.1:8032",
+    "stopped": true
+  },
+  "databases": {
+    "names": [
+      "retroboards_e2e_blocklist_layout_20261108",
+      "retroboards_test_blocklist_layout_20261108"
+    ],
+    "dropped": true,
+    "absence_verified": true
+  },
+  "removed_paths": [
+    "/tmp/rb-blocklist-layout-20261108-marr39v9/ratelimit",
+    "/tmp/rb-test-retroboards_test_blocklist_layout_20261108",
+    "/tmp/rb-test-schema-8ff64fdcd5dd6698a8291729c56fe00d.fingerprint"
+  ],
+  "preserved": [
+    "existing rb-mariadb container and all other databases",
+    "keyring and registry form-error worktrees",
+    "independent registry-blocklist worktree",
+    "raw verification scratch /tmp/rb-blocklist-layout-20261108-marr39v9"
+  ]
+}

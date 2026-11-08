@@ -1,0 +1,92 @@
+FFFFF
+======================================================================
+FAIL: test_missing_credential_input_refuses_before_child (__main__.EvidenceRunnerTest.test_missing_credential_input_refuses_before_child)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/azureuser/rb-wt-registry-blocklist/tests/diagnostics/test_blocklist_evidence_runner.py", line 46, in test_missing_credential_input_refuses_before_child
+    self.assert_refused_before_child()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/azureuser/rb-wt-registry-blocklist/tests/diagnostics/test_blocklist_evidence_runner.py", line 40, in assert_refused_before_child
+    self.assertEqual(result.returncode, 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 2
+
+======================================================================
+FAIL: test_non_disposable_browser_or_php_database_refuses_before_child (__main__.EvidenceRunnerTest.test_non_disposable_browser_or_php_database_refuses_before_child) (input='RB_BLOCKLIST_BROWSER_DB')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/azureuser/rb-wt-registry-blocklist/tests/diagnostics/test_blocklist_evidence_runner.py", line 59, in test_non_disposable_browser_or_php_database_refuses_before_child
+    self.assert_refused_before_child()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/azureuser/rb-wt-registry-blocklist/tests/diagnostics/test_blocklist_evidence_runner.py", line 40, in assert_refused_before_child
+    self.assertEqual(result.returncode, 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 2
+
+======================================================================
+FAIL: test_non_disposable_browser_or_php_database_refuses_before_child (__main__.EvidenceRunnerTest.test_non_disposable_browser_or_php_database_refuses_before_child) (input='RB_BLOCKLIST_TEST_DB')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/azureuser/rb-wt-registry-blocklist/tests/diagnostics/test_blocklist_evidence_runner.py", line 59, in test_non_disposable_browser_or_php_database_refuses_before_child
+    self.assert_refused_before_child()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/azureuser/rb-wt-registry-blocklist/tests/diagnostics/test_blocklist_evidence_runner.py", line 40, in assert_refused_before_child
+    self.assertEqual(result.returncode, 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 2
+
+======================================================================
+FAIL: test_runtime_credential_reaches_child_without_inheriting_provider_or_host (__main__.EvidenceRunnerTest.test_runtime_credential_reaches_child_without_inheriting_provider_or_host)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/azureuser/rb-wt-registry-blocklist/tests/diagnostics/test_blocklist_evidence_runner.py", line 75, in test_runtime_credential_reaches_child_without_inheriting_provider_or_host
+    self.assertEqual(json.loads(result.stdout), {
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        'credential_matches': True, 'user_matches': True, 'browser_matches': True,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        'php_matches': True, 'test_mode': True, 'local_host': True, 'provider_isolated': True,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    })
+    ^^
+AssertionError: {'cre[13 chars]es': False, 'user_matches': False, 'browser_ma[97 chars]True} != {'cre[13 chars]es': True, 'user_matches': True, 'browser_matc[93 chars]True}
+- {'browser_matches': False,
+?                     ^^^^
+
++ {'browser_matches': True,
+?                     ^^^
+
+-  'credential_matches': False,
+?                        ^^^^
+
++  'credential_matches': True,
+?                        ^^^
+
+   'local_host': True,
+-  'php_matches': False,
+?                 ^^^^
+
++  'php_matches': True,
+?                 ^^^
+
+   'provider_isolated': True,
+   'test_mode': True,
+-  'user_matches': False}
+?                  ^^^^
+
++  'user_matches': True}
+?                  ^^^
+
+
+======================================================================
+FAIL: test_unreadable_credential_input_refuses_before_child (__main__.EvidenceRunnerTest.test_unreadable_credential_input_refuses_before_child)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/azureuser/rb-wt-registry-blocklist/tests/diagnostics/test_blocklist_evidence_runner.py", line 51, in test_unreadable_credential_input_refuses_before_child
+    self.assertEqual(result.returncode, 2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 2
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.177s
+
+FAILED (failures=5)

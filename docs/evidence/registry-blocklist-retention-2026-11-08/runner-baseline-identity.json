@@ -1,0 +1,7 @@
+{
+  "application_revision": "a308e1b167189422086b35838c03069a85610566",
+  "runner_path": "docs/evidence/registry-blocklist-layout-2026-11-08/logs/run-env.py",
+  "runner_git_blob": "ac8a3a8710f284790b44f495c7adfd7d67dcd3b8",
+  "test_fixture_sha256": "c3689a175ed29492014178ea7d41eccd85d2a9c81ff089631a13cf3c1deda1a6",
+  "result": "4 tests, 5 expected assertion failures on the unchanged legacy runner; no database or provider was called by the guard tests"
+}

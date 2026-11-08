@@ -1,9 +1,9 @@
 {
-  "version": "0ab71f5ca65e7fa0",
+  "version": "c0ff610c8c690556",
   "urls": {
     "forum-base.css": "/assets/dist/forum-base-style-DsiQn3Ye.css",
     "app.css": "/assets/dist/app-style-diYLPve0.css",
-    "forum-theme.css": "/assets/dist/forum-theme-style-CNIV-nj8.css",
+    "forum-theme.css": "/assets/dist/forum-theme-style-Dp3f7HoX.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
     "app.js": "/assets/dist/app-9b906acd1f6f64c8.js",
     "composer.js": "/assets/dist/composer-004f699d19dc5157.js",
@@ -121,6 +121,10 @@
       "sha256": "9b3d799538defa568122a8678ab03d7ea04a2c651144b733fc86c1baa1983bfc",
       "immutable": true
     },
+    "/assets/dist/forum-theme-style-Dp3f7HoX.css": {
+      "sha256": "ccaf67715a389d56b2af9fe0050adcd1eaac2621f5f6766867717c3df015721e",
+      "immutable": true
+    },
     "/assets/dist/imladris-style-DmYWEV0N.css": {
       "sha256": "0a18658421b343b56d83052e820b5cfe7a88e1f0baffe989c95c0a91f54a2418",
       "immutable": true
@@ -166,7 +170,7 @@
       "immutable": false
     },
     "/assets/forum-theme.css": {
-      "sha256": "a416cce30aef82c79d980c535e1812170ae379957ae063a287dd51c7aaf17d48",
+      "sha256": "caac57532f9187f93988a3df400b94bb4404cb0c933d681b1d1331c3f7c8f254",
       "immutable": false
     },
     "/assets/passkeys.js": {
@@ -179,6 +183,22 @@
     }
   },
   "releases": [
+    {
+      "version": "c0ff610c8c690556",
+      "files": [
+        "/assets/dist/app-9b906acd1f6f64c8.js",
+        "/assets/dist/app-style-diYLPve0.css",
+        "/assets/dist/composer-004f699d19dc5157.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+        "/assets/dist/forum-base-style-DsiQn3Ye.css",
+        "/assets/dist/forum-theme-style-Dp3f7HoX.css",
+        "/assets/dist/milkdown-adapter-DXUybFX0.js",
+        "/assets/dist/passkeys-abc14d1e680e3beb.js",
+        "/assets/dist/tour-4573ee743ebaf07c.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-XlKwRXnh.js"
+      ]
+    },
     {
       "version": "0ab71f5ca65e7fa0",
       "files": [

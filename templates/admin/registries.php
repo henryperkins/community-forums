@@ -157,7 +157,7 @@ $ingestOpen = !empty($regErrors['advisory_envelope']);
         <?php else: ?>
         <ul class="packages-rule-list">
             <?php foreach ($blocks as $block): ?>
-                <li class="packages-rule-row">
+                <li class="packages-rule-row packages-block-row">
                     <span class="packages-rule-main">
                         <code class="packages-rule-id"><?= $block['package_uid'] !== null ? $e($block['package_uid']) : $e(substr((string) $block['digest'], 0, 16)) . '…' ?></code>
                         <?php if (($block['reason'] ?? '') !== ''): ?><span class="packages-rule-detail"><?= $e((string) $block['reason']) ?></span><?php endif; ?>

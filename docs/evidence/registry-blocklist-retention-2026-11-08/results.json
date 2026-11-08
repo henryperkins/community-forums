@@ -1,0 +1,41 @@
+{
+  "base": "b0038b5b9ae5f48e4213312ed29f76c46b690ebc",
+  "asset_candidate": "c0ff610c8c690556",
+  "full_php": {
+    "exit_code": 0,
+    "tests": 3576,
+    "assertions": 33934,
+    "duration": "05:50.630",
+    "existing_deprecations": 8,
+    "skipped": 1,
+    "skip_reason": "direct down/up rehearsal runs only on its dedicated throwaway database"
+  },
+  "focused_php": {
+    "exit_code": 0,
+    "tests": 34,
+    "assertions": 205
+  },
+  "browser": {
+    "engine": "Chromium only",
+    "exit_code": 0,
+    "passed": 12,
+    "skipped": 0,
+    "seconds": 12.3
+  },
+  "runner_regression": {
+    "passed": 4,
+    "baseline_expected_failures": 5
+  },
+  "worker_assets": {
+    "passed": 35,
+    "skipped": 0
+  },
+  "asset_closure": {
+    "passed": true,
+    "allowlist_entries": 42,
+    "immutable_files": 34,
+    "live_files": 11,
+    "candidate_files": 11
+  },
+  "forum_and_asset_checks": "passed"
+}

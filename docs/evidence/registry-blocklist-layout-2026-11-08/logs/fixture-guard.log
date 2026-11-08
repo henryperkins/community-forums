@@ -1,0 +1,4 @@
+PHP Fatal error:  Uncaught RuntimeException: Select a disposable blocklist-layout database in APP_ENV=test. in /home/azureuser/rb-wt-registry-blocklist/tests/browser/registry-blocklist-layout-fixture.php:14
+Stack trace:
+#0 {main}
+  thrown in /home/azureuser/rb-wt-registry-blocklist/tests/browser/registry-blocklist-layout-fixture.php on line 14
