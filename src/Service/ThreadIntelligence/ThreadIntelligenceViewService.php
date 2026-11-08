@@ -250,14 +250,8 @@ final class ThreadIntelligenceViewService
         }
         $evidence = array_map('intval', $evidence);
 
-        // The brief cites the citation union (thread_summary_sources), which
-        // is normally a strict subset of the generation's evidence-pack union:
-        // uncited evidence posts must not suppress the brief (ADR 0058, fixing
-        // ADR 0026 F1). What must still fail closed is a CITED source becoming
-        // unsafe — sources() drops deleted/pending/unreadable rows after the
-        // query, so the stored citation list no longer matching the safe list
-        // is exactly that event. Because suppression holds whenever a cited
-        // source drops, the surviving ordinals never shift under a reader.
+        // A stored citation missing from the safe list means that source dropped.
+        // Suppress the brief so the remaining ordinals do not move.
         $cited = array_map('intval', array_column($this->db->fetchAll(
             'SELECT post_id FROM thread_summary_sources WHERE summary_id = ?',
             [$summaryId],
@@ -274,7 +268,6 @@ final class ThreadIntelligenceViewService
         if ($cited !== $current) {
             return false;
         }
-        // Every citation must trace back to the generation's evidence pack.
         return array_diff($cited, $evidence) === [];
     }
 
@@ -305,6 +298,7 @@ final class ThreadIntelligenceViewService
             'version' => (int) $summary['version'],
             'label' => $label,
             'metadata' => $metadata,
+            'kind' => (string) $summary['kind'],
             'has_ai_lineage' => $hasAiAncestor,
             'published_at' => $time->format('Y-m-d H:i:s') . ' UTC',
             'published_at_utc' => $time->format('Y-m-d\TH:i:s\Z'),

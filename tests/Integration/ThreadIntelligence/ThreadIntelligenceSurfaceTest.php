@@ -159,6 +159,50 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringContainsString('#p' . $cited[1] . '" aria-label="Source post #' . $cited[1] . '">2</a></sup>', $html);
     }
 
+    public function test_out_of_range_citation_markers_are_removed_on_the_thread_page(): void
+    {
+        $seed = $this->seedThread(8, 'Stray citation marker topic');
+        $cited = [$seed['post_ids'][0]];
+        [$summaryId] = $this->insertAiBrief($seed['thread_id'], $cited, 'unused', $seed['post_ids']);
+        $this->db->run(
+            'UPDATE thread_summaries SET body = ?, body_html = ? WHERE id = ?',
+            ['Cited [^1] and stray [^7].', '<p>Cited [^1] and stray [^7].</p>', $summaryId],
+        );
+
+        $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+        self::assertStringNotContainsString('[^1]', $html);
+        self::assertStringNotContainsString('[^7]', $html);
+        self::assertStringContainsString('#p' . $cited[0] . '" aria-label="Source post #' . $cited[0] . '">1</a></sup>', $html);
+        self::assertStringContainsString('and stray .', $html);
+    }
+
+    public function test_curator_amendment_keeps_literal_markers_when_a_cited_source_drops(): void
+    {
+        $seed = $this->seedThread(8, 'Curator amendment markers');
+        $cited = [$seed['post_ids'][1], $seed['post_ids'][7]];
+        [$aiId] = $this->insertAiBrief($seed['thread_id'], $cited, 'AI body', $seed['post_ids']);
+        $curator = $this->makeUser();
+        $manualId = $this->db->insert(
+            "INSERT INTO thread_summaries
+                (thread_id, kind, status, body, body_html, version, author_id, reviewer_id, parent_summary_id, published_at, created_at)
+             VALUES (?, 'manual', 'published', ?, ?, 2, ?, NULL, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+            [$seed['thread_id'], 'Edited [^1] claim.', '<p>Edited [^1] claim.</p>', $curator['id'], $aiId],
+        );
+        foreach ($cited as $postId) {
+            $this->db->run('INSERT INTO thread_summary_sources (summary_id, post_id) VALUES (?, ?)', [$manualId, $postId]);
+        }
+        $this->db->run('UPDATE posts SET is_pending = 1 WHERE id = ?', [$cited[0]]);
+
+        $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+        self::assertStringContainsString('AI-generated · curator edited', $html);
+        self::assertStringContainsString('Edited [^1] claim.', $html);
+        self::assertStringNotContainsString('living-brief-cite', $html);
+    }
+
     public function test_thread_dom_order_has_one_memory_slot_no_empty_panel_and_public_disclosure(): void
     {
         $seed = $this->seedThread(8, 'Rendered living brief');

@@ -32,15 +32,19 @@ nth listed source only while no listed source can silently drop out.
 2. **Claim citations are server-composed plain text.** The validator appends
    ` [^n]` markers to the overview's first paragraph and to each key point /
    open question, where `n` is the 1-based ordinal of the cited post in the
-   ascending citation union. The model never writes markers; it only supplies
-   the structured `source_post_ids` it already supplied. Each marker carries
-   a leading space so an item ending in `!` cannot form the `![` image
-   opener the unsafe-pattern guard rejects.
-3. **Markers become anchors only in the view layer.** Stored `body_html`
-   keeps the literal markers. `ThreadController::show()`, which already
+   ascending citation union. Model prose that already contains `[^n]` is
+   rejected before those markers are appended, in overview text, list items,
+   and related-topic explanations. Each marker carries a leading space so an
+   item ending in `!` cannot form the `![` image opener the unsafe-pattern
+   guard rejects.
+3. **Markers become anchors only for an AI brief.** Stored `body_html` keeps
+   the literal markers. `ThreadController::renderThread()`, which already
    builds each source's paginated post URL, upgrades `[^n]` to
-   `<sup class="living-brief-cite"><a href="…#p{id}">n</a></sup>` for
-   AI-lineage briefs. Manual curator briefs are not rewritten.
+   `<sup class="living-brief-cite"><a href="…#p{id}">n</a></sup>` only when
+   `kind = ai`. An ordinal with no listed source is removed. Manual curator
+   briefs, including an amendment of an AI brief, are not rewritten. Cite
+   presentation lives in the unlayered Forum theme so it beats prose-link
+   underlines.
 
 ## Consequences
 
@@ -58,11 +62,13 @@ nth listed source only while no listed source can silently drop out.
 ## Evidence
 
 - Unit: `ThreadIntelligenceOutputValidatorTest` pins the composed canonical
-  markers, sorted-union ordinals over out-of-order citations, and the
-  `Ship it! [^1]` unsafe-pattern interaction.
+  markers, sorted-union ordinals over out-of-order citations, the
+  `Ship it! [^1]` unsafe-pattern interaction, and rejection of model-supplied
+  `[^n]` in overview text, list items, and explanations.
 - Integration: `ThreadIntelligenceSurfaceTest` pins subset rendering,
-  uncited-source non-suppression, cited-source suppression, and the HTML
-  anchor upgrade; `ThreadIntelligenceWorkerTest` pins the end-to-end
-  worker-publishes → view-renders path that F1 broke.
+  uncited-source non-suppression, cited-source suppression, the HTML anchor
+  upgrade, removal of an out-of-range marker, and curator amendments keeping
+  literal markers after a cited source drops; `ThreadIntelligenceWorkerTest`
+  pins the end-to-end worker-publishes → view-renders path that F1 broke.
 - The pre-fix reproduction and suite counts are recorded in the 2026-11-08
   REVIEW/IMPLEMENT session report for this change.

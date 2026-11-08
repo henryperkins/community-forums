@@ -11350,9 +11350,6 @@ html:not(.has-js) .board-view .board-topics-heading { top: var(--topbar-h); }
 }
 .living-brief-label a { color: inherit; }
 .living-brief-mark { display: inline-flex; color: var(--star); }
-.living-brief-cite { font-family: var(--font-meta); font-size: max(var(--text-floor), .68rem); line-height: 0; }
-.living-brief-cite a { color: var(--accent); text-decoration: none; }
-.living-brief-cite a:hover { text-decoration: underline; }
 .living-brief-mark .icon-commend-star { width: 12px; height: 12px; }
 /* Provenance, one disclosure away (ThreadView.dc.html:520-543). */
 .living-brief-provenance { margin-top: 10px; }

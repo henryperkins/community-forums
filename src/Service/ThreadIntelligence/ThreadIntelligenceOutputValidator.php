@@ -114,13 +114,9 @@ final class ThreadIntelligenceOutputValidator
         }
 
         // ---- canonical composition ---------------------------------------------
-        // Claim citations are server-composed as plain-text footnote markers
-        // (ADR 0058): `[^n]` where n is the 1-based ordinal of the cited post in
-        // the ascending citation union — the same order the view layer lists
-        // sources in. The model never writes markers; it only supplies the
-        // structured source_post_ids validated above. Each marker is appended
-        // with a leading space so an item ending in `!` can never form the
-        // Markdown image opener `![` that UNSAFE_PATTERNS rejects.
+        // A leading space keeps "Ship it!" from forming the image opener.
+        // Overview markers close the first paragraph so a later reference
+        // definition is still visible to the link check.
 
         $union = $overviewSources;
         foreach ([...$validatedKeyPoints, ...$validatedOpenQuestions] as $item) {
@@ -150,8 +146,7 @@ final class ThreadIntelligenceOutputValidator
         }
         $canonical = implode("\n\n", $parts);
 
-        // The 450-word ceiling bounds brief content; server-composed citation
-        // markers are apparatus, not words, so they are stripped before counting.
+        // Server-composed markers are not words, so they do not count toward the ceiling.
         if ($this->wordCount((string) preg_replace('/\[\^\d+\]/', '', $canonical)) > self::TOTAL_WORD_LIMIT) {
             $this->rejectContent('composed brief exceeds 450 words');
         }
@@ -254,6 +249,7 @@ final class ThreadIntelligenceOutputValidator
         if ($this->wordCount($text) > $wordLimit) {
             $this->rejectContent('word limit exceeded');
         }
+        $this->assertNoCitationMarkers($text);
         $this->assertSafeContent($text);
         return $text;
     }
@@ -273,8 +269,17 @@ final class ThreadIntelligenceOutputValidator
         if (preg_match('/[.!?][)"\'\]]*\s+\S/u', $text) === 1) {
             $this->rejectContent('explanations must be one sentence');
         }
+        $this->assertNoCitationMarkers($text);
         $this->assertSafeContent($text);
         return $text;
+    }
+
+    /** Model prose must not contain the marker syntax citationMarkers() appends later. */
+    private function assertNoCitationMarkers(string $text): void
+    {
+        if (preg_match('/\[\^\d+\]/', $text) === 1) {
+            $this->rejectContent('citation markers are reserved for server composition');
+        }
     }
 
     /** @param list<int> $ids @param list<int> $eligible @return list<int> */

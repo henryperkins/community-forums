@@ -450,17 +450,15 @@ final class ThreadController extends Controller
                 );
             }
             unset($source);
-            if ($livingBrief !== null && !empty($livingBrief['has_ai_lineage'])) {
-                // §4 citation anchors (ADR 0058): the generation pipeline stores
-                // plain-text [^n] markers; only here, where source URLs exist,
-                // are they upgraded to links. n is the 1-based ordinal in the
-                // ascending source list above. Manual briefs keep their text.
+            if ($livingBrief !== null && ($livingBrief['kind'] ?? '') === 'ai') {
+                // An ordinal with no listed source is removed so it cannot
+                // point at a different post. Curator text is left unchanged.
                 $livingBrief['body_html'] = (string) preg_replace_callback(
                     '/\[\^(\d+)\]/',
                     static function (array $m) use ($livingBriefSources): string {
                         $source = $livingBriefSources[(int) $m[1] - 1] ?? null;
-                        if ($source === null) {
-                            return $m[0];
+                        if (!is_array($source) || !isset($source['url'], $source['id'])) {
+                            return '';
                         }
                         return '<sup class="living-brief-cite"><a href="'
                             . htmlspecialchars((string) $source['url'], ENT_QUOTES)

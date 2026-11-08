@@ -11,6 +11,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Add ADR 0026 §4 claim citations: the validator composes plain-text `[^n]`
   markers from the structured citations, and the thread page upgrades them to
   superscript anchors resolving to the cited posts, in source-list order.
+  Model prose that already contains `[^n]` is rejected. Only `kind = ai`
+  briefs are rewritten, and an ordinal with no listed source is removed.
+  Cite presentation is in the unlayered Forum theme.
 
 ## [2026-11-08] - Readable registry blocklist rows
 

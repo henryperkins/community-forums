@@ -177,6 +177,21 @@ final class ThreadIntelligenceOutputValidatorTest extends TestCase
         self::assertStringContainsString('Ship it! [^1]', $validated->canonicalMarkdown());
     }
 
+    public function test_model_supplied_citation_markers_are_rejected(): void
+    {
+        $overview = $this->validOutput();
+        $overview['overview']['markdown'] = 'See footnote [^1] in the overview.';
+        $this->assertRejected($overview, ThreadIntelligenceFailureCode::VALIDATION_FAILED, 'overview marker');
+
+        $item = $this->validOutput();
+        $item['key_points'][0]['markdown'] = 'Quoted marker [^7]';
+        $this->assertRejected($item, ThreadIntelligenceFailureCode::VALIDATION_FAILED, 'item marker');
+
+        $explanation = $this->validOutput();
+        $explanation['related_topics'][0]['explanation'] = 'Same cookie issue cited as [^1]';
+        $this->assertRejected($explanation, ThreadIntelligenceFailureCode::VALIDATION_FAILED, 'explanation marker');
+    }
+
     public function test_moderation_text_contains_the_complete_brief_plus_every_related_explanation(): void
     {
         $validated = $this->validator->validate($this->providerResult($this->validOutput()), $this->request());
