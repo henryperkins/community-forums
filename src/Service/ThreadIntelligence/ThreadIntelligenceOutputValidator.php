@@ -114,23 +114,45 @@ final class ThreadIntelligenceOutputValidator
         }
 
         // ---- canonical composition ---------------------------------------------
+        // Claim citations are server-composed as plain-text footnote markers
+        // (ADR 0058): `[^n]` where n is the 1-based ordinal of the cited post in
+        // the ascending citation union — the same order the view layer lists
+        // sources in. The model never writes markers; it only supplies the
+        // structured source_post_ids validated above. Each marker is appended
+        // with a leading space so an item ending in `!` can never form the
+        // Markdown image opener `![` that UNSAFE_PATTERNS rejects.
 
-        $parts = [$overviewText];
+        $union = $overviewSources;
+        foreach ([...$validatedKeyPoints, ...$validatedOpenQuestions] as $item) {
+            $union = [...$union, ...$item['source_post_ids']];
+        }
+        $union = array_values(array_unique($union));
+        sort($union);
+        $ordinals = array_flip($union);
+
+        // Overview markers close the first paragraph, never the raw text end:
+        // an overview ending in a reference definition must keep that
+        // definition intact so the composed-render link check still sees it.
+        $overviewBlocks = explode("\n\n", $overviewText, 2);
+        $overviewBlocks[0] .= $this->citationMarkers($overviewSources, $ordinals);
+        $parts = [implode("\n\n", $overviewBlocks)];
         if ($validatedKeyPoints !== []) {
             $parts[] = "### Key points\n\n" . implode("\n", array_map(
-                static fn (array $item): string => '- ' . $item['markdown'],
+                fn (array $item): string => '- ' . $item['markdown'] . $this->citationMarkers($item['source_post_ids'], $ordinals),
                 $validatedKeyPoints,
             ));
         }
         if ($validatedOpenQuestions !== []) {
             $parts[] = "### Open questions\n\n" . implode("\n", array_map(
-                static fn (array $item): string => '- ' . $item['markdown'],
+                fn (array $item): string => '- ' . $item['markdown'] . $this->citationMarkers($item['source_post_ids'], $ordinals),
                 $validatedOpenQuestions,
             ));
         }
         $canonical = implode("\n\n", $parts);
 
-        if ($this->wordCount($canonical) > self::TOTAL_WORD_LIMIT) {
+        // The 450-word ceiling bounds brief content; server-composed citation
+        // markers are apparatus, not words, so they are stripped before counting.
+        if ($this->wordCount((string) preg_replace('/\[\^\d+\]/', '', $canonical)) > self::TOTAL_WORD_LIMIT) {
             $this->rejectContent('composed brief exceeds 450 words');
         }
         $this->assertSafeContent($canonical);
@@ -141,13 +163,6 @@ final class ThreadIntelligenceOutputValidator
             $moderationText .= "\n\n" . implode("\n", $explanations);
         }
         $this->assertSafeContent($moderationText);
-
-        $union = $overviewSources;
-        foreach ([...$validatedKeyPoints, ...$validatedOpenQuestions] as $item) {
-            $union = [...$union, ...$item['source_post_ids']];
-        }
-        $union = array_values(array_unique($union));
-        sort($union);
 
         return new ValidatedThreadIntelligenceOutput(
             $canonical,
@@ -295,6 +310,18 @@ final class ThreadIntelligenceOutputValidator
         if (preg_match(self::FORBIDDEN_RENDERED_MARKUP, $rendered) !== 0) {
             $this->rejectContent('rendered content must not contain interactive or executable markup');
         }
+    }
+
+    /**
+     * @param list<int> $ids
+     * @param array<int,int> $ordinals post id => 0-based ordinal in the citation union
+     */
+    private function citationMarkers(array $ids, array $ordinals): string
+    {
+        $ordered = array_values(array_unique($ids));
+        usort($ordered, static fn (int $a, int $b): int => $ordinals[$a] <=> $ordinals[$b]);
+        $markers = array_map(static fn (int $id): string => '[^' . ($ordinals[$id] + 1) . ']', $ordered);
+        return $markers === [] ? '' : ' ' . implode(' ', $markers);
     }
 
     private function wordCount(string $text): int

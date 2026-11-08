@@ -392,6 +392,9 @@ above the posts when provider credentials are configured:
 
 - The brief says whether it is AI-generated or curator-edited and shows its
   version, update time, current readable source posts, and related topics.
+  Claims in an AI brief carry superscript citation numbers that link to the
+  cited posts; the numbers follow the same order as the source list in
+  “Where this came from” (ADR 0058).
 - Source and related links are rechecked against the viewer's current read
   access. A deleted, pending, private, or otherwise inaccessible cited source
   suppresses unsafe AI content rather than leaking it.

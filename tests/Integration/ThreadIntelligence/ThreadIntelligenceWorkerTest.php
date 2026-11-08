@@ -35,6 +35,7 @@ use App\Service\ThreadIntelligence\ThreadIntelligenceResult;
 use App\Service\ThreadIntelligence\ThreadIntelligenceRetryPolicy;
 use App\Service\ThreadIntelligence\ThreadIntelligenceSettings;
 use App\Service\ThreadIntelligence\ThreadIntelligenceUsage;
+use App\Service\ThreadIntelligence\ThreadIntelligenceViewService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
 use App\Security\BoardPolicy;
@@ -323,6 +324,41 @@ final class ThreadIntelligenceWorkerTest extends TestCase
         $budget = $services['budget']->status($this->now());
         self::assertSame(1, $budget['used_calls']);
         self::assertSame(0, $budget['reserved_calls']);
+    }
+
+    public function test_subset_citation_generation_renders_in_the_view_model(): void
+    {
+        // ADR 0058 / ADR 0026 F1 end-to-end: providerResult() cites only the
+        // first and last of 8 evidence posts. Before the fix the worker
+        // published this brief and the view model suppressed it, because the
+        // generation's evidence union (8) could never equal the citation
+        // union (2).
+        $this->enableFlags();
+        $seed = $this->seedThread();
+        $this->due($seed);
+        $provider = new FakeThreadIntelligenceProvider();
+        $provider->queueResult($this->providerResult($seed['post_ids']));
+        $services = $this->services($provider);
+
+        $counts = $this->runWorker($services['worker'], 25, 'phpunit-subset-view');
+
+        self::assertSame(['processed' => 1, 'succeeded' => 1, 'failed' => 0], $counts);
+        $view = new ThreadIntelligenceViewService(
+            $this->db,
+            new BoardMemberRepository($this->db),
+            new BoardPolicy(),
+            $services['eligibility'],
+            $services['jobs'],
+            new Markdown(new HtmlSanitizer()),
+        );
+        $model = $view->forThread($seed['thread_id'], null);
+        self::assertNotNull($model['living_brief'], 'subset-citation brief must render, not just publish');
+        self::assertSame(
+            [$seed['post_ids'][0], $seed['post_ids'][7]],
+            array_map('intval', array_column($model['sources'], 'id')),
+            'only the cited posts are listed as sources',
+        );
+        self::assertStringContainsString('[^1]', (string) $model['living_brief']['body_html'], 'canonical markers reach the view layer as plain text');
     }
 
     public function test_five_new_posts_refresh_incrementally_and_carry_the_exact_curator_baseline(): void

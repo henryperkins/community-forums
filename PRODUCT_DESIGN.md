@@ -452,7 +452,11 @@ through an explicit `features.<flag>=false` override.
 - **Member workflow.** An eligible public thread may show a Living Brief above
   the posts. The brief identifies AI or curator authorship, update time, version,
   and current readable source posts; related-topic explanations link only to
-  destinations the viewer may read. If no manual or AI summary exists, no empty
+  destinations the viewer may read. AI claims carry server-composed citation
+  markers rendered as superscript anchors to their cited posts (ADR 0058): only
+  cited sources gate rendering — an uncited evidence post changing state has no
+  effect, while a cited source becoming unsafe suppresses the brief so citation
+  ordinals never shift. If no manual or AI summary exists, no empty
   brief renders and deterministic related-topic context remains the fallback.
 - **Curator workflow.** An admin or in-scope board moderator may publish/edit a
   sourced manual brief, refresh, retire, restore, and explicitly pause/resume

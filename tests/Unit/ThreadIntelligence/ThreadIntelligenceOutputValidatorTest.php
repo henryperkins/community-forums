@@ -136,12 +136,12 @@ final class ThreadIntelligenceOutputValidatorTest extends TestCase
     {
         $validated = $this->validator->validate($this->providerResult($this->validOutput()), $this->request());
 
-        $expected = "The discussion covers a login failure after the widget upgrade and converges on a workaround.\n\n"
+        $expected = "The discussion covers a login failure after the widget upgrade and converges on a workaround. [^1] [^2]\n\n"
             . "### Key points\n\n"
-            . "- The upgrade changed the session cookie name.\n"
-            . "- Clearing site data restores login for most members.\n\n"
+            . "- The upgrade changed the session cookie name. [^1]\n"
+            . "- Clearing site data restores login for most members. [^2] [^3]\n\n"
             . "### Open questions\n\n"
-            . '- Whether single sign-on installs need a separate fix.';
+            . '- Whether single sign-on installs need a separate fix. [^3]';
         self::assertSame($expected, $validated->canonicalMarkdown());
 
         self::assertSame([11, 12, 13], $validated->sourcePostIds(), 'citation union, ascending and unique');
@@ -152,6 +152,29 @@ final class ThreadIntelligenceOutputValidatorTest extends TestCase
         self::assertCount(1, $validated->openQuestions());
         self::assertCount(2, $validated->relatedTopics());
         self::assertSame(201, $validated->relatedTopics()[0]['thread_id']);
+    }
+
+    public function test_citation_markers_follow_the_sorted_union_not_citation_order(): void
+    {
+        $output = $this->validOutput();
+        // Citations deliberately out of order and overlapping across items:
+        // ordinals must still be the ascending-union positions (11->1, 12->2,
+        // 13->3), matching the order the view layer lists sources in.
+        $output['overview']['source_post_ids'] = [13, 11];
+        $output['key_points'][0]['source_post_ids'] = [13];
+        $validated = $this->validator->validate($this->providerResult($output), $this->request());
+
+        self::assertStringContainsString('workaround. [^1] [^3]', $validated->canonicalMarkdown());
+        self::assertStringContainsString('cookie name. [^3]', $validated->canonicalMarkdown());
+        self::assertStringNotContainsString('![', $validated->canonicalMarkdown(), 'a marker never forms the image opener');
+    }
+
+    public function test_citation_marker_after_an_exclamation_passes_the_unsafe_patterns(): void
+    {
+        $output = $this->validOutput();
+        $output['key_points'][0]['markdown'] = 'Ship it!';
+        $validated = $this->validator->validate($this->providerResult($output), $this->request());
+        self::assertStringContainsString('Ship it! [^1]', $validated->canonicalMarkdown());
     }
 
     public function test_moderation_text_contains_the_complete_brief_plus_every_related_explanation(): void
