@@ -1,0 +1,57 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/rb-wt-registry-form-errors/phpunit.xml
+
+FFFFF                                                               5 / 5 (100%)
+
+Time: 00:00.061, Memory: 14.00 MB
+
+There were 5 failures:
+
+1) Tests\Integration\Core\AppRegistryFormErrorsTest::test_wrong_password_preserves_only_the_submitted_action_and_target with data set #0 ('pin')
+The originating disclosure stays open.
+Failed asserting that false is true.
+
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:99
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:146
+
+2) Tests\Integration\Core\AppRegistryFormErrorsTest::test_wrong_password_preserves_only_the_submitted_action_and_target with data set #1 ('rotate')
+The originating disclosure stays open.
+Failed asserting that false is true.
+
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:99
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:146
+
+3) Tests\Integration\Core\AppRegistryFormErrorsTest::test_wrong_password_preserves_only_the_submitted_action_and_target with data set #2 ('advisory')
+The originating disclosure stays open.
+Failed asserting that false is true.
+
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:99
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:146
+
+4) Tests\Integration\Core\AppRegistryFormErrorsTest::test_wrong_password_preserves_only_the_submitted_action_and_target with data set #3 ('revoke')
+Retain only this form's exact nonsecret draft.
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'Draft <reason> belongs to this key only'
++''
+
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:104
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:146
+
+5) Tests\Integration\Core\AppRegistryFormErrorsTest::test_malformed_rotation_json_is_associated_only_with_its_rotation_field
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'true'
++''
+
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:107
+/home/azureuser/rb-wt-registry-form-errors/tests/Integration/Core/AppRegistryFormErrorsTest.php:156
+
+FAILURES!
+Tests: 5, Assertions: 19, Failures: 5.
