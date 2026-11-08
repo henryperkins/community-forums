@@ -65,11 +65,10 @@ switch any flag off but never switches on one that has not shipped
 Reserved under ADR 0018); that stays a deliberate write with the commands
 below. While `settings.features` is not a JSON object (a JSON list, a scalar or
 `null`) every row is locked: inspect it and follow **Repairing an override map**
-below first. A stored
-number PHP cannot re-encode (for example `1e999`) does not lock the rows, since
-the overrides around it still apply, but every write is refused with that
-reason until the value is repaired separately. A restricted (for
-example suspended) admin sees every toggle locked.
+below first. A stored number PHP cannot re-encode (for example `1e999`) does
+not lock the rows, since the overrides around it still apply, but every write
+is refused with that reason until the value is repaired separately. A
+restricted (for example suspended) admin sees every toggle locked.
 
 ```bash
 # Inspect current overrides (decoded; "array ()" means no overrides)

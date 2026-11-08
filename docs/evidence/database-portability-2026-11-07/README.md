@@ -146,9 +146,12 @@ self-reactions to avoid modifying another member's reputation ledger.
 
 `npm run assets:record-release -- 5dc1b40f3b23d46d` records the previously verified
 live asset version alongside `c66e3b55dba6da68` and `3630440af0d45598`, retiring
-`67ba8434286ff7e6`. The current asset version remains `5dc1b40f3b23d46d`. The
-Worker runtime test exercises retained dependencies and verifies their bytes,
-as well as GET, conditional 304, HEAD and safe missing-file behavior.
+`67ba8434286ff7e6`. At the time of this branch's verification the current asset
+version remained `5dc1b40f3b23d46d`; the Forum theme refinement then published
+`0ab71f5ca65e7fa0` and recorded it separately, so this is a point-in-time
+bookkeeping note, not a claim about the current manifest. The Worker runtime
+test exercises retained dependencies and verifies their bytes, as well as GET,
+conditional 304, HEAD and safe missing-file behavior.
 
 This groups release bookkeeping with the backend change under ADR 0051;
 it is not a new deployment receipt.

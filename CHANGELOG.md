@@ -57,14 +57,13 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Make audit and budget JSON assertions portable across storage formats while
   retaining corrupt-spend protection. Add HTTP and desktop/mobile browser
   regressions for independent reaction toggles and reputation accounting.
+  Validation:
+  [database portability evidence](docs/evidence/database-portability-2026-11-07/README.md).
 - Delegate `RepairService::repairInstalledPackageStates()` to
   `PackageHealthService::enforcePolicy('repair reconcile: ')` and wire
   `PackageIntegrationService` into `bin/console` health and repair commands so
   suspended/revoked publisher disables and package credential teardown stay in
   sync.
-- Record the previously verified Forum asset release `5dc1b40f3b23d46d`, retaining
-  `c66e3b55dba6da68` and `3630440af0d45598` and retiring `67ba8434286ff7e6`.
-  Validation: [database portability evidence](docs/evidence/database-portability-2026-11-07/README.md).
 
 ## [2026-11-07] - Conventional Forum theme
 
