@@ -1,0 +1,135 @@
+{
+  "version": "0ab71f5ca65e7fa0",
+  "checked_at_utc": "2026-11-08T04:27:51Z",
+  "host": "https://forum.candidary.online",
+  "home_status": 200,
+  "home_references": [
+    "/assets/dist/app-9b906acd1f6f64c8.js",
+    "/assets/dist/app-style-diYLPve0.css",
+    "/assets/dist/forum-base-style-DsiQn3Ye.css",
+    "/assets/dist/forum-theme-style-CNIV-nj8.css"
+  ],
+  "home_references_all_in_release": true,
+  "home_references_subset_of_manifest_urls": true,
+  "preload_link_references": [
+    "/assets/dist/app-9b906acd1f6f64c8.js",
+    "/assets/dist/app-style-diYLPve0.css",
+    "/assets/dist/forum-base-style-DsiQn3Ye.css",
+    "/assets/dist/forum-theme-style-CNIV-nj8.css"
+  ],
+  "release_files_checked": 11,
+  "release_files_matched": 11,
+  "release_files": [
+    {
+      "url": "/assets/dist/app-9b906acd1f6f64c8.js",
+      "status": 200,
+      "sha256": "9b906acd1f6f64c80fd84bbebdb7c73ec03f5868b6f5d16647d39e3c893810e3",
+      "expected": "9b906acd1f6f64c80fd84bbebdb7c73ec03f5868b6f5d16647d39e3c893810e3",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/app-style-diYLPve0.css",
+      "status": 200,
+      "sha256": "5cd49db5135263e2422446bee6995b34cba60eb8f714c037ae57befb24f90ef4",
+      "expected": "5cd49db5135263e2422446bee6995b34cba60eb8f714c037ae57befb24f90ef4",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/composer-004f699d19dc5157.js",
+      "status": 200,
+      "sha256": "004f699d19dc51578025ea06f7aedfa869c556ce01f7aab5d50d5e2515e4f4a0",
+      "expected": "004f699d19dc51578025ea06f7aedfa869c556ce01f7aab5d50d5e2515e4f4a0",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+      "status": 200,
+      "sha256": "74964ff3b56c482d0398a495f859da1170743588baebb4d610107cc90b05d841",
+      "expected": "74964ff3b56c482d0398a495f859da1170743588baebb4d610107cc90b05d841",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/forum-base-style-DsiQn3Ye.css",
+      "status": 200,
+      "sha256": "b55ab9eb913c1c37116e8aad3dbc55fcf8190fd69af67bd7ce9b7c3861588899",
+      "expected": "b55ab9eb913c1c37116e8aad3dbc55fcf8190fd69af67bd7ce9b7c3861588899",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/forum-theme-style-CNIV-nj8.css",
+      "status": 200,
+      "sha256": "9b3d799538defa568122a8678ab03d7ea04a2c651144b733fc86c1baa1983bfc",
+      "expected": "9b3d799538defa568122a8678ab03d7ea04a2c651144b733fc86c1baa1983bfc",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/milkdown-adapter-DXUybFX0.js",
+      "status": 200,
+      "sha256": "14cb2e8d2e98bd8db7adf8674c941f25d796854f1b23ea098e8e0926c064856e",
+      "expected": "14cb2e8d2e98bd8db7adf8674c941f25d796854f1b23ea098e8e0926c064856e",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/passkeys-abc14d1e680e3beb.js",
+      "status": 200,
+      "sha256": "abc14d1e680e3beba1e355500b318e90239694abef67b845b216da43ee890b41",
+      "expected": "abc14d1e680e3beba1e355500b318e90239694abef67b845b216da43ee890b41",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/tour-4573ee743ebaf07c.js",
+      "status": 200,
+      "sha256": "4573ee743ebaf07cf88c8892aa4b718a168a24b17e057bc684c053032578be59",
+      "expected": "4573ee743ebaf07cf88c8892aa4b718a168a24b17e057bc684c053032578be59",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+      "status": 200,
+      "sha256": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
+      "expected": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-XlKwRXnh.js",
+      "status": 200,
+      "sha256": "5695624172f4209d6686552645ed60e69ba4cbf9d8ef61c8f32fa140c08d7369",
+      "expected": "5695624172f4209d6686552645ed60e69ba4cbf9d8ef61c8f32fa140c08d7369",
+      "match": true,
+      "cache_control": "public, max-age=31536000, immutable",
+      "x_retroboards_cache": "STATIC"
+    }
+  ],
+  "retained_files_checked": 26,
+  "retained_files_matched": 26,
+  "retained_files_mismatched": [],
+  "unlisted_control": {
+    "url": "/assets/dist/app-style-rbProbe0.css",
+    "status": 404,
+    "cache_control": "no-store"
+  },
+  "health": {
+    "status": 200,
+    "body": "{\"status\":\"ok\",\"database\":\"ok\"}"
+  }
+}

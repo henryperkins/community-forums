@@ -1,0 +1,16 @@
+vite v8.3.5 building client environment for production...
+transforming...
+✓ 866 modules transformed.
+rendering chunks...
+computing gzip size...
+../../../../tmp/retroboards-assets-R1lEZr/.vite/manifest.json               1.18 kB │ gzip:   0.34 kB
+../../../../tmp/retroboards-assets-R1lEZr/wysiwyg-composer-BRAFF38E.css     1.12 kB │ gzip:   0.49 kB
+../../../../tmp/retroboards-assets-R1lEZr/forum-theme-style-Df3cy6rv.css   25.90 kB │ gzip:   6.29 kB
+../../../../tmp/retroboards-assets-R1lEZr/forum-base-style-CuKEinPx.css    98.89 kB │ gzip:  16.32 kB
+../../../../tmp/retroboards-assets-R1lEZr/app-style-CptmPCYs.css          486.37 kB │ gzip:  74.00 kB
+../../../../tmp/retroboards-assets-R1lEZr/wysiwyg-composer-XlKwRXnh.js      1.66 kB │ gzip:   0.88 kB
+../../../../tmp/retroboards-assets-R1lEZr/milkdown-adapter-DXUybFX0.js    467.21 kB │ gzip: 140.26 kB
+
+✓ built in 292ms
+Built 37 delivery files; staged 45 public assets for Workers.
+exit=0

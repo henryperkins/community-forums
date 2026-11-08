@@ -1,0 +1,90 @@
+{
+  "label": "1b-unrecorded-all-four",
+  "version": "d3ee56066cd40e83",
+  "releases": [
+    "d3ee56066cd40e83",
+    "5dc1b40f3b23d46d",
+    "c66e3b55dba6da68",
+    "3630440af0d45598"
+  ],
+  "deployedReleases": [
+    "5dc1b40f3b23d46d",
+    "c66e3b55dba6da68",
+    "3630440af0d45598"
+  ],
+  "manifest_file_count": 45,
+  "live_release_files_missing": [
+    "/assets/dist/app-9b906acd1f6f64c8.js",
+    "/assets/dist/app-style-diYLPve0.css",
+    "/assets/dist/forum-base-style-DsiQn3Ye.css",
+    "/assets/dist/forum-theme-style-CNIV-nj8.css"
+  ],
+  "live_release_files": [
+    {
+      "url": "/assets/dist/app-9b906acd1f6f64c8.js",
+      "in_manifest_files": false,
+      "in_public_dist": false,
+      "in_build_static": false
+    },
+    {
+      "url": "/assets/dist/app-style-diYLPve0.css",
+      "in_manifest_files": false,
+      "in_public_dist": false,
+      "in_build_static": false
+    },
+    {
+      "url": "/assets/dist/composer-004f699d19dc5157.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/forum-base-style-DsiQn3Ye.css",
+      "in_manifest_files": false,
+      "in_public_dist": false,
+      "in_build_static": false
+    },
+    {
+      "url": "/assets/dist/forum-theme-style-CNIV-nj8.css",
+      "in_manifest_files": false,
+      "in_public_dist": false,
+      "in_build_static": false
+    },
+    {
+      "url": "/assets/dist/milkdown-adapter-DXUybFX0.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/passkeys-abc14d1e680e3beb.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/tour-4573ee743ebaf07c.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-XlKwRXnh.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    }
+  ]
+}
