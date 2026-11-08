@@ -29,6 +29,7 @@ final class AdminSettingsService
         private ModerationLogRepository $log,
         private WriteGate $writeGate,
         private FeatureFlags $features,
+        private AntiAbuseService $antiAbuse,
         private ?BrandingRevisionService $branding = null,
     ) {
     }
@@ -56,7 +57,7 @@ final class AdminSettingsService
     public function moderationModel(array $overlay = []): array
     {
         return array_replace([
-            'antiabuse_mode' => $this->settings->getString('antiabuse_mode', 'observe'),
+            'antiabuse_mode' => $this->antiAbuse->mode(),
             'antiabuse_blocked_words' => (array) $this->settings->get('antiabuse_blocked_words', []),
             'antiabuse_modes' => self::ANTI_ABUSE_MODES,
             'settings_errors' => [],
@@ -154,7 +155,7 @@ final class AdminSettingsService
         $words = array_values($words);
 
         $before = [
-            'antiabuse_mode' => $this->settings->getString('antiabuse_mode', 'observe'),
+            'antiabuse_mode' => $this->antiAbuse->mode(),
             'antiabuse_blocked_words' => (array) $this->settings->get('antiabuse_blocked_words', []),
         ];
         $after = [

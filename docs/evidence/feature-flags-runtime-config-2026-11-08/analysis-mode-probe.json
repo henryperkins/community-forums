@@ -1,0 +1,52 @@
+{
+  "recorded_at_utc": "2026-11-08T00:25:43+00:00",
+  "revision_context": "b1d2a591b3846fda586cd66ffd2346438de8286c",
+  "boundary": "Direct HEAD service methods with real PDO SQLite in-memory SELECTs. This is a reproduction of mode resolution, not a MySQL, HTTP, browser or full-suite result.",
+  "observations": [
+    {
+      "case": "no stored override",
+      "configured_mode": "observe",
+      "runtime_mode": "observe",
+      "admin_form_mode": "observe"
+    },
+    {
+      "case": "no stored override",
+      "configured_mode": "hold",
+      "runtime_mode": "hold",
+      "admin_form_mode": "observe"
+    },
+    {
+      "case": "no stored override",
+      "configured_mode": "block",
+      "runtime_mode": "block",
+      "admin_form_mode": "observe"
+    },
+    {
+      "case": "stored override",
+      "configured_mode": "block",
+      "stored_override": "hold",
+      "runtime_mode": "hold",
+      "admin_form_mode": "hold"
+    },
+    {
+      "case": "stored override",
+      "configured_mode": "block",
+      "stored_override": "",
+      "runtime_mode": "block",
+      "admin_form_mode": ""
+    },
+    {
+      "case": "stored override",
+      "configured_mode": "block",
+      "stored_override": "invalid-mode",
+      "runtime_mode": "observe",
+      "admin_form_mode": "invalid-mode"
+    }
+  ],
+  "source_sha256": {
+    "src/Service/AdminSettingsService.php": "af409f79162965c14756ca6d35674083d51e53780dbea3e1c8aaecf9ddb289a2",
+    "src/Service/AntiAbuseService.php": "2edb2de97a4d84a6fd351cabd9cf80380ad9bb57f8e296868aaac5e31407668a",
+    "src/Repository/SettingRepository.php": "69796c1724f769e3dc8598324e79c57b28996e7ae4802fa1485be2a2589369a2",
+    "src/Core/Config.php": "cee873a3a21d977bbd14e0a25f662c76d54b7fc30e09169168dc6ddaf87ed3a5"
+  }
+}
