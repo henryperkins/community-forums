@@ -2,6 +2,19 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-08] - Living Brief citation anchors and subset-citation rendering
+
+- Fix ADR 0026 Finding F1: an AI generation citing a subset of its evidence
+  window published but never rendered, because the view gate required the
+  citation union to equal the evidence-pack union. The gate now compares the
+  stored citations against the currently safe cited sources (ADR 0058).
+- Add ADR 0026 §4 claim citations: the validator composes plain-text `[^n]`
+  markers from the structured citations, and the thread page upgrades them to
+  superscript anchors resolving to the cited posts, in source-list order.
+  Model prose that already contains `[^n]` is rejected. Only `kind = ai`
+  briefs are rewritten, and an ordinal with no listed source is removed.
+  Cite presentation is in the unlayered Forum theme.
+
 ## [2026-11-08] - Readable registry blocklist rows
 
 - Keep blocked package identifiers and reasons readable on narrow screens;

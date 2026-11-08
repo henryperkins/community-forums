@@ -123,6 +123,9 @@ sweep, when someone runs it, knows this block was skipped on purpose.
 
 ## Deferrals (owned, not dropped)
 
+> **Resolution note (2026-11-08):** Deferral 2 (§4) and Finding F1 below were
+> resolved together by ADR 0058. Deferral 1 (§2b) and Finding F2 remain open.
+
 **1 — §2b, the "last verified brief" status line.**
 The handoff asked to collapse two stacked status bands into one, with last-good
 winning over paused. No last-good state exists anywhere in the member view model.

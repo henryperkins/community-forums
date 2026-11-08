@@ -500,6 +500,11 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
 .inbox-empty-star, .search-state-icon, .board-empty-mark, .dm-empty-mark { color: var(--text-muted); opacity: 1; }
 .board-empty-mark.icon, .dm-empty-mark.icon { width: 30px; height: 30px; }
 .living-brief-mark .icon-sparkle { width: 12px; height: 12px; }
+/* Unlayered so cite links beat the prose underline rule and the application
+   layer. The later forced-colors rule still underlines .post-body a. */
+.living-brief-cite { font-family: var(--font-meta); font-size: max(var(--text-floor), .68rem); line-height: 0; }
+.living-brief-cite a { color: var(--accent); text-decoration: none; }
+.living-brief-cite a:hover { text-decoration: underline; }
 .topic-tools-open .icon, .topic-tools-mark .icon { width: 16px; height: 16px; color: currentColor; }
 
 /* Stored style keys are retained for compatibility; the old font families are

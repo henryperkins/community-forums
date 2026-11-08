@@ -83,7 +83,7 @@ final class ThreadIntelligenceViewService
             $aiCurrent = !$isAi || (
                 (string) $thread['board_visibility'] === 'public'
                 && $activeGenerationId !== null
-                && $this->aiSourcesAreCurrent($activeGenerationId, $threadId, $sources)
+                && $this->aiSourcesAreCurrent($activeGenerationId, (int) $summary['id'], $threadId, $sources)
             );
             if ($aiCurrent) {
                 $livingBrief = $this->brief($summary, $lineage['has_ai_ancestor']);
@@ -231,8 +231,11 @@ final class ThreadIntelligenceViewService
         return $safe;
     }
 
-    /** @param list<array<string,mixed>> $sources */
-    private function aiSourcesAreCurrent(int $generationId, int $threadId, array $sources): bool
+    /**
+     * @param list<array<string,mixed>> $sources the summary's safe (currently
+     * readable) cited sources, as returned by sources()
+     */
+    private function aiSourcesAreCurrent(int $generationId, int $summaryId, int $threadId, array $sources): bool
     {
         $encoded = $this->db->fetchValue(
             'SELECT source_post_ids FROM thread_intelligence_generations WHERE id = ?',
@@ -241,11 +244,18 @@ final class ThreadIntelligenceViewService
         if (!is_string($encoded)) {
             return false;
         }
-        $expected = json_decode($encoded, true);
-        if (!is_array($expected) || !array_is_list($expected)) {
+        $evidence = json_decode($encoded, true);
+        if (!is_array($evidence) || !array_is_list($evidence)) {
             return false;
         }
-        $expected = array_map('intval', $expected);
+        $evidence = array_map('intval', $evidence);
+
+        // A stored citation missing from the safe list means that source dropped.
+        // Suppress the brief so the remaining ordinals do not move.
+        $cited = array_map('intval', array_column($this->db->fetchAll(
+            'SELECT post_id FROM thread_summary_sources WHERE summary_id = ?',
+            [$summaryId],
+        ), 'post_id'));
         $current = [];
         foreach ($sources as $source) {
             if ((int) $source['thread_id'] !== $threadId || (string) $source['board_visibility'] !== 'public') {
@@ -253,9 +263,12 @@ final class ThreadIntelligenceViewService
             }
             $current[] = (int) $source['id'];
         }
-        sort($expected, SORT_NUMERIC);
+        sort($cited, SORT_NUMERIC);
         sort($current, SORT_NUMERIC);
-        return $expected === $current;
+        if ($cited !== $current) {
+            return false;
+        }
+        return array_diff($cited, $evidence) === [];
     }
 
     /** @param array<string,mixed> $summary @return array<string,mixed> */
@@ -285,6 +298,7 @@ final class ThreadIntelligenceViewService
             'version' => (int) $summary['version'],
             'label' => $label,
             'metadata' => $metadata,
+            'kind' => (string) $summary['kind'],
             'has_ai_lineage' => $hasAiAncestor,
             'published_at' => $time->format('Y-m-d H:i:s') . ' UTC',
             'published_at_utc' => $time->format('Y-m-d\TH:i:s\Z'),

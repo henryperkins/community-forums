@@ -113,6 +113,96 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertSame($summaryId, (int) $this->db->fetchValue('SELECT id FROM thread_summaries WHERE id = ?', [$summaryId]));
     }
 
+    public function test_subset_citation_brief_renders_and_only_cited_sources_gate_it(): void
+    {
+        // ADR 0058 / ADR 0026 F1: a real generation stores the full evidence
+        // window (8 posts) on the generation row but only the cited subset on
+        // the summary. The brief must render for that subset.
+        $seed = $this->seedThread(8, 'Subset citation topic');
+        $cited = [$seed['post_ids'][0], $seed['post_ids'][7]];
+        $uncited = $seed['post_ids'][3];
+        $this->insertAiBrief($seed['thread_id'], $cited, 'Subset AI brief', $seed['post_ids']);
+
+        $model = $this->viewService()->forThread($seed['thread_id'], null);
+        self::assertNotNull($model['living_brief'], 'subset-citation brief renders');
+        self::assertSame($cited, array_map('intval', array_column($model['sources'], 'id')));
+
+        // An uncited evidence post becoming unsafe changes no claim: no suppression.
+        $this->db->run('UPDATE posts SET is_pending = 1 WHERE id = ?', [$uncited]);
+        $stillShown = $this->viewService()->forThread($seed['thread_id'], null);
+        self::assertNotNull($stillShown['living_brief'], 'uncited source state does not suppress the brief');
+        $this->db->run('UPDATE posts SET is_pending = 0 WHERE id = ?', [$uncited]);
+
+        // A cited source becoming unsafe suppresses the whole brief, so the
+        // surviving citation ordinals can never shift under a reader.
+        $this->db->run('UPDATE posts SET is_pending = 1 WHERE id = ?', [$cited[1]]);
+        $suppressed = $this->viewService()->forThread($seed['thread_id'], null);
+        self::assertNull($suppressed['living_brief'], 'unsafe cited source suppresses the brief');
+        self::assertSame([], $suppressed['sources']);
+    }
+
+    public function test_brief_citation_markers_become_source_anchors_on_the_thread_page(): void
+    {
+        $seed = $this->seedThread(8, 'Citation anchor topic');
+        $cited = [$seed['post_ids'][0], $seed['post_ids'][7]];
+        [$summaryId] = $this->insertAiBrief($seed['thread_id'], $cited, 'unused', $seed['post_ids']);
+        $this->db->run(
+            'UPDATE thread_summaries SET body = ?, body_html = ? WHERE id = ?',
+            ['A claim [^1] and another [^2].', '<p>A claim [^1] and another [^2].</p>', $summaryId],
+        );
+
+        $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+        self::assertStringNotContainsString('[^1]', $html, 'plain-text markers are upgraded, not shown raw');
+        self::assertStringContainsString('<sup class="living-brief-cite"><a href="/t/' . $seed['thread_id'] . '-' . $seed['slug'] . '#p' . $cited[0] . '"', $html);
+        self::assertStringContainsString('#p' . $cited[1] . '" aria-label="Source post #' . $cited[1] . '">2</a></sup>', $html);
+    }
+
+    public function test_out_of_range_citation_markers_are_removed_on_the_thread_page(): void
+    {
+        $seed = $this->seedThread(8, 'Stray citation marker topic');
+        $cited = [$seed['post_ids'][0]];
+        [$summaryId] = $this->insertAiBrief($seed['thread_id'], $cited, 'unused', $seed['post_ids']);
+        $this->db->run(
+            'UPDATE thread_summaries SET body = ?, body_html = ? WHERE id = ?',
+            ['Cited [^1] and stray [^7].', '<p>Cited [^1] and stray [^7].</p>', $summaryId],
+        );
+
+        $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+        self::assertStringNotContainsString('[^1]', $html);
+        self::assertStringNotContainsString('[^7]', $html);
+        self::assertStringContainsString('#p' . $cited[0] . '" aria-label="Source post #' . $cited[0] . '">1</a></sup>', $html);
+        self::assertStringContainsString('and stray .', $html);
+    }
+
+    public function test_curator_amendment_keeps_literal_markers_when_a_cited_source_drops(): void
+    {
+        $seed = $this->seedThread(8, 'Curator amendment markers');
+        $cited = [$seed['post_ids'][1], $seed['post_ids'][7]];
+        [$aiId] = $this->insertAiBrief($seed['thread_id'], $cited, 'AI body', $seed['post_ids']);
+        $curator = $this->makeUser();
+        $manualId = $this->db->insert(
+            "INSERT INTO thread_summaries
+                (thread_id, kind, status, body, body_html, version, author_id, reviewer_id, parent_summary_id, published_at, created_at)
+             VALUES (?, 'manual', 'published', ?, ?, 2, ?, NULL, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+            [$seed['thread_id'], 'Edited [^1] claim.', '<p>Edited [^1] claim.</p>', $curator['id'], $aiId],
+        );
+        foreach ($cited as $postId) {
+            $this->db->run('INSERT INTO thread_summary_sources (summary_id, post_id) VALUES (?, ?)', [$manualId, $postId]);
+        }
+        $this->db->run('UPDATE posts SET is_pending = 1 WHERE id = ?', [$cited[0]]);
+
+        $page = $this->get('/t/' . $seed['thread_id'] . '-' . $seed['slug']);
+        $this->assertStatus(200, $page);
+        $html = $page->body();
+        self::assertStringContainsString('AI-generated · curator edited', $html);
+        self::assertStringContainsString('Edited [^1] claim.', $html);
+        self::assertStringNotContainsString('living-brief-cite', $html);
+    }
+
     public function test_thread_dom_order_has_one_memory_slot_no_empty_panel_and_public_disclosure(): void
     {
         $seed = $this->seedThread(8, 'Rendered living brief');
@@ -998,8 +1088,14 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         return ['thread_id' => (int) $thread['thread_id'], 'slug' => $thread['slug'], 'board' => $board, 'post_ids' => $postIds];
     }
 
-    /** @param list<int> $sourcePostIds @return array{int,int} */
-    private function insertAiBrief(int $threadId, array $sourcePostIds, string $body): array
+    /**
+     * @param list<int> $sourcePostIds citation union stored on the summary
+     * @param list<int>|null $generationSourcePostIds evidence-pack union stored
+     * on the generation; defaults to the citation union (the pre-ADR-0058
+     * fixture shape). Pass the full evidence window to model a real worker run.
+     * @return array{int,int}
+     */
+    private function insertAiBrief(int $threadId, array $sourcePostIds, string $body, ?array $generationSourcePostIds = null): array
     {
         $summaryId = $this->db->insert(
             "INSERT INTO thread_summaries
@@ -1014,7 +1110,7 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
             "INSERT INTO thread_intelligence_generations
                 (thread_id, trigger_code, status, published_summary_id, source_post_ids, requested_at, completed_at, published_at)
              VALUES (?, 'post_created', 'published', ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP())",
-            [$threadId, $summaryId, json_encode($sourcePostIds, JSON_THROW_ON_ERROR)],
+            [$threadId, $summaryId, json_encode($generationSourcePostIds ?? $sourcePostIds, JSON_THROW_ON_ERROR)],
         );
         return [$summaryId, $generationId];
     }

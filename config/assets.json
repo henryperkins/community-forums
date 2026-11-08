@@ -1,9 +1,9 @@
 {
-  "version": "c0ff610c8c690556",
+  "version": "11b63fb564c36ce9",
   "urls": {
     "forum-base.css": "/assets/dist/forum-base-style-DsiQn3Ye.css",
     "app.css": "/assets/dist/app-style-diYLPve0.css",
-    "forum-theme.css": "/assets/dist/forum-theme-style-Dp3f7HoX.css",
+    "forum-theme.css": "/assets/dist/forum-theme-style-Ba2Ycb6L.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
     "app.js": "/assets/dist/app-9b906acd1f6f64c8.js",
     "composer.js": "/assets/dist/composer-004f699d19dc5157.js",
@@ -113,16 +113,16 @@
       "sha256": "b55ab9eb913c1c37116e8aad3dbc55fcf8190fd69af67bd7ce9b7c3861588899",
       "immutable": true
     },
+    "/assets/dist/forum-theme-style-Ba2Ycb6L.css": {
+      "sha256": "1bd3081a4ba2d1310aec9ba25fb46eb05bb7b141ba1767f206394397a86fc5a2",
+      "immutable": true
+    },
     "/assets/dist/forum-theme-style-C35sAGgP.css": {
       "sha256": "9409ca0b32aaa07595e2f56dbb2e1c6df01835d8e24f480c0aa5c0f4cd64fe89",
       "immutable": true
     },
     "/assets/dist/forum-theme-style-CNIV-nj8.css": {
       "sha256": "9b3d799538defa568122a8678ab03d7ea04a2c651144b733fc86c1baa1983bfc",
-      "immutable": true
-    },
-    "/assets/dist/forum-theme-style-Dp3f7HoX.css": {
-      "sha256": "ccaf67715a389d56b2af9fe0050adcd1eaac2621f5f6766867717c3df015721e",
       "immutable": true
     },
     "/assets/dist/imladris-style-DmYWEV0N.css": {
@@ -170,7 +170,7 @@
       "immutable": false
     },
     "/assets/forum-theme.css": {
-      "sha256": "caac57532f9187f93988a3df400b94bb4404cb0c933d681b1d1331c3f7c8f254",
+      "sha256": "f6ded1d41787fe53b3a769d620ee437717ae92b901579fe9237d4e90e4262339",
       "immutable": false
     },
     "/assets/passkeys.js": {
@@ -184,14 +184,14 @@
   },
   "releases": [
     {
-      "version": "c0ff610c8c690556",
+      "version": "11b63fb564c36ce9",
       "files": [
         "/assets/dist/app-9b906acd1f6f64c8.js",
         "/assets/dist/app-style-diYLPve0.css",
         "/assets/dist/composer-004f699d19dc5157.js",
         "/assets/dist/conversation-entry-74964ff3b56c482d.js",
         "/assets/dist/forum-base-style-DsiQn3Ye.css",
-        "/assets/dist/forum-theme-style-Dp3f7HoX.css",
+        "/assets/dist/forum-theme-style-Ba2Ycb6L.css",
         "/assets/dist/milkdown-adapter-DXUybFX0.js",
         "/assets/dist/passkeys-abc14d1e680e3beb.js",
         "/assets/dist/tour-4573ee743ebaf07c.js",
