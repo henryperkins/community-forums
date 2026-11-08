@@ -1,0 +1,18 @@
+{
+    "server": "10.11.19-MariaDB-ubu2204",
+    "historical_migrations": 85,
+    "legacy_collation": "utf8mb4_general_ci",
+    "new_column": {
+        "collation_name": "utf8mb4_bin",
+        "capacity": 48,
+        "nullable": "NO"
+    },
+    "preserved_rows": 3,
+    "first_up_alters": 1,
+    "second_up_alters": 0,
+    "prepare_modes": [
+        "emulated",
+        "native"
+    ],
+    "result": "passed"
+}

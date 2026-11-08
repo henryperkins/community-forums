@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.48 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-10-31
+**Status:** v1.49 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-11-07
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [PRODUCT_DESIGN.md](PRODUCT_DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -373,7 +373,7 @@ CREATE TABLE reactions (
   id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   post_id    BIGINT UNSIGNED NOT NULL,
   user_id    BIGINT UNSIGNED NOT NULL,
-  emoji      VARCHAR(48)     NOT NULL,                      -- widened by migration 0058 for custom emoji shortcodes
+  emoji      VARCHAR(48) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL, -- 0058 shortcode capacity; 0086 distinct Unicode identity
   created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_reaction (post_id, user_id, emoji),         -- one per (user, post, emoji)
@@ -1361,6 +1361,7 @@ The following candidates remain unspecced/uncommitted as of 2026-09-23. A mentio
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.49 | 2026-11-07 | Migration `0086` sets `reactions.emoji` to `utf8mb4_bin`, preserving `VARCHAR(48) NOT NULL` and existing values while distinguishing supplementary-plane emoji in unique keys, toggles and grouped counts. The ALTER is guarded for safe replay; `down()` retains the correction because a lossy collation could collapse distinct reactions. Other emoji catalogue keys are normalized ASCII shortcodes, not Unicode reaction keys. |
 | v1.48 | 2026-10-31 | Added migration `0085`'s `branding_drafts` (table #118, §3): one private unpublished branding document per administrator with its base revision (ADR 0054 increment 2b). Draft uploads reuse `attachments` with `visibility = 'private'` until published; no attachment schema change. |
 | v1.47 | 2026-10-31 | Added migration `0084`'s append-only `branding_revisions` (table #117, §3) for versioned branding, history and restore (ADR 0054). The live pointer is the existing `settings.brand_revision` key; brand media stays referenced by `/media/{id}` paths and is never purged. |
 | v1.46 | 2026-10-07 | Added migration `0083`'s explicit `thread_user.snoozed_indefinitely` state for hiding until manually restored. Folded the existing `0048` deadline, note and snooze index into the table definition and removed their stale foreshadowing comment. |

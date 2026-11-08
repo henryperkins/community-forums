@@ -103,6 +103,11 @@ compact JSON whitespace while MySQL returns its normalized representation.
 These backend paths were left outside this theme change. The baseline findings
 explain the qualification limit; they do not turn failed tests into passes.
 
+**Backend follow-up, 2026-11-07:** the locking, JSON-assertion and emoji-identity
+corrections and their completed cross-engine qualification are recorded in
+[database portability evidence](../database-portability-2026-11-07/README.md).
+The original theme-run results above remain the historical record.
+
 ## Browser scope and environment
 
 The browser evidence uses headless Chromium 153 on Linux. Desktop is

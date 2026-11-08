@@ -243,13 +243,18 @@ final class ThreadIntelligenceQueue
      */
     private function lockCurrentVisibilityOrFail(int $threadId): ?array
     {
+        // MySQL requires FOR SHARE for SKIP LOCKED; MariaDB retains its
+        // legacy spelling. Both must keep shared locks on the source board.
+        $sharedLock = stripos((string) $this->db->pdo()->getAttribute(\PDO::ATTR_SERVER_VERSION), 'MariaDB') !== false
+            ? 'LOCK IN SHARE MODE'
+            : 'FOR SHARE';
         try {
             $current = $this->db->fetch(
                 'SELECT t.id, t.is_deleted, t.is_pending, b.visibility
                  FROM threads t
                  STRAIGHT_JOIN boards b ON b.id = t.board_id
                  WHERE t.id = ?
-                 LOCK IN SHARE MODE SKIP LOCKED',
+                 ' . $sharedLock . ' SKIP LOCKED',
                 [$threadId],
             );
         } catch (PDOException $e) {

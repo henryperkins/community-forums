@@ -259,7 +259,15 @@ final class AdminAuditPageTest extends TestCase
         );
         self::assertStringContainsString('<span class="audit-target">Board #42</span>', $body);
         self::assertStringContainsString('<details class="audit-change">', $body);
-        self::assertStringContainsString('Before: <code>{&quot;status&quot;:&quot;active&quot;}</code>', $body);
+        // MySQL normalizes JSON whitespace; MariaDB retains the inserted text.
+        // Assert the rendered raw data, independent of its storage formatting.
+        foreach (['Before' => '{"status":"active"}', 'After' => '{"status":"suspended"}'] as $label => $expected) {
+            self::assertSame(1, preg_match('~' . $label . ': <code>(.*?)</code>~s', $body, $match));
+            self::assertJsonStringEqualsJsonString(
+                $expected,
+                html_entity_decode($match[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            );
+        }
         self::assertStringNotContainsString('aria-label="Pagination"', $body);
     }
 }
