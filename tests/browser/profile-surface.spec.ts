@@ -777,7 +777,8 @@ test('Commends meets contrast in both themes and every empty state keeps the sha
   await expect(card.locator('.profile-regard-value')).toHaveText('5,140');
   // The raised surface with a gold hairline, not the source's gold-100 wash.
   await expect(card).toHaveCSS('background-image', 'none');
-  await expect(page.locator('.profile-commend-list > h2')).toHaveCSS('text-transform', 'uppercase');
+  // ADR 0057: section headings are sentence case, not CSS capitals.
+  await expect(page.locator('.profile-commend-list > h2')).toHaveCSS('text-transform', 'none');
 
   for (const theme of ['light', 'dark'] as const) {
     await capture(page, info, 'guest-commends', theme);

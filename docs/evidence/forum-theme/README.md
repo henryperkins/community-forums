@@ -243,3 +243,19 @@ published assets are retained for already-open pages; see
 [asset-retention.md](asset-retention.md). The candidate is not marked deployed.
 Merge, deployment, live asset-byte verification and production behavior checks
 remain separate outcomes from this local implementation and review.
+
+### Publication of `b1d2a59`
+
+PR #93 merged to `main` as `b1d2a59`. The account that recorded this could not
+read Cloud Build, Cloud Run or Workers Builds, so no build or revision receipts
+are included. At 00:03 UTC on 2026-11-08 the public site served this release:
+all 11 delivery files of `5dc1b40f3b23d46d` matched the manifest byte for byte,
+the home page and its preload `Link` header referenced only those files (and no
+Imladris stylesheet), and `/healthz` answered
+`{"status":"ok","database":"ok"}`
+([`live-verify-5dc1b40f3b23d46d.json`](production/live-verify-5dc1b40f3b23d46d.json)).
+The live release was then recorded with
+`npm run assets:record-release -- 5dc1b40f3b23d46d`, and `npm run check:assets`
+passed (`production/asset-record-*-5dc1b40f3b23d46d.log`). That record retires
+`67ba8434286ff7e6` and its one exclusive file (`app-style-BQrKPQLm.css`), and
+rides with the next planned change (ADR 0051).

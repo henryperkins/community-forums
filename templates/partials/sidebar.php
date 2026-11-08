@@ -1,15 +1,14 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 /**
- * The board rail — the design system's BoardRail
- * (docs/design-system/imladris/components/forum/BoardRail.jsx), rendered
- * server-side (ADRs 0032, 0046). Directory navigation, boards, personal folders and saved feeds, with the
+ * The board rail, rendered server-side (ADRs 0032, 0046); its structure
+ * originated in the retired Imladris BoardRail design. Directory navigation, boards, personal folders and saved feeds, with the
  * active board marked the same way on every surface that has one; the presence
  * widget hangs in the footer slot, so the same roster and the same "See everyone
  * online" travel with the member across every route.
  *
- * The class vocabulary is the design's own and the layered /assets/imladris.css
- * styles it; app.css adds only what the layer cannot express (the sticky desktop
+ * The established .board-rail* vocabulary is styled by forum-base.css and the
+ * Forum presentation; app.css adds only what those cannot express (the sticky desktop
  * rail, the phone drawer, the persisted rail-closed state, the picker's button
  * reset) — see its "Member chrome" block.
  *

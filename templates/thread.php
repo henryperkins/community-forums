@@ -127,8 +127,8 @@ $this->start('subheader_leading');
             ]) ?>
         <?php endif; ?>
         <?php if ($hasTopicTools): ?>
-            <a class="topic-tools-open" data-topic-tools-fallback href="#topic-tools-<?= (int) $thread['id'] ?>"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?><span>Topic tools</span><?php if ($watchLabel !== null): ?><span class="topic-tools-watch">· <?= $e($watchLabel) ?></span><?php endif; ?></a>
-            <button type="button" class="topic-tools-open" data-topic-tools-open hidden aria-controls="topic-tools-<?= (int) $thread['id'] ?>" aria-expanded="false"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?><span>Topic tools</span><?php if ($watchLabel !== null): ?><span class="topic-tools-watch">· <?= $e($watchLabel) ?></span><?php endif; ?></button>
+            <a class="topic-tools-open" data-topic-tools-fallback href="#topic-tools-<?= (int) $thread['id'] ?>"><?= $this->partial('partials/icon', ['name' => 'settings']) ?><span>Topic tools</span><?php if ($watchLabel !== null): ?><span class="topic-tools-watch">· <?= $e($watchLabel) ?></span><?php endif; ?></a>
+            <button type="button" class="topic-tools-open" data-topic-tools-open hidden aria-controls="topic-tools-<?= (int) $thread['id'] ?>" aria-expanded="false"><?= $this->partial('partials/icon', ['name' => 'settings']) ?><span>Topic tools</span><?php if ($watchLabel !== null): ?><span class="topic-tools-watch">· <?= $e($watchLabel) ?></span><?php endif; ?></button>
         <?php endif; ?>
         </div>
         </div>

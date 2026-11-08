@@ -2,6 +2,39 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-08] - Forum theme refinement and Imladris retirement
+
+- Set metadata, labels, chips, tabs and table headers in the interface face
+  at 14px or larger (at the default text size), in sentence case with normal
+  letter spacing, across member, operator and moderation screens. Labels built
+  from stored values, such as report statuses, roles, board access and ban
+  periods, are now cased where they are rendered. New tokens `--font-meta` and
+  `--text-floor`; `--font-mono` is reserved for code and exact identifiers
+  such as slugs, ids, shortcodes, paths and versions.
+- Set posts, messages and the composer in the reader's own `sans-serif`
+  face instead of `system-ui`, which is meant for interface text.
+- Centre labels on link-styled controls, including the phone order sheet;
+  keep the Online list's You and Staff tags whole beside long names, also in
+  rows the presence poll redraws; stop the composer's board picker breaking a
+  name mid-word; colour the Online heading as a link.
+- Keep the topic's reply or guest dock in the page flow on viewports at most
+  480px high, such as 400% zoom, and drop the scroll padding reserved for it
+  there, so it no longer covers focused posts.
+- Replace Imladris marks: a five-point star for Star and commends, a settings
+  mark for Topic tools, a sparkle only for Living Briefs, and neutral
+  empty-state marks.
+- Make the admin bar a banner landmark, give labelled draft and queue
+  sections a group role, promote branding section headings to h2, and append
+  the community name to page titles.
+- Retire the Imladris build: remove its builder, source bundle, generated
+  `imladris.css`, design digest, web fonts and star asset, and stop publishing
+  the fonts and star. Stored compatibility keys, infrastructure names and the
+  retained releases' fingerprinted files are unchanged.
+- Re-review UI libraries and platform primitives and withdraw the Bootstrap
+  5.3 fallback; add reading research, contrast-method status and standards
+  context to the accessibility baseline. Qualification:
+  `docs/evidence/forum-refinement/README.md`; ADR 0057.
+
 ## [2026-11-07] - Conventional Forum theme
 
 - Replace the active Imladris presentation with neutral light/dark surfaces,
@@ -20,6 +53,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Retain the verified `c66e3b55dba6da68` inbox-hardening asset release alongside
   the two preceding deployed releases (`3630440af0d45598`, `67ba8434286ff7e6`).
   Qualification: `docs/evidence/forum-theme/README.md`; ADR 0056.
+- Verified on the public site after publication (`5dc1b40f3b23d46d`, all 11
+  delivery files byte-identical) and recorded as deployed, retiring
+  `67ba8434286ff7e6`; receipts are in `docs/evidence/forum-theme/production/`.
 
 ## [2026-11-07] - Inbox reading pane and triage hardening
 

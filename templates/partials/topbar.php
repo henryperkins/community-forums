@@ -1,19 +1,20 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 /**
- * The member chrome's top bar — the design system's ForumNav
- * (docs/design-system/imladris/components/forum/ForumNav.jsx), rendered
- * server-side (ADR 0032).
+ * The member chrome's top bar, rendered server-side (ADR 0032). Its structure
+ * originated in the retired Imladris ForumNav design; the Forum theme now
+ * presents it (ADRs 0056, 0057).
  *
  * One register, identical on every app route: house lockup · surface
  * pills · search · rail toggle · the viewer. Creation lives in the shared
  * subheader (ADR 0043). Below 861px the primary
  * routes use their own row so all labels remain readable; app.js moves that row
  * last in the reading order to match, and a lone route is not drawn there because
- * the lockup leads to the same place (ADR 0042, 2026-10-07). The class vocabulary is
- * the design's own and the layered /assets/imladris.css styles it directly;
- * app.css carries only what the layer cannot express — see its "Member chrome"
- * block. The 2026-08-27 transfer copies of this bar (.topbar*) are retired.
+ * the lockup leads to the same place (ADR 0042, 2026-10-07). The established
+ * .forum-bar* class vocabulary is styled by the layered forum-base.css and the
+ * Forum presentation in forum-theme.css; app.css carries only what those cannot
+ * express — see its "Member chrome" block. The 2026-08-27 transfer copies of this
+ * bar (.topbar*) are retired.
  *
  * What the design does not draw, kept because it is real function here: the
  * off-canvas drawer's hamburger (`.nav-toggle`), operator branding (an uploaded

@@ -62,7 +62,10 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
     <?php if (preg_match('#^/messages/[0-9]+$#', (string) ($request_path ?? '')) === 1): ?>
     <script src="<?= $e($assetUrl('conversation-entry.js')) ?>"></script>
     <?php endif; ?>
-    <title><?= $e($this->block('title', $brand['name'])) ?></title>
+    <?php /* Page first, community second, so tabs and history entries stay
+             distinguishable (ADR 0057). The home page is the community itself. */ ?>
+    <?php $pageTitle = $this->block('title', $brand['name']); ?>
+    <title><?= $e($pageTitle === $brand['name'] ? $pageTitle : $pageTitle . ' · ' . $brand['name']) ?></title>
     <meta name="description" content="<?= $e($desc) ?>">
     <?php if ($robots !== ''): ?><meta name="robots" content="<?= $e($robots) ?>"><?php endif; ?>
     <?php if ($canonical !== ''): ?><link rel="canonical" href="<?= $e($appUrl . $canonical) ?>"><?php endif; ?>

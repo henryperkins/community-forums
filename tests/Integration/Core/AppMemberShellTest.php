@@ -308,7 +308,7 @@ final class AppMemberShellTest extends TestCase
             self::assertStringContainsString('data-board-unread-count="1"', $rows[0][0]);
         }
         self::assertSame(1, preg_match('#<a class="board-rail-item[^>]*href="/c/folder-hidden"[^>]*>.*?</a>#s', $home, $hiddenRow));
-        self::assertStringContainsString('board-rail-tag">hidden</span>', $hiddenRow[0]);
+        self::assertStringContainsString('board-rail-tag">Hidden</span>', $hiddenRow[0]);
         self::assertStringNotContainsString('data-board-unread-count', $hiddenRow[0]);
         self::assertSame(2, preg_match_all('#<a class="board-rail-item[^>]*href="/c/folder-muted"[^>]*>.*?</a>#s', $home, $mutedRows));
         foreach ($mutedRows[0] as $row) {

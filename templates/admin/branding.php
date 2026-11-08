@@ -211,7 +211,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                     'corners' => ['Corners', 'corners', $style_corners, $corners],
                 ];
                 ?>
-                <h3 class="branding-section-label" id="branding-style-title">Style</h3>
+                <h2 class="branding-section-label" id="branding-style-title">Style</h2>
                 <div class="branding-style" role="group" aria-labelledby="branding-style-title" data-brand-style-presets="<?= $e(json_encode(array_map(static fn (array $p): array => ['rail' => $p['rail'], 'type' => $p['type'], 'corners' => $p['corners']], $style_presets), JSON_THROW_ON_ERROR)) ?>"<?= !empty($brand_package_active) ? ' data-brand-package-active' : '' ?>>
                     <ul class="branding-style-presets" aria-label="Style presets">
                         <?php foreach ($style_presets as $presetKey => $presetInfo): ?>
@@ -268,7 +268,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                     <p class="callout callout-review" role="status">Your selected logo or favicon files were not uploaded. Select those files again before saving.</p>
                 <?php endif; ?>
 
-                <h3 class="branding-section-label">Marks</h3>
+                <h2 class="branding-section-label">Marks</h2>
                 <p class="brand-preview-note">Choose a replacement file or mark an existing image for removal. Changes apply when you save branding. The logo appears in the header, the administration bar and on every sign-in screen; light and dark variants replace it in their mode, and System follows each visitor’s device.</p>
                 <p class="brand-preview-note" id="branding-upload-help"><?= $e($upload_formats) ?> images, up to <?= $e($upload_max_label) ?> per file and <?= $e($upload_max_width) ?> × <?= $e($upload_max_height) ?> pixels.<?php if ($upload_request_label !== null): ?> Keep all files in one save below <?= $e($upload_request_label) ?> combined.<?php endif; ?></p>
                 <div class="branding-marks">
@@ -298,7 +298,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                     <?php endforeach; ?>
                 </div>
 
-                <h3 class="branding-section-label" id="branding-text">Community text</h3>
+                <h2 class="branding-section-label" id="branding-text">Community text</h2>
                 <p class="brand-preview-note">Plain text. Leave a field blank to use its default. Saved text appears on the next page load.</p>
                 <div class="branding-field-grid branding-text-grid">
                     <div class="branding-field branding-field-wide">
@@ -327,7 +327,7 @@ $colourDefaultText = static function (string $token, string $value) use ($brand_
                     </div>
                 </div>
 
-                <h3 class="branding-section-label">Custom CSS</h3>
+                <h2 class="branding-section-label">Custom CSS</h2>
                 <?php if (!empty($custom_css_available)): ?>
                     <div class="branding-custom-css">
                         <label class="branding-checkline">

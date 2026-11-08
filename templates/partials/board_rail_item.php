@@ -8,5 +8,5 @@ $active = $request_path === '/c/' . $board['slug']
 <a class="board-rail-item<?= $active ? ' is-active' : '' ?>" data-board-slug="<?= $e($board['slug']) ?>" href="/c/<?= $e($board['slug']) ?>"<?= $active ? ' aria-current="page"' : '' ?>>
     <span class="board-rail-name"><?= $e($board['name']) ?></span>
     <?= $unread_pill((int) ($board['unread_count'] ?? 0)) ?>
-    <?php if ($board['visibility'] !== 'public'): ?><span class="board-rail-tag"><?= $e($board['visibility']) ?></span><?php endif; ?>
+    <?php if ($board['visibility'] !== 'public'): ?><span class="board-rail-tag"><?= $e(label_text((string) $board['visibility'])) ?></span><?php endif; ?>
 </a>

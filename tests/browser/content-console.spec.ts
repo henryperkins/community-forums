@@ -329,7 +329,8 @@ test('tag merge uses the verbatim confirmation anatomy and remains a real GET-to
     padding: '0px',
     radius: '0px',
     border: '0px',
-    fontSize: '13.44px',
+    // The code face keeps the shared .875rem text floor (ADR 0057).
+    fontSize: '14px',
   });
   await expectAxeClean(page, info, 'tag-merge-confirmation');
   await shot(page, info, '06-content-tag-merge-confirmation');

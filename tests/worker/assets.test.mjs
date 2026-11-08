@@ -27,8 +27,8 @@ test('only the genuine current version makes source asset URLs immutable', async
   }
   const valid = await routeRequest(request(`/assets/app.js?v=${manifest.version}`), staticEnv(), noContainer);
   assert.equal(valid.headers.get('Cache-Control'), immutable);
-  const font = await routeRequest(request('/assets/fonts/imladris/eb-garamond-latin-400-normal.woff2'), staticEnv(), noContainer);
-  assert.equal(font.headers.get('Cache-Control'), revalidate);
+  const source = await routeRequest(request('/assets/forum-theme.css'), staticEnv(), noContainer);
+  assert.equal(source.headers.get('Cache-Control'), revalidate);
 });
 
 test('conditional requests retain 304 and validators, and HEAD retains its empty body', async () => {

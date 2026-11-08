@@ -15,7 +15,7 @@ $hiddenFromInbox = \App\Support\InboxSnooze::hidden($my_snooze ?? null, !empty($
 <div class="topic-tools-scrim" data-topic-tools-scrim hidden></div>
 <aside class="topic-tools" id="topic-tools-<?= (int) $thread['id'] ?>" data-topic-tools tabindex="-1" aria-labelledby="topic-tools-title-<?= (int) $thread['id'] ?>">
     <header class="topic-tools-head">
-        <span class="topic-tools-mark" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?></span>
+        <span class="topic-tools-mark" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'settings']) ?></span>
         <h2 id="topic-tools-title-<?= (int) $thread['id'] ?>">Topic tools</h2>
         <a class="topic-tools-close" data-topic-tools-fallback-close href="#thread-title-<?= (int) $thread['id'] ?>" aria-label="Close Topic tools"><?= $this->partial('partials/icon', ['name' => 'x']) ?></a>
         <button type="button" class="topic-tools-close" data-topic-tools-close hidden aria-label="Close Topic tools"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button>
@@ -116,7 +116,7 @@ $hiddenFromInbox = \App\Support\InboxSnooze::hidden($my_snooze ?? null, !empty($
         <?php endif; ?>
         <?php if ($showMemory): ?>
         <details data-topic-tools-section="memory">
-            <summary><span>Living Brief</span><span aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?></span></summary>
+            <summary><span>Living Brief</span><span aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'sparkle']) ?></span></summary>
             <div class="topic-tools-section-body">
                 <p class="muted">Curator tools for this brief sit at the foot of the brief itself.</p>
                 <?php // With JS on this drawer is a modal (body scroll locked, scrim up), so the

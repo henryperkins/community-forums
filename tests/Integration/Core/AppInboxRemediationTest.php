@@ -24,7 +24,7 @@ use Tests\Support\TestCase;
 final class AppInboxRemediationTest extends TestCase
 {
     private const CSS = __DIR__ . '/../../../public/assets/app.css';
-    private const TOKENS = __DIR__ . '/../../../public/assets/imladris.css';
+    private const TOKENS = __DIR__ . '/../../../resources/forum/tokens.css';
 
     private array $author;
     private array $board;
@@ -191,7 +191,7 @@ final class AppInboxRemediationTest extends TestCase
         self::assertIsInt($end, 'The generated bridge keeps its end marker.');
         $after = (string) preg_replace('#/\*.*?\*/#s', '', substr($raw, $end));
         self::assertStringContainsString('.inbox-scope-menu-panel a > span:not(.inbox-choice-state) { color: inherit; font: inherit; }', $after);
-        self::assertStringContainsString('.inbox-scope-menu-panel a > span.inbox-choice-state { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-chip); }', $after);
+        self::assertStringContainsString('.inbox-scope-menu-panel a > span.inbox-choice-state { color: var(--text-muted); font-family: var(--font-meta); font-size: var(--text-chip); }', $after);
         self::assertStringContainsString('.thread-row-inbox .thread-row-chips .chip-reason:not(.is-direct) {', $after);
     }
 
@@ -306,8 +306,10 @@ final class AppInboxRemediationTest extends TestCase
 
         self::assertStringContainsString('.thread-row-inbox .thread-meta a,', $css);
         self::assertStringContainsString('color: var(--artifact-link)', $css);
-        self::assertStringContainsString('--artifact-link: var(--river-500)', $tokens);
-        self::assertStringContainsString('--artifact-link: var(--river-200)', $tokens);
+        // The Forum tokens keep a darker link in light mode and a lighter one in
+        // both dark registers (ADR 0056); the retired Imladris river ramp is gone.
+        self::assertStringContainsString('--artifact-link: #1d4ed8', $tokens);
+        self::assertSame(2, substr_count($tokens, '--artifact-link: #93c5fd'));
     }
 
     /** Density still applies to rows and is managed by the appearance surface. */

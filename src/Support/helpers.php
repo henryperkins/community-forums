@@ -94,8 +94,8 @@ if (!function_exists('iso_datetime')) {
 
 if (!function_exists('post_datetime')) {
     /**
-     * Compact byline stamp for the thread stream. The Imladris thread-view
-     * reference renders the post time inline in the byline ("Jul 10 at 09:14"),
+     * Compact byline stamp for the thread stream. The thread view renders the
+     * post time inline in the byline ("Jul 10 at 09:14"),
      * not a full absolute stamp — at 390px the long form plus an author title,
      * OP and Staff wraps the byline onto a second line. The year is appended only
      * when it is not the current one, so an ordinary reading day stays on one
@@ -247,6 +247,37 @@ if (!function_exists('human_duration')) {
         $rem = $minutes % 60;
         return 'about ' . $hours . ' hour' . ($hours === 1 ? '' : 's')
             . ($rem > 0 ? ' ' . $rem . ' minute' . ($rem === 1 ? '' : 's') : '');
+    }
+}
+
+if (!function_exists('label_text')) {
+    /**
+     * A stored machine value (`off_topic`, `triaged`, `private`) or a phrase
+     * shown as a label, in sentence case: underscores become spaces and the
+     * first letter is capitalised. The Forum theme renders labels as written,
+     * with no CSS capitals, so raw lowercase values must be cased here
+     * (ADR 0057).
+     */
+    function label_text(string $value): string
+    {
+        $text = trim(str_replace('_', ' ', $value));
+
+        return $text === '' ? '' : mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
+    }
+}
+
+if (!function_exists('moderation_action_label')) {
+    /** A member-facing label for an appealable moderation action. */
+    function moderation_action_label(string $action): string
+    {
+        return [
+            'warn' => 'Warning',
+            'suspend' => 'Suspension',
+            'ban' => 'Ban',
+            'clear_signature' => 'Signature removed',
+            'clear_avatar' => 'Avatar removed',
+            'delete_post' => 'Post removed',
+        ][$action] ?? label_text($action);
     }
 }
 

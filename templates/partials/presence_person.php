@@ -46,7 +46,7 @@ $pSig = $pUser . ':' . $pState . ':' . (!empty($member['is_staff']) ? 's' : '-')
             <span class="presence-dot presence-dot-bare<?= $pState === 'away' ? ' is-away' : '' ?>" aria-hidden="true"></span>
         <?php endif; ?>
         <span class="presence-person-id">
-            <span class="presence-name"><?= $e($pName) ?><?php if (!empty($member['is_self'])): ?><span class="presence-you">you</span><?php endif; ?><?php if (!empty($member['is_staff'])): ?><span class="presence-staff">Staff</span><?php endif; ?></span>
+            <span class="presence-name"><span class="presence-name-text"><?= $e($pName) ?></span><?php if (!empty($member['is_self'])): ?><span class="presence-you">You</span><?php endif; ?><?php if (!empty($member['is_staff'])): ?><span class="presence-staff">Staff</span><?php endif; ?></span>
             <span class="presence-sub">@<?= $e($pUser) ?> · <?= $pState === 'away' ? 'Away' : 'Here now' ?></span>
         </span>
     </a>

@@ -12,10 +12,10 @@
  * them names anyway.
  */
 $pollClosed = (string) ($poll['status'] ?? '') === 'closed';
-$pollMode = (string) ($poll['mode'] ?? 'single') === 'multiple' ? 'choose any' : 'choose one';
+$pollMode = (string) ($poll['mode'] ?? 'single') === 'multiple' ? 'Choose any' : 'Choose one';
 ?>
 <section class="poll-card poll-panel" aria-labelledby="poll-question-<?= (int) $poll['id'] ?>">
-    <p class="poll-eyebrow">Poll<span class="poll-eyebrow-mode">· <?= $e($pollClosed ? 'closed' : $pollMode) ?></span></p>
+    <p class="poll-eyebrow">Poll<span class="poll-eyebrow-mode">· <?= $e($pollClosed ? 'Closed' : $pollMode) ?></span></p>
     <h2 class="poll-question" id="poll-question-<?= (int) $poll['id'] ?>"><?= $e($poll['question']) ?></h2>
     <?php if (!empty($poll['results_visible'])): ?>
         <?php $pollTotal = max(1, array_sum(array_map(static fn (array $option): int => (int) $option['vote_count'], $poll['options']))); ?>

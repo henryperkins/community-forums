@@ -11,10 +11,10 @@
           // It is deliberately outside the label row, which stays headingless. ?>
     <h2 class="sr-only">Living brief</h2>
     <p class="living-brief-label">
-        <?php // The commend star, as the design marks this region
-              // (ThreadView.dc.html:511) — the same four-point mark that carries
-              // regard and the accepted answer, never a second glyph. ?>
-        <span class="living-brief-mark" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'commend-star']) ?></span>
+        <?php // The four-point sparkle marks this region (ThreadView.dc.html:511).
+              // Regard and the accepted answer use the separate five-point
+              // commend star (ADR 0057). ?>
+        <span class="living-brief-mark" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'sparkle']) ?></span>
         <?php if (!empty($living_brief['has_ai_lineage'])): ?>
             <a href="/privacy#thread-intelligence"><?= $e($living_brief['label']) ?></a>
         <?php else: ?>
@@ -63,7 +63,7 @@
         <div class="reference-cards" aria-label="Referenced content">
             <?php foreach ($living_brief['reference_cards'] as $card): ?>
                 <a class="reference-card" href="<?= $e($card['url']) ?>">
-                    <span class="badge badge-muted"><?= $e($card['type']) ?></span>
+                    <span class="badge badge-muted"><?= $e(label_text((string) $card['type'])) ?></span>
                     <strong><?= $e($card['title']) ?></strong>
                     <?php if (($card['meta'] ?? '') !== ''): ?><span class="muted"><?= $e($card['meta']) ?></span><?php endif; ?>
                 </a>

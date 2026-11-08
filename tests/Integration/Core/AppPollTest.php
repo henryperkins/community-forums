@@ -114,7 +114,7 @@ final class AppPollTest extends TestCase
         // far right — three announcements of a control the question below names.
         self::assertStringNotContainsString('poll-head', $before->body());
         self::assertStringNotContainsString('poll-status', $before->body());
-        self::assertStringContainsString('<p class="poll-eyebrow">Poll<span class="poll-eyebrow-mode">· choose one</span></p>', $before->body());
+        self::assertStringContainsString('<p class="poll-eyebrow">Poll<span class="poll-eyebrow-mode">· Choose one</span></p>', $before->body());
         self::assertStringContainsString('poll-option', $before->body());
         self::assertStringContainsString('Open to members', $before->body());
 

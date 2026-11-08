@@ -1,9 +1,8 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 /**
- * /users-online — the presence roll (ADR 0031), verbatim from the design system's
- * templates/users-online/UsersOnline.dc.html as of the 2026-09-12 handoff
- * (docs/design-system/imladris/_archive/design_handoff_presence/README.md).
+ * /users-online — the presence roll (ADR 0031), built from the 2026-09-12
+ * presence handoff (archived in docs/design-system/imladris/_archive/).
  *
  * The design draws a full member directory behind an off-by-default toggle
  * (Everyone / Staff / New this week) and a loading skeleton and error card; this

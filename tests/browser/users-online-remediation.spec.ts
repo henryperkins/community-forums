@@ -389,7 +389,7 @@ test('a signed-in member counts themselves, and is marked as such', async ({ pag
   // guest read 16 — the same rail disagreeing with itself about the same moment.
   const self = page.locator('.users-online [data-presence-self]');
   await expect(self).toHaveCount(1);
-  await expect(self.locator('.presence-you')).toHaveText('you');
+  await expect(self.locator('.presence-you')).toHaveText('You');
   expect(guest).toBeTruthy();
 
   await settled(page);

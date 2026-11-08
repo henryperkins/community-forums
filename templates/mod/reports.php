@@ -66,9 +66,9 @@ $staleBefore = time() - 86400;
                     ?>
                     <li class="report-row<?= $urgent ? ' is-urgent' : ' is-open' ?><?= $stale ? ' is-stale' : '' ?>">
                         <div class="report-head">
-                            <span class="badge<?= $r['status'] === 'triaged' ? '' : ' badge-muted' ?>"><?= $e($r['status']) ?></span>
-                            <?php if (($r['reason_code'] ?? '') !== ''): ?><span class="tag"><?= $e(str_replace('_', ' ', $r['reason_code'])) ?></span><?php endif; ?>
-                            <?php if ($stale): ?><span class="tag tag-stale">waiting over a day</span><?php endif; ?>
+                            <span class="badge<?= $r['status'] === 'triaged' ? '' : ' badge-muted' ?>"><?= $e(label_text((string) $r['status'])) ?></span>
+                            <?php if (($r['reason_code'] ?? '') !== ''): ?><span class="tag"><?= $e(label_text((string) $r['reason_code'])) ?></span><?php endif; ?>
+                            <?php if ($stale): ?><span class="tag tag-stale">Waiting over a day</span><?php endif; ?>
                             <span class="muted">by <?= $e($r['reporter_username']) ?> · <?= $e(human_datetime($r['created_at'])) ?></span>
                         </div>
                         <?php if (($r['post_id'] ?? null) !== null): ?>

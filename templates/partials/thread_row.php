@@ -1,7 +1,7 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 /**
- * One topic row, three presentations (docs/design-system/imladris/components/forum/thread-row.card.html).
+ * One topic row, three presentations (first drawn in the retired Imladris thread-row card).
  *
  *   t                 array   the topic, joined with its board, its author and the viewer's state
  *   presentation      'default' a topic list inside a page (tags)

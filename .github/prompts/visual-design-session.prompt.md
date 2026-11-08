@@ -22,8 +22,9 @@ Preserve unrelated work and existing functional, authorization and data contract
   reading-design choices and records the validation matrix.
 
 Imladris authoring assets and the previous prompt in `docs/history/` are
-historical. Their font, ornament and lexicon rules are superseded. Do not
-reintroduce an old font preload or make an Imladris digest a release gate.
+historical. Their font, ornament and lexicon rules are superseded, and its
+build, runtime CSS and web fonts were retired (ADR 0057). Do not reintroduce an
+old font preload, its marks or an Imladris digest.
 
 ## Implementation
 

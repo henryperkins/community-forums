@@ -164,7 +164,7 @@ foreach ($tierAreas as $key => $meta) {
     ];
 }
 ?>
-<div class="admin-bar">
+<header class="admin-bar">
     <div class="admin-bar-id">
         <a class="admin-bar-brand" href="/" aria-label="<?= $e($brandName) ?>">
             <?= $this->partial('partials/brand_logo', [
@@ -226,7 +226,7 @@ foreach ($tierAreas as $key => $meta) {
             ]) ?>
         </nav>
     </details>
-</div>
+</header>
 <main class="admin-console" id="main" tabindex="-1"<?= $current !== null ? ' data-area="' . $e($area) . '"' : '' ?>>
     <?php if ($current !== null): ?>
         <h1 class="admin-title"><?= $e($current['h1']) ?></h1>

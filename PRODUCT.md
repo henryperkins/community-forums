@@ -82,9 +82,9 @@ Two further positions are load-bearing:
 
 ## Brand Commitments
 
-**Current direction (2026-11-07, ADR 0056).** The built-in **Forum** theme replaces Imladris with a conventional, accessible reading interface. Root `DESIGN.md`, `resources/forum/`, and the research notes in `docs/design-system/` define the active presentation. Imladris documents and assets are retained as historical material; their all-serif, ornamental and fantasy-lexicon rules no longer govern new work.
+**Current direction (2026-11-07, ADRs 0056 and 0057).** The built-in **Forum** theme replaces Imladris with a conventional, accessible reading interface, and ADR 0057 retires Imladris's remaining typography, marks and build pipeline. Root `DESIGN.md`, `resources/forum/`, and the research notes in `docs/design-system/` define the active presentation. Imladris documents in `docs/design-system/imladris/` and `docs/history/` are retained as historical material; their all-serif, ornamental and fantasy-lexicon rules no longer govern new work.
 
-- **Identity.** Neutral light and dark surfaces, blue links and actions, system sans-serif typography, visible controls and restrained separators. Uploaded community logos and configured community identity remain operator-owned.
+- **Identity.** Neutral light and dark surfaces, blue links and actions, system interface typography with discussions in the reader's own sans-serif, sentence-case labels, conventional icons, visible controls and restrained separators. Uploaded community logos and configured community identity remain operator-owned.
 - **Language.** Use familiar forum terms: community, board, topic, reply, message, reputation and badges. Interface copy should explain an action directly. Stored reaction names, member titles and authored content are not silently migrated.
 - **Reading.** Default interface text is `1rem`; discussion prose is `1.125rem` with unitless `1.65` leading and a `65ch` maximum measure. User font settings and browser text sizing remain effective.
 - **States.** Pair meaningful colors with text, icons or shape. Focus is visible; prose links are underlined. Status words remain available without color.

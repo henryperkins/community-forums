@@ -40,7 +40,7 @@ $describedBy = $loginError !== '' ? ' aria-describedby="login-error"' : '';
     <?php endif; ?>
     <?php if (!empty($oauth_providers)): ?>
         <div class="oauth-buttons">
-            <p class="oauth-sep">or sign in with</p>
+            <p class="oauth-sep">Or sign in with</p>
             <div class="oauth-row">
             <?php foreach ($oauth_providers as $p): ?>
                 <a class="btn btn-oauth btn-oauth-<?= $e($p['name']) ?>" href="/auth/<?= $e($p['name']) ?>/redirect"><?= $e($p['label']) ?></a>

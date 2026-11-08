@@ -110,9 +110,8 @@ uses a dedicated local port, resets between suites/projects, captures mail,
 and partitions output beneath the evidence root.
 
 ```bash
-composer build:imladris
-composer check:imladris
-composer verify:imladris
+composer build:forum
+composer verify:forum
 DB_TEST_DATABASE=retroboards_unified_test MAIL_DRIVER=sendmail MAIL_FROM='' \
   COMPOSER_PROCESS_TIMEOUT=0 composer test
 

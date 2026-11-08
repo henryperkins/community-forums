@@ -1,0 +1,113 @@
+{
+  "version": "5dc1b40f3b23d46d",
+  "checked_at_utc": "2026-11-08T00:03:07Z",
+  "host": "https://forum.candidary.online",
+  "checked": 11,
+  "matched": 11,
+  "mismatched": [],
+  "home_status": 200,
+  "home_references": [
+    "/assets/dist/app-107ef98522c229d0.js",
+    "/assets/dist/app-style-QOPBXP9w.css",
+    "/assets/dist/forum-base-style-CKKxU1F6.css",
+    "/assets/dist/forum-theme-style-C35sAGgP.css"
+  ],
+  "home_references_current": true,
+  "preload_link_references": [
+    "/assets/dist/app-107ef98522c229d0.js",
+    "/assets/dist/app-style-QOPBXP9w.css",
+    "/assets/dist/forum-base-style-CKKxU1F6.css",
+    "/assets/dist/forum-theme-style-C35sAGgP.css"
+  ],
+  "preload_link_references_current": true,
+  "behaviour": {
+    "imladris_stylesheet_referenced": false,
+    "forum_theme_stylesheets_referenced": [
+      "/assets/dist/forum-base-style-CKKxU1F6.css",
+      "/assets/dist/forum-theme-style-C35sAGgP.css"
+    ]
+  },
+  "health": {
+    "status": 200,
+    "body": "{\"status\":\"ok\",\"database\":\"ok\"}"
+  },
+  "files": [
+    {
+      "url": "/assets/dist/app-107ef98522c229d0.js",
+      "status": 200,
+      "sha256": "107ef98522c229d04c1c5ee0694357a1fd2dd086514506c0bdda752026e15eaf",
+      "expected": "107ef98522c229d04c1c5ee0694357a1fd2dd086514506c0bdda752026e15eaf",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/app-style-QOPBXP9w.css",
+      "status": 200,
+      "sha256": "f61c365c4459876012c971a6b06e49f3f2b5893eecf9e4acd4f88b5124f48fd8",
+      "expected": "f61c365c4459876012c971a6b06e49f3f2b5893eecf9e4acd4f88b5124f48fd8",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/composer-004f699d19dc5157.js",
+      "status": 200,
+      "sha256": "004f699d19dc51578025ea06f7aedfa869c556ce01f7aab5d50d5e2515e4f4a0",
+      "expected": "004f699d19dc51578025ea06f7aedfa869c556ce01f7aab5d50d5e2515e4f4a0",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+      "status": 200,
+      "sha256": "74964ff3b56c482d0398a495f859da1170743588baebb4d610107cc90b05d841",
+      "expected": "74964ff3b56c482d0398a495f859da1170743588baebb4d610107cc90b05d841",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/forum-base-style-CKKxU1F6.css",
+      "status": 200,
+      "sha256": "9933a3aced95dfcfba789466e40aaa448d4243f1dff4e918898d9855b955cab2",
+      "expected": "9933a3aced95dfcfba789466e40aaa448d4243f1dff4e918898d9855b955cab2",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/forum-theme-style-C35sAGgP.css",
+      "status": 200,
+      "sha256": "9409ca0b32aaa07595e2f56dbb2e1c6df01835d8e24f480c0aa5c0f4cd64fe89",
+      "expected": "9409ca0b32aaa07595e2f56dbb2e1c6df01835d8e24f480c0aa5c0f4cd64fe89",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/milkdown-adapter-DXUybFX0.js",
+      "status": 200,
+      "sha256": "14cb2e8d2e98bd8db7adf8674c941f25d796854f1b23ea098e8e0926c064856e",
+      "expected": "14cb2e8d2e98bd8db7adf8674c941f25d796854f1b23ea098e8e0926c064856e",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/passkeys-abc14d1e680e3beb.js",
+      "status": 200,
+      "sha256": "abc14d1e680e3beba1e355500b318e90239694abef67b845b216da43ee890b41",
+      "expected": "abc14d1e680e3beba1e355500b318e90239694abef67b845b216da43ee890b41",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/tour-4573ee743ebaf07c.js",
+      "status": 200,
+      "sha256": "4573ee743ebaf07cf88c8892aa4b718a168a24b17e057bc684c053032578be59",
+      "expected": "4573ee743ebaf07cf88c8892aa4b718a168a24b17e057bc684c053032578be59",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+      "status": 200,
+      "sha256": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
+      "expected": "bcf34ca15fd583c4b8b99fee2b8b803d41ce5b009ac6f7fa2600f35d9d22f644",
+      "match": true
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-XlKwRXnh.js",
+      "status": 200,
+      "sha256": "5695624172f4209d6686552645ed60e69ba4cbf9d8ef61c8f32fa140c08d7369",
+      "expected": "5695624172f4209d6686552645ed60e69ba4cbf9d8ef61c8f32fa140c08d7369",
+      "match": true
+    }
+  ]
+}

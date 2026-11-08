@@ -1,6 +1,6 @@
 # Forum accessibility and reading baseline
 
-**Reviewed:** 2026-11-07. **Target:** WCAG 2.2 Level AA, including applicable Level A criteria.
+**Reviewed:** 2026-11-07 (ADR 0056); refined the same day (ADR 0057). **Target:** WCAG 2.2 Level AA, including applicable Level A criteria.
 **Scope:** the conventional forum theme replacing Imladris, including member,
 authentication, composer, messaging, moderation, and administration surfaces.
 
@@ -18,16 +18,30 @@ does not prescribe a font family, a default font size, or a specific line length
 
 | Area | Project decision | Reason and boundary |
 | --- | --- | --- |
-| Type family | System sans serif for interface and prose; system monospace for code | Familiar rendering without required font downloads. A serif font is not inherently inaccessible. |
+| Type family | `system-ui` for interface text and metadata; the generic `sans-serif` family for posts, messages and the composer; system monospace only for code and exact identifiers | No font downloads. MDN and CSS Fonts 4 describe `system-ui` as meant for interface text rather than long paragraphs; some systems do not let readers change it, while browsers let readers choose their `sans-serif` face. Reading studies show no single best face for everyone (§1a). A serif font is not inherently inaccessible. |
 | Base sizing | Root `100%`; interface `1rem`; prose `1.125rem` | Approximately 16px and 18px at the browser's usual default; retain the reader's font preference. |
 | Reading rhythm | Prose line height `1.65`, unitless; readable column up to `65ch` | USWDS recommends at least 1.5 for longer text and identifies about 66 characters as a useful extended-reading target. `ch` is an approximation, so inspect real content. |
-| Metadata | At least `0.875rem`; normal, legible weights | Smaller secondary text still needs ordinary-text contrast. Avoid all-caps or widely tracked text for continuous reading. |
+| Metadata and labels | At least `0.875rem` (`--text-floor`); interface face; sentence case; normal letter spacing; tabular numerals for counts and times | Enforced at the source in the retained layers and pinned by `forum-refinement.spec.ts` (ADR 0057). Smaller secondary text still needs ordinary-text contrast. |
 | Alignment | Start-aligned text and clear paragraph/heading separation | Avoid full justification. Keep headings meaningful and visually distinguishable. |
 | Links | Blue link tokens with persistent underlines within prose | Color alone does not identify an action. Navigation may use other clear visual affordances. |
 | Color modes | Light, dark, and system preference | Validate each resolved mode and meaningful interaction state independently. Dark mode does not establish accessibility by itself. |
 | Controls | Aim for an actual 44 × 44 CSS pixel hit area for key standalone controls | The icon can be smaller. This exceeds the AA minimum; inline prose links are handled separately. |
 | Surfaces and images | Solid reading surfaces; no decorative photography behind text | Keep content imagery responsive. Provide meaningful alternatives for informative images and empty `alt` for purely decorative images. |
 | Focus | Clearly visible outline or border, with adequate offset and contrast | A shadow alone disappears in forced-colors mode. Aim to keep the entire focused control visible. |
+
+### 1a. What the reading research supports
+
+These findings inform the choices above; none is a WCAG requirement. They are
+summarised from the primary sources listed, reviewed 2026-11-07.
+
+| Question | Evidence | What it supports here |
+| --- | --- | --- |
+| Text size | Rello, Pielot & Marcos (CHI 2016, 104 eye-tracked readers): readability rose with size and comprehension was best at the larger sizes tested; line-spacing effects were small. Legge & Bigelow (2011 review): reading speed plateaus across a wide range of sizes above a critical print size, which is larger for people with low vision. | A generous `1.125rem` prose size that scales with the reader's browser and member settings. It does not establish 18px as a threshold. |
+| Line length | Dyson & Haselgrove (2001) found about 55 characters per line best for comprehension, while longer lines were often read faster; Dyson's 2004 review reports readers prefer moderate lengths. | A bounded measure (`65ch` maximum; about 49 characters in the desktop topic column). WCAG 1.4.8 (AAA) sets 80 characters as an upper bound. |
+| Line spacing | Little direct evidence beyond avoiding extremes (Rello et al. 2016). | `1.65` is a convention, compatible with WCAG 1.4.8's 1.5 and with 1.4.12 overrides. |
+| Typeface | Arditi & Cho (2005): serifs had no effect on reading speed. Wallace et al. (ACM TOCHI 2022, 352 readers, 16 fonts): each reader's fastest font differed, by up to 35%, with no comprehension loss. Rello & Baeza-Yates (2016): sans-serif and roman styles read better than italic for readers with and without dyslexia. | No single house reading face. Prose follows the reader's own `sans-serif` setting; long italic runs are avoided. |
+| "Dyslexia fonts" | Controlled studies (Kuster et al. 2018; Wery & Diliberto 2017) found no speed or accuracy benefit, and a 2026 meta-analysis in *Annals of Dyslexia* addressed the same question; one 2023 doctoral study reported gains with OpenDyslexic. | Do not ship a dyslexia font; leave font choice to the reader. |
+| Dark mode | With display luminance controlled, polarity itself did not affect readability (Buchner et al. 2009); dark-on-light helped acuity and proofreading for younger and older adults (Piepenbrock et al. 2013); light-on-dark raised workload in some lighting conditions (Sethi & Ziat 2023). Claims about "halation" from very high dark-mode contrast are opinion, not established findings. | Keep light as the default and offer dark and system modes; measure both independently. |
 
 Apply the reading width to prose, not indiscriminately to every table or the
 whole forum shell. Long usernames, URLs, translations, quotations, and attachment
@@ -42,6 +56,8 @@ remain difficult to read despite a numerically passing color pair.
 
 | Requirement | Level and criterion | Acceptance condition |
 | --- | --- | --- |
+| Page titles | A, 2.4.2 | Each page title names the page, then the community (`Inbox · RetroBoards`, ADR 0057); the home page is the community name. |
+| Language | A, 3.1.1; AA, 3.1.2 | The document declares `lang`. Passages in another language need their own `lang`; posts have no language field yet, so a post written in another language is a known gap under 3.1.2. |
 | Text contrast | AA, 1.4.3 | Ordinary text at least 4.5:1. Large text at least 3:1: 18pt regular or 14pt bold, approximately 24px or 18.67px. Metadata, labels, placeholders, and help text are included; inactive controls have an exception. See [contrast][contrast]. |
 | Non-text contrast | AA, 1.4.11 | Necessary visual information identifying controls, states, or meaningful graphics has at least 3:1 against adjacent colors, subject to the criterion's exceptions. Decorative separators do not all need 3:1. See [non-text contrast][nontext]. |
 | Non-color cues | A, 1.4.1 | Errors, unread/current/selected states, and links are understandable without color alone. Use text, shape, decoration, or another visible cue as appropriate. |
@@ -61,11 +77,46 @@ remain difficult to read despite a numerically passing color pair.
 | Hover/focus content | AA, 1.4.13 | Applicable tooltips/popovers are dismissible, hoverable, and persistent under the criterion's conditions. |
 | Moving or updating content | A, 2.2.2 | Provide required pause, stop, or hide controls for applicable moving and auto-updating content. Avoid unnecessary animation. |
 
+**Tracked AAA criteria (information, not targets).** 1.4.6 Contrast (Enhanced)
+needs 7:1 for ordinary text: body and muted text pass in both modes, but the
+light-mode link and action colour measures 6.70:1. 1.4.8 Visual Presentation
+asks for a mechanism to choose colours, keep lines to 80 characters or fewer
+(40 for CJK), avoid justification, use at least 1.5 line spacing with larger
+paragraph spacing, and resize to 200% without horizontal scrolling. The
+defaults meet the measure, justification and line-spacing items; browser and
+user settings supply the rest.
+
 The 44 × 44 target in this project is a design goal; WCAG 2.5.5 specifies that
 size at **AAA**, with exceptions. Likewise, the quantitative focus-area rule in
 2.4.13 is **AAA**, not AA. AA 2.4.11 permits partial focus obstruction; this
 project should aim for full visibility. Use the [normative standard][wcag] when
 assessing exceptions rather than treating this summary as a replacement.
+
+### 2a. Contrast method status
+
+WCAG 2.2's relative-luminance ratio remains the acceptance test. WCAG 3 is
+still a Working Draft; its April 2026 Editor's Draft notes that its contrast
+algorithm is "yet to be determined", and the APCA method, present in the first
+public draft (2021), was pulled from the July 2023 Working Draft.
+APCA lightness contrast (Lc) is recorded below only as information: it rates
+the dark palette's link and faint text lower than WCAG 2 does, so those are the
+first candidates if the dark palette is revised.
+
+| Token pair | Light | Dark |
+| --- | --- | --- |
+| Body text on page | 14.10:1 (Lc 100.6) | 16.96:1 (Lc −103.2) |
+| Muted text on page | 7.58:1 (Lc 86.3) | 11.95:1 (Lc −79.2) |
+| Faint text on page | 6.31:1 (Lc 81.4) | 9.82:1 (Lc −67.9) |
+| Link and action text on page | 6.70:1 (Lc 82.2) | 9.84:1 (Lc −68.0) |
+| Primary button label on its fill | 6.70:1 (Lc −87.2) | 9.84:1 (Lc 68.9) |
+| Field boundary on raised surface | 4.76:1 | 5.72:1 |
+| Focus outline on page | 6.39:1 | 12.48:1 |
+| Link colour against body text | 2.10:1 | 1.72:1 |
+
+The last row is below the 3:1 of technique G183, so links inside text rely on
+their underline, not colour, to satisfy 1.4.1. Prose and help links are
+underlined; links standing alone in navigation, lists and metadata are
+identified by position and layout.
 
 ## 3. Forum interaction requirements
 
@@ -177,6 +228,35 @@ assistive-technology sessions are recorded; DOM inspection and browser emulation
 do not substitute for them. Include disabled users in usability evaluation when
 available. Record unavailable platforms and remaining risks explicitly.
 
+### Refinement record (ADR 0057)
+
+**Recorded 2026-11-07 and re-measured 2026-11-08, local fixtures, Chromium
+153.** An audit of the merged
+theme across 22 routes, both themes and both viewports, plus keyboard
+traversal, 320px reflow, text-spacing, forced colours and a 320 × 256
+viewport, found the contract gaps listed in ADR 0057. After the changes:
+
+- no visible text below 14px at the default text size (including
+  `aria-hidden` and generated text; initials and glyphs exempt), no capitals,
+  positive tracking or lower-case labels, and no code face outside code and
+  identifiers on the 20 routes swept by `forum-refinement.spec.ts` in both
+  themes at desktop and phone widths;
+- zero axe violations with WCAG 2.0–2.2 A/AA and best-practice rules on those
+  routes and states, including landmark, heading-order and region rules; the
+  incomplete results remain in the saved JSON;
+- link-style controls, including the phone order sheet and the search scope
+  and order options, centre their labels within 1.5px;
+- at 320 × 256 the reply dock is static, scroll padding is 12px, and focused
+  post links are not covered (2.4.11) for a guest with and without scripting
+  and for a member with the reply composer, where previously the dock covered
+  57% of the viewport;
+- no undersized target on the 22 audited routes, at either viewport, fails
+  2.5.8's spacing exception (`tests/browser/forum-type-audit/targets.mjs`).
+
+The 320 × 256 viewport approximates 1280 × 1024 at 400% zoom; real browser
+zoom, physical devices, Firefox and Safari were not exercised. Screen-reader
+testing remains **not yet run**.
+
 ## 6. Primary references
 
 The links below were reviewed on 2026-11-07. WCAG requirements come from W3C;
@@ -196,3 +276,33 @@ USWDS informs reading choices, and MDN documents browser preference behavior.
 [dialog]: https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
 [motion]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion
 [forced]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/forced-colors
+
+Reading research and contrast status (reviewed 2026-11-07):
+
+- Rello, Pielot & Marcos, [Make It Big! (CHI 2016)](https://doi.org/10.1145/2858036.2858204)
+- Wallace et al., [Towards Individuated Reading Experiences (ACM TOCHI 2022)](https://doi.org/10.1145/3502222)
+- Dyson & Haselgrove, [line length and reading speed (2001)](https://doi.org/10.1006/ijhc.2001.0458); Dyson, [how physical text layout affects reading from screen (2004)](https://doi.org/10.1080/01449290410001715714)
+- Legge & Bigelow, [Does print size matter for reading? (2011)](https://doi.org/10.1167/11.5.8)
+- Arditi & Cho, [Serifs and font legibility (2005)](https://doi.org/10.1016/j.visres.2005.06.013)
+- Rello & Baeza-Yates, [font type and readability for people with dyslexia (2016)](https://doi.org/10.1145/2897736)
+- Kuster et al., [Dyslexie font (2018)](https://doi.org/10.1007/s11881-017-0154-6); Wery & Diliberto, [OpenDyslexic (2017)](https://doi.org/10.1007/s11881-016-0127-1); Broadbent, [OpenDyslexic and Arial with Key Stage 2 readers (UCL EdD thesis, 2023)](https://discovery-pp.ucl.ac.uk/id/eprint/10173561)
+- Buchner, Mayr & Brandt, [display polarity and luminance (2009)](https://doi.org/10.1080/00140130802641635); Piepenbrock et al., [positive polarity for younger and older adults (2013)](https://doi.org/10.1080/00140139.2013.790485); Sethi & Ziat, [dark mode and workload (2023)](https://doi.org/10.1080/00140139.2022.2160879)
+- [MDN: `font-family` and `system-ui`](https://developer.mozilla.org/en-US/docs/Web/CSS/font-family); [CSS Fonts Module Level 4](https://www.w3.org/TR/css-fonts-4/)
+- [WCAG 3.0 Working Draft](https://www.w3.org/TR/wcag-3.0/); Roselli, [WCAG3 contrast as of April 2026](https://adrianroselli.com/2026/04/wcag3-contrast-as-of-april-2026.html); [Understanding SC 1.4.3](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html); [technique G183](https://www.w3.org/WAI/WCAG22/Techniques/general/G183)
+
+## 7. Standards context for operators
+
+This is orientation, not legal advice. Whether a particular community is in
+scope of a law depends on who runs it and for whom.
+
+| Instrument | Status on 2026-11-07 |
+| --- | --- |
+| WCAG 2.2 | W3C Recommendation; also [ISO/IEC 40500:2025](https://www.w3.org/WAI/news/2025-10-21/wcag22-iso). |
+| EN 301 549 | V4.1.1 aligns its web clauses with WCAG 2.2 AA. |
+| European Accessibility Act | Applies since 28 June 2025 to listed consumer services; general forum software is not a listed category, third-party content outside the operator's control is excluded, and microenterprise service providers are exempt. |
+| US ADA Title II | The DOJ's web rule keeps WCAG 2.1 AA; an [April 2026 interim final rule](https://www.federalregister.gov/documents/2026/04/20/2026-07663/extension-of-compliance-dates-for-nondiscrimination-on-the-basis-of-disability-accessibility-of-web) moved compliance to 26 April 2027 (populations of 50,000 or more) and 26 April 2028 (smaller entities). |
+| Section 508 | Still references WCAG 2.0 A and AA. |
+
+Member posts are user-contributed content. Several instruments treat content
+outside the operator's control differently; the forum's own templates,
+controls and defaults are what this baseline governs.

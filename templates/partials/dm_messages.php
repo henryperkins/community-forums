@@ -70,7 +70,7 @@ foreach (($participants ?? []) as $pp) {
                     <div class="reference-cards" aria-label="Referenced content">
                         <?php foreach ($messageReferenceCards as $card): ?>
                             <a class="reference-card" href="<?= $e($card['url']) ?>">
-                                <span class="ref-type"><?= $e($card['type']) ?></span>
+                                <span class="ref-type"><?= $e(label_text((string) $card['type'])) ?></span>
                                 <strong><?= $e($card['title']) ?></strong>
                                 <?php if (($card['meta'] ?? '') !== ''): ?><span class="ref-meta"><?= $e($card['meta']) ?></span><?php endif; ?>
                             </a>

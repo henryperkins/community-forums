@@ -61,8 +61,8 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
         <section class="card">
             <h2>Member</h2>
             <dl class="profile-stats">
-                <div><dt>Role</dt><dd><span class="role-pill role-<?= $e($subject['role']) ?>"><?= $e($subject['role']) ?></span></dd></div>
-                <div><dt>State</dt><dd><span class="state state-<?= $e($status) ?>"><?= $e($status) ?></span></dd></div>
+                <div><dt>Role</dt><dd><span class="role-pill role-<?= $e($subject['role']) ?>"><?= $e(label_text((string) $subject['role'])) ?></span></dd></div>
+                <div><dt>State</dt><dd><span class="state state-<?= $e($status) ?>"><?= $e(label_text((string) $status)) ?></span></dd></div>
                 <?php if ($status === 'suspended' && !empty($subject['suspended_until'])): ?>
                     <div><dt>Suspended until</dt><dd><?= $e(human_datetime((string) $subject['suspended_until'])) ?></dd></div>
                 <?php endif; ?>
@@ -159,11 +159,11 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                             <span class="record-body">
                                 <?= ($bn['type'] ?? '') === 'post' ? 'read-only (suspension)' : 'full ban' ?> · <?= $e($bn['reason']) ?>
                                 <?php if (!empty($bn['lifted_at'])): ?>
-                                    <span class="pill">lifted <?= $e(human_date((string) $bn['lifted_at'])) ?></span>
+                                    <span class="pill">Lifted <?= $e(human_date((string) $bn['lifted_at'])) ?></span>
                                 <?php elseif (!empty($bn['expires_at'])): ?>
-                                    <span class="pill">until <?= $e(human_date((string) $bn['expires_at'])) ?></span>
+                                    <span class="pill">Until <?= $e(human_date((string) $bn['expires_at'])) ?></span>
                                 <?php else: ?>
-                                    <span class="pill">indefinite</span>
+                                    <span class="pill">Indefinite</span>
                                 <?php endif; ?>
                             </span>
                             <span class="muted">by @<?= $e($bn['created_by_username'] ?? 'system') ?></span>

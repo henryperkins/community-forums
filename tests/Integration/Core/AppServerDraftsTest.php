@@ -180,6 +180,8 @@ final class AppServerDraftsTest extends TestCase
         self::assertStringContainsString('Listed draft', $page->body());
         self::assertStringContainsString('/drafts/' . $id . '/discard', $page->body());
         self::assertStringContainsString('No JavaScript needed', $page->body());
+        // ADR 0057: labels are sentence case at the source, not CSS capitals.
+        self::assertMatchesRegularExpression('/<span class="account-draft-chip">Revision \d+<\/span>/', $page->body());
 
         $this->assertRedirect($this->post('/drafts/' . $id . '/discard'), '/drafts');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM server_drafts WHERE id = ?', [$id]));

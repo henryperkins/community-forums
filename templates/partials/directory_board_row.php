@@ -23,7 +23,7 @@ $emptyLabel = match ($sort) {
             <span class="forum-directory__board-name"><?= $e((string) $board['name']) ?></span>
             <?php if (!empty($board['description'])): ?><span class="forum-directory__board-description"><?= $e((string) $board['description']) ?></span><?php endif; ?>
             <span class="forum-directory__board-facts">
-                <?php if ($signal !== ''): ?><span class="forum-directory__board-signal"><?= $e($signal) ?></span><?php endif; ?>
+                <?php if ($signal !== ''): ?><span class="forum-directory__board-signal"><?= $e(label_text($signal)) ?></span><?php endif; ?>
                 <span><?= (int) $board['thread_count'] ?> topic<?= (int) $board['thread_count'] === 1 ? '' : 's' ?> · <?= (int) $board['post_count'] ?> post<?= (int) $board['post_count'] === 1 ? '' : 's' ?></span>
             </span>
         </a>
