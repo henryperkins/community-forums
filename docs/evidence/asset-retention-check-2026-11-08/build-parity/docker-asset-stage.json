@@ -1,0 +1,19 @@
+{
+  "docker_node": "v24.22.2",
+  "docker_version": "0ab71f5ca65e7fa0",
+  "docker_deployedReleases": [
+    "0ab71f5ca65e7fa0",
+    "5dc1b40f3b23d46d",
+    "c66e3b55dba6da68"
+  ],
+  "manifest_byte_identical_to_committed": true,
+  "dist_file_count_committed_docker": [
+    33,
+    33
+  ],
+  "dist_identical": true,
+  "dist_only_in_committed": [],
+  "dist_only_in_docker": [],
+  "dist_content_differs": [],
+  "build_input_digest": "a936b896ef146f04e806202bb90b9a06c87c56a62eb1a78e960961504e21b3a2"
+}

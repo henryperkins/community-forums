@@ -46,6 +46,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   5.3 fallback; add reading research, contrast-method status and standards
   context to the accessibility baseline. Qualification:
   `docs/evidence/forum-refinement/README.md`; ADR 0057.
+- Verified on the public site after publication (`0ab71f5ca65e7fa0`, all 11
+  delivery files byte-identical) and recorded as deployed, retiring
+  `3630440af0d45598` and its four exclusive files; receipts are in
+  `docs/evidence/asset-retention-check-2026-11-08/`.
 
 ## [2026-11-07] - Database portability and reaction identity
 

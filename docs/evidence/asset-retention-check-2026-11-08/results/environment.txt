@@ -1,0 +1,4 @@
+revision=eeceed780aa9ec92e2a85e9554020a6c6d85d503
+node=v22.22.1
+vite=8.3.5
+scratch=/home/azureuser/.rb-asset-repro.V5mpyJ
