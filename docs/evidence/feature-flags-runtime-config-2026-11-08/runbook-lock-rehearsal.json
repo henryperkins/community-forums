@@ -1,0 +1,103 @@
+{
+    "recorded_at_utc": "2026-11-08T00:59:25+00:00",
+    "database_server": "11.8.9-MariaDB-ubu2404",
+    "runbook_sha256": "2fb85fab6bdbe4f278ef75b0d8f96718886f824cea9e7b19a9d370d3409f3115",
+    "disable_recipe_sha256": "2b1384b00934530502edb7959648874446b284ffa3bb9c0fe9218c73f2c26808",
+    "restore_recipe_sha256": "422b0863188526b113b7914edeb7497bda622ea50a139e07db96ff94950e0b11",
+    "boundary": "Dedicated local rehearsal database; published recipes extracted verbatim, with synchronization only after their map read; competing writer uses the real console service.",
+    "observations": {
+        "baseline_unlocked": {
+            "final_map": {
+                "email": false,
+                "community": false
+            },
+            "console_pending_before_release": false
+        },
+        "current_absent": {
+            "final_map": {
+                "community": false,
+                "search": false
+            },
+            "console_pending_before_release": true
+        },
+        "current_existing": {
+            "final_map": {
+                "email": false,
+                "legacy": {
+                    "keep": "value"
+                },
+                "community": false,
+                "search": false
+            },
+            "console_pending_before_release": true
+        },
+        "restore_with_console": {
+            "final_map": {
+                "legacy": [
+                    "keep"
+                ],
+                "search": false
+            },
+            "console_pending_before_release": true
+        },
+        "last_override": {
+            "exit": 0,
+            "stored_json": "{}"
+        },
+        "refuse-disable-0": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refuse-restore-0": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refuse-disable-1": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refuse-restore-1": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refuse-disable-2": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refuse-restore-2": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refuse-disable-3": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refuse-restore-3": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refuse-disable-4": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refuse-restore-4": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "deliberate_enable": {
+            "exit": 0,
+            "custom_css_override": true
+        }
+    },
+    "failures": []
+}

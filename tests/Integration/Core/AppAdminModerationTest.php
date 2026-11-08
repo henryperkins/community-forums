@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Core\App;
+use App\Core\Config;
 use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
@@ -28,6 +30,78 @@ final class AppAdminModerationTest extends TestCase
     private function settings(): SettingRepository
     {
         return new SettingRepository($this->db);
+    }
+
+    private function configureAntiAbuseMode(string $mode): void
+    {
+        $items = $this->config->all();
+        $items['antiabuse']['mode'] = $mode;
+        $this->config = new Config($items);
+        $this->app = new App($this->config, $this->db, $this->rateLimiter);
+    }
+
+    public function test_moderation_form_shows_effective_mode_without_a_database_override(): void
+    {
+        $this->db->run('DELETE FROM settings WHERE `key` = ?', ['antiabuse_mode']);
+        $this->actingAs($this->admin);
+
+        foreach (['observe', 'hold', 'block'] as $mode) {
+            $this->configureAntiAbuseMode($mode);
+            $response = $this->get('/admin/moderation');
+
+            $this->assertStatus(200, $response);
+            self::assertStringContainsString('<option value="' . $mode . '" selected>', $response->body());
+        }
+    }
+
+    public function test_moderation_form_resolves_stored_mode_like_enforcement(): void
+    {
+        $this->configureAntiAbuseMode('block');
+        $this->actingAs($this->admin);
+
+        foreach ([['hold', 'hold'], ['', 'block'], ['invalid-mode', 'observe'], [[], 'block'], [false, 'block']] as [$stored, $expected]) {
+            $this->settings()->set('antiabuse_mode', $stored);
+            $response = $this->get('/admin/moderation');
+
+            $this->assertStatus(200, $response);
+            self::assertStringContainsString('<option value="' . $expected . '" selected>', $response->body());
+        }
+    }
+
+    public function test_moderation_audit_before_records_the_enforced_inherited_mode(): void
+    {
+        $this->db->run('DELETE FROM settings WHERE `key` = ?', ['antiabuse_mode']);
+        $this->configureAntiAbuseMode('block');
+        $this->actingAs($this->admin);
+
+        $response = $this->post('/admin/moderation', [
+            'antiabuse_mode' => 'flag',
+            'antiabuse_blocked_words' => 'saved phrase',
+        ]);
+
+        $this->assertRedirect($response, '/admin/moderation');
+        $audit = $this->db->fetch("SELECT before_json, after_json FROM moderation_log WHERE reason = 'anti_abuse_settings' ORDER BY id DESC LIMIT 1");
+        self::assertNotNull($audit);
+        self::assertSame('block', json_decode($audit['before_json'], true)['antiabuse_mode']);
+        self::assertSame('flag', json_decode($audit['after_json'], true)['antiabuse_mode']);
+    }
+
+    public function test_invalid_moderation_draft_is_preserved_over_effective_mode(): void
+    {
+        $this->db->run('DELETE FROM settings WHERE `key` = ?', ['antiabuse_mode']);
+        $this->configureAntiAbuseMode('hold');
+        $this->actingAs($this->admin);
+
+        $response = $this->post('/admin/moderation', [
+            'antiabuse_mode' => 'invalid-mode',
+            'antiabuse_blocked_words' => 'keep this phrase',
+        ]);
+
+        $this->assertStatus(422, $response);
+        self::assertStringContainsString('<option value="invalid-mode" selected>', $response->body());
+        self::assertStringContainsString('keep this phrase', $response->body());
+        self::assertFalse($this->settings()->has('antiabuse_mode'));
+        self::assertStringContainsString('<option value="hold" selected>', $this->get('/admin/moderation')->body());
     }
 
     public function test_admin_can_set_board_require_approval_and_it_holds_posts(): void

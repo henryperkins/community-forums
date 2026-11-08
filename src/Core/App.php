@@ -2441,6 +2441,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
             $c->get(FeatureFlags::class),
+            $c->get(AntiAbuseService::class),
             $c->get(\App\Service\BrandingRevisionService::class),
         ));
         $c->bind(FeatureFlagAdminService::class, fn (Container $c) => new FeatureFlagAdminService(

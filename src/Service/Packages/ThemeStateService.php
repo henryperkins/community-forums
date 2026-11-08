@@ -63,13 +63,15 @@ final class ThemeStateService
             $this->reauth->requirePassword($admin, (string) $currentPassword);
         }
 
-        $this->settings->set('theme_safe_mode', $enabled ? '1' : '');
-        $this->audit->log([
-            'actor_id' => $admin->id(),
-            'action' => $enabled ? 'theme_safe_mode_enter' : 'theme_safe_mode_exit',
-            'target_type' => 'setting',
-            'target_id' => 0,
-        ]);
+        $this->db->transaction(function () use ($admin, $enabled): void {
+            $this->settings->set('theme_safe_mode', $enabled ? '1' : '');
+            $this->audit->log([
+                'actor_id' => $admin->id(),
+                'action' => $enabled ? 'theme_safe_mode_enter' : 'theme_safe_mode_exit',
+                'target_type' => 'setting',
+                'target_id' => 0,
+            ]);
+        });
         $this->telemetry?->emit('theme.lifecycle', ['action' => $enabled ? 'safe_mode_enter' : 'safe_mode_exit']);
     }
 

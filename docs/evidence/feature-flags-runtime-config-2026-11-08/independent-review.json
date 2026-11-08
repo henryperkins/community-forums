@@ -1,0 +1,29 @@
+{
+  "range": "b1d2a591..b1fd7ce6",
+  "reviewer": "independent read-only reviewer",
+  "critical": [],
+  "important": [
+    {
+      "finding": "Focused browser spec failed normal harness discovery without its special database and inherited hold.",
+      "red": "review-browser-red.txt",
+      "resolution": "Dedicated npm run evidence:runtime-config runner prepares a private browser DB in observe mode and tests under hold; normal discovery skips those special scenarios.",
+      "green": [
+        "browser-default-discovery.log",
+        "task-1-browser.log"
+      ]
+    }
+  ],
+  "contract_completion": [
+    {
+      "finding": "A non-encodable value on the target key could be overwritten/removed before encoding validation.",
+      "red": "review-encoding-red.json",
+      "resolution": "Validate the original map before either mutation; rehearsal checks both actions for five malformed/unwritable inputs.",
+      "green": "runbook-lock-rehearsal.json"
+    }
+  ],
+  "declined_to_judge": [
+    "Production deployment behavior (outside accepted plan)",
+    "Still-running full-suite result (executor will record final outcome)",
+    "Unchanged PHP 8.5 scanner deprecation (baseline qualification retained)"
+  ]
+}

@@ -1,0 +1,6 @@
+There were 4 failures:
+1) Tests\Integration\Core\AppAdminModerationTest::test_moderation_form_shows_effective_mode_without_a_database_override
+2) Tests\Integration\Core\AppAdminModerationTest::test_moderation_form_resolves_stored_mode_like_enforcement
+3) Tests\Integration\Core\AppAdminModerationTest::test_moderation_audit_before_records_the_enforced_inherited_mode
+4) Tests\Integration\Core\AppAdminModerationTest::test_invalid_moderation_draft_is_preserved_over_effective_mode
+Tests: 14, Assertions: 65, Failures: 4.

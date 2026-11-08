@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Core\Database;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\InstalledPackageRepository;
@@ -125,6 +126,73 @@ final class AppThemePackageTest extends TestCase
 
         $service->setSafeMode($admin, false, 'password123');
         self::assertStringContainsString('/theme/' . $digest . '.css', $this->get('/')->body());
+    }
+
+    public function test_safe_mode_audit_failure_preserves_the_previous_setting(): void
+    {
+        // This connection has no harness transaction: only the service can roll
+        // back its setting write when the real audit insert fails.
+        $database = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
+        $settings = new SettingRepository($database);
+        $previous = $database->fetch('SELECT `value`, updated_at FROM settings WHERE `key` = ?', ['theme_safe_mode']);
+        $missingActorId = 2147483647;
+        self::assertFalse($database->fetchValue('SELECT 1 FROM users WHERE id = ?', [$missingActorId]));
+        $missingActor = new User(['id' => $missingActorId, 'role' => 'admin', 'status' => 'active']);
+
+        try {
+            foreach ([null, ''] as $initial) {
+                if ($initial === null) {
+                    $database->run('DELETE FROM settings WHERE `key` = ?', ['theme_safe_mode']);
+                } else {
+                    $settings->set('theme_safe_mode', $initial);
+                }
+
+                try {
+                    $this->themeState($database)->setSafeMode($missingActor, true);
+                    self::fail('The audit foreign key must reject the missing actor.');
+                } catch (\PDOException $e) {
+                    self::assertSame('23000', (string) $e->getCode());
+                    self::assertSame(1452, $e->errorInfo[1]);
+                    self::assertStringContainsString('fk_modlog_actor', $e->getMessage());
+                }
+
+                self::assertFalse($database->pdo()->inTransaction());
+                self::assertSame($initial, $settings->get('theme_safe_mode'));
+                self::assertSame($initial !== null, $settings->has('theme_safe_mode'));
+            }
+        } finally {
+            if ($previous === null) {
+                $database->run('DELETE FROM settings WHERE `key` = ?', ['theme_safe_mode']);
+            } else {
+                $database->run('UPDATE settings SET `value` = ?, updated_at = ? WHERE `key` = ?', [
+                    $previous['value'], $previous['updated_at'], 'theme_safe_mode',
+                ]);
+            }
+        }
+    }
+
+    public function test_safe_mode_records_one_audit_for_each_successful_transition(): void
+    {
+        $admin = $this->adminEntity();
+        $service = $this->themeState();
+
+        $service->setSafeMode($admin, true);
+        $service->setSafeMode($admin, false, 'password123');
+
+        $actions = $this->db->fetchAll("SELECT action FROM moderation_log WHERE actor_id = ? AND action LIKE 'theme_safe_mode_%' ORDER BY id", [$admin->id()]);
+        self::assertSame(['theme_safe_mode_enter', 'theme_safe_mode_exit'], array_column($actions, 'action'));
+    }
+
+    public function test_environment_override_keeps_safe_mode_active_after_database_exit(): void
+    {
+        $admin = $this->adminEntity();
+        $service = $this->themeState(forcedSafeMode: true);
+
+        $service->setSafeMode($admin, true);
+        $service->setSafeMode($admin, false, 'password123');
+
+        self::assertSame('', (new SettingRepository($this->db))->getString('theme_safe_mode'));
+        self::assertTrue($service->safeMode());
     }
 
     public function test_brand_css_suppresses_retro_preset_while_package_theme_active(): void
@@ -816,22 +884,24 @@ final class AppThemePackageTest extends TestCase
         $this->appArtifactFiles[] = $path;
     }
 
-    private function themeState(): ThemeStateService
+    private function themeState(?Database $database = null, bool $forcedSafeMode = false): ThemeStateService
     {
+        $database ??= $this->db;
         return new ThemeStateService(
-            $this->db,
-            new PackageThemeRepository($this->db),
-            new InstalledPackageRepository($this->db),
-            new PackageRepository($this->db),
-            new PackageReleaseRepository($this->db),
+            $database,
+            new PackageThemeRepository($database),
+            new InstalledPackageRepository($database),
+            new PackageRepository($database),
+            new PackageReleaseRepository($database),
             new PackageArtifactStore($this->artifactDir),
-            new PackageSecurityGate(new LocalPackageBlockRepository($this->db), new PackageAdvisoryRepository($this->db)),
-            new ThemeBuildService($this->db, new PackageThemeRepository($this->db), new ManifestValidator(), new ThemeAssetScanner()),
+            new PackageSecurityGate(new LocalPackageBlockRepository($database), new PackageAdvisoryRepository($database)),
+            new ThemeBuildService($database, new PackageThemeRepository($database), new ManifestValidator(), new ThemeAssetScanner()),
             new WriteGate(),
             new ReauthGate(new PasswordHasher()),
-            new SettingRepository($this->db),
-            new ModerationLogRepository($this->db),
-            new PackageHistoryRepository($this->db),
+            new SettingRepository($database),
+            new ModerationLogRepository($database),
+            new PackageHistoryRepository($database),
+            forcedSafeMode: $forcedSafeMode,
         );
     }
 
