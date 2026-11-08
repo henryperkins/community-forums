@@ -20,6 +20,9 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 - Retain the verified `c66e3b55dba6da68` inbox-hardening asset release alongside
   the two preceding deployed releases (`3630440af0d45598`, `67ba8434286ff7e6`).
   Qualification: `docs/evidence/forum-theme/README.md`; ADR 0056.
+- Verified on the public site after publication (`5dc1b40f3b23d46d`, all 11
+  delivery files byte-identical) and recorded as deployed, retiring
+  `67ba8434286ff7e6`; receipts are in `docs/evidence/forum-theme/production/`.
 
 ## [2026-11-07] - Inbox reading pane and triage hardening
 
