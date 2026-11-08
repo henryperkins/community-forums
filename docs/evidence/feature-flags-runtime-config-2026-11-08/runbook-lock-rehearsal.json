@@ -1,0 +1,73 @@
+{
+    "recorded_at_utc": "2026-11-08T00:51:17+00:00",
+    "database_server": "11.8.9-MariaDB-ubu2404",
+    "runbook_sha256": "93106be5f58a90361085fd326460b335b167e46fc2a16c4b3ab57fcba5d3fff9",
+    "disable_recipe_sha256": "ecaa635509182a0b4181542c09be943603f4df850a8de162619bbe1cb91d2603",
+    "restore_recipe_sha256": "1c71858d7af15df4261ec58c63405b2b37489be0837da09ef9d07c5b43cca78f",
+    "boundary": "Dedicated local rehearsal database; published recipes extracted verbatim, with synchronization only after their map read; competing writer uses the real console service.",
+    "observations": {
+        "baseline_unlocked": {
+            "final_map": {
+                "email": false,
+                "community": false
+            },
+            "console_pending_before_release": false
+        },
+        "current_absent": {
+            "final_map": {
+                "community": false,
+                "search": false
+            },
+            "console_pending_before_release": true
+        },
+        "current_existing": {
+            "final_map": {
+                "email": false,
+                "legacy": {
+                    "keep": "value"
+                },
+                "community": false,
+                "search": false
+            },
+            "console_pending_before_release": true
+        },
+        "restore_with_console": {
+            "final_map": {
+                "legacy": [
+                    "keep"
+                ],
+                "search": false
+            },
+            "console_pending_before_release": true
+        },
+        "last_override": {
+            "exit": 0,
+            "stored_json": "{}"
+        },
+        "refusal_0": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refusal_1": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refusal_2": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "refusal_3": {
+            "exit": 255,
+            "unchanged": true,
+            "controlled_refusal": true
+        },
+        "deliberate_enable": {
+            "exit": 0,
+            "custom_css_override": true
+        }
+    },
+    "failures": []
+}

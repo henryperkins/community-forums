@@ -18,3 +18,11 @@ The isolated analysis probe uses real PDO SQLite in memory for settings SELECTs;
 The MariaDB failure test first observed `theme_safe_mode = "1"` after the real audit foreign-key failure, instead of the previous absent setting ([red log](task-2-red.log)). After wrapping the setting and audit writes together, the test verifies both absent and disabled prior states are retained. It uses an independent real connection outside the harness transaction and restores that row in `finally`.
 
 The theme package suite passes 29 tests and 283 assertions ([PHPUnit log](task-2-phpunit.log)), including one audit entry per successful transition, password-guarded exit, and continued environment-forced safe mode. PHP 8.5 reports the existing `ThemeAssetScanner.php:68` `imagedestroy()` deprecation, also present in the unchanged baseline. This task does not change that scanner.
+
+## Manual override recipes
+
+The rehearsal extracts the three PHP command bodies from the published runbook and executes the disable/restore recipes in child processes. It only inserts synchronization after the map read; the competing writer calls the real feature-console service. Its destructive setup is restricted to `DB_DATABASE=retroboards_flags_rehearsal`.
+
+- The original recipe erased the console's `search=false` override. The baseline/current old-recipe run also exposed last-key `[]` storage and replacement of corrupt maps ([baseline receipt](runbook-lock-baseline.json)).
+- The revised recipes retain both changes for absent and existing rows, preserve existing unknown/nested keys, restore one key alongside a concurrent console write, store `{}` after the last removal, refuse JSON null/list/scalar/out-of-range-number maps unchanged through their explicit guard, and retain deliberate manual enablement ([passing receipt](runbook-lock-rehearsal.json)).
+- The receipt contains the exact runbook and command hashes. Reproduce with `DB_DATABASE=retroboards_flags_rehearsal php docs/evidence/feature-flags-runtime-config-2026-11-08/runbook-lock-rehearsal.php` against a dedicated local database with that name. It does not inspect production.

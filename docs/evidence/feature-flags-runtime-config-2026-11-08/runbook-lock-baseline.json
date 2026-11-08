@@ -1,0 +1,74 @@
+{
+    "recorded_at_utc": "2026-11-08T00:49:44+00:00",
+    "database_server": "11.8.9-MariaDB-ubu2404",
+    "runbook_sha256": "3e6efb5fdeb14cc6e11c13f5263ab9d48a64dca9fbd284c2eab46b3ec26a692c",
+    "disable_recipe_sha256": "17b1562f1a93ba08413f37096f4ba7f791c69104ec26d4906531a2e49e36fc33",
+    "restore_recipe_sha256": "8b999f348314c715ba504cca1b80d95cace7d099d38c280d8069400331db1d9e",
+    "boundary": "Dedicated local rehearsal database; published recipes extracted verbatim, with synchronization only after their map read; competing writer uses the real console service.",
+    "observations": {
+        "baseline_unlocked": {
+            "final_map": {
+                "email": false,
+                "community": false
+            },
+            "console_pending_before_release": false
+        },
+        "current_absent": {
+            "final_map": {
+                "community": false
+            },
+            "console_pending_before_release": false
+        },
+        "current_existing": {
+            "final_map": {
+                "email": false,
+                "legacy": {
+                    "keep": "value"
+                },
+                "community": false
+            },
+            "console_pending_before_release": false
+        },
+        "restore_with_console": {
+            "final_map": {
+                "legacy": [
+                    "keep"
+                ]
+            },
+            "console_pending_before_release": false
+        },
+        "last_override": {
+            "exit": 0,
+            "stored_json": "[]"
+        },
+        "refusal_0": {
+            "exit": 0,
+            "unchanged": false
+        },
+        "refusal_1": {
+            "exit": 0,
+            "unchanged": false
+        },
+        "refusal_2": {
+            "exit": 0,
+            "unchanged": false
+        },
+        "refusal_3": {
+            "exit": 255,
+            "unchanged": true
+        },
+        "deliberate_enable": {
+            "exit": 0,
+            "custom_css_override": true
+        }
+    },
+    "failures": [
+        "absent: independent changes were not both retained.",
+        "existing: independent changes were not both retained.",
+        "Restore did not preserve the concurrent and unknown keys.",
+        "The last override did not become an empty JSON object.",
+        "Malformed/unwritable map was not refused unchanged: 0",
+        "Malformed/unwritable map was not refused unchanged: 1",
+        "Malformed/unwritable map was not refused unchanged: 2"
+    ]
+}

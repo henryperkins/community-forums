@@ -64,10 +64,11 @@ switch any flag off but never switches on one that has not shipped
 (`FeatureFlags::consoleEnableBlocker()`: Safety-blocked, Missing user UI, or
 Reserved under ADR 0018); that stays a deliberate write with the commands
 below. While `settings.features` is not a JSON object (a JSON list, a scalar or
-`null`) every row is locked: repair it with the commands below first. A stored
+`null`) every row is locked: inspect it and follow **Repairing an override map**
+below first. A stored
 number PHP cannot re-encode (for example `1e999`) does not lock the rows, since
 the overrides around it still apply, but every write is refused with that
-reason until the value is removed with the commands below. A restricted (for
+reason until the value is repaired separately. A restricted (for
 example suspended) admin sees every toggle locked.
 
 ```bash
@@ -77,22 +78,65 @@ Env::load(".env"); $c=Config::fromFile("config/config.php");
 var_export((new App\Repository\SettingRepository(new Database($c->get("db"))))
   ->get("features", [])); echo "\n";'
 
-# Disable a feature (example: pause community layer) — read-modify-write.
+# Disable a feature (example: pause community layer) — locked read-modify-write.
 # NEVER write a fresh object: set("features", ["x"=>false]) replaces the whole
 # JSON and silently re-enables every other rolled-back default-ON flag.
-php -r 'require "vendor/autoload.php"; use App\Core\{Config,Database,Env};
+php -r 'require "vendor/autoload.php"; use App\Core\{Config,Database,Env,FeatureFlags};
 Env::load(".env"); $c=Config::fromFile("config/config.php");
-$s=new App\Repository\SettingRepository(new Database($c->get("db")));
-$f=(array) $s->get("features", []); $f["community"]=false;
-$s->set("features", $f);'
+$db=new Database($c->get("db")); $s=new App\Repository\SettingRepository($db);
+$db->transaction(function () use ($s): void {
+    $f=$s->lockForUpdate("features", new stdClass());
+    if (!FeatureFlags::isOverrideMap($f)) {
+        throw new RuntimeException("settings.features is not an override map; inspect and repair it separately.");
+    }
+    $f["community"]=false;
+    $next=(object) $f;
+    if (json_encode($next, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) === false) {
+        throw new RuntimeException("settings.features cannot be encoded; inspect and repair it separately.");
+    }
+    $s->set("features", $next);
+});'
 
 # Re-enable: remove the key (restores the code default) — or set it true.
-php -r 'require "vendor/autoload.php"; use App\Core\{Config,Database,Env};
+php -r 'require "vendor/autoload.php"; use App\Core\{Config,Database,Env,FeatureFlags};
 Env::load(".env"); $c=Config::fromFile("config/config.php");
-$s=new App\Repository\SettingRepository(new Database($c->get("db")));
-$f=(array) $s->get("features", []); unset($f["community"]);
-$s->set("features", $f);'
+$db=new Database($c->get("db")); $s=new App\Repository\SettingRepository($db);
+$db->transaction(function () use ($s): void {
+    $f=$s->lockForUpdate("features", new stdClass());
+    if (!FeatureFlags::isOverrideMap($f)) {
+        throw new RuntimeException("settings.features is not an override map; inspect and repair it separately.");
+    }
+    unset($f["community"]);
+    $next=(object) $f;
+    if (json_encode($next, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) === false) {
+        throw new RuntimeException("settings.features cannot be encoded; inspect and repair it separately.");
+    }
+    $s->set("features", $next);
+});'
 ```
+
+Both mutation commands take the same row lock as console writes, including
+when the row is initially absent, and preserve every other key. They are
+operator database edits and do not create an actor-attributed console audit
+entry. Prefer the console for ordinary changes. A deliberate manual enablement
+of a console-blocked flag can use the same locked procedure with an explicit
+`$f["flag_name"]=true` assignment, after reviewing that flag's blocker and ADR.
+
+**Repairing an override map.** Routine toggles refuse malformed or unwritable
+maps; they do not repair them. Preserve the raw value and timestamp first:
+
+```sql
+SELECT `value`, updated_at FROM settings WHERE `key` = 'features';
+```
+
+Pause other flag writers while reviewing the repair. Build a valid JSON object
+from that copy, preserving intended rollback overrides and other keys; remove
+or correct only the corrupt values. Before explicitly replacing the map, take
+the same row lock inside a transaction and check that the raw row still matches
+the saved copy. If it changed, review the newer value first. Do not replace the
+map with a fresh empty object merely to unlock the console: that restores every
+code default and discards existing rollbacks. Verify the effective states on
+`/admin/features` after the repair.
 
 Rolling a feature back is the **first response** to a logic defect; it is
 covered by `AppFeatureFlagTest`.

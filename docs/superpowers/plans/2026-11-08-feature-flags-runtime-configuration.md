@@ -10,7 +10,7 @@
 
 **Spec:** `DECISIONS.md` §2; `PRODUCT_DESIGN.md` §13; `ADMIN.md` §3.8 and §9.3; `AGENTS.md` write-path and release rules; `docs/adr/0049-guarded-feature-flag-toggles.md`; `docs/runbooks/operations.md` §2; `docs/runbooks/package_themes.md` §Safe Mode.
 
-**Status:** Implementation in progress; Tasks 1–2 verified, Tasks 3–4 pending.
+**Status:** Implementation in progress; Tasks 1–3 verified, Task 4 pending.
 
 **Analysis revision:** `b1d2a591b3846fda586cd66ffd2346438de8286c`, current HEAD when inspected. References below use this committed revision. Unrelated working-tree edits are outside this plan.
 
@@ -134,11 +134,11 @@ Tasks 1–4 are independently reviewable. Start with Task 1, whose mismatch is r
 - Consume `Database::transaction()`, `SettingRepository::lockForUpdate(string $key, mixed $seed): mixed`, `FeatureFlags::isOverrideMap(mixed $overrides): bool` and `SettingRepository::set(string $key, mixed $value): void`.
 - Retain the existing inspect, disable-one-key and remove-one-key operator actions.
 
-- [ ] Reproduce the collision with two connections to a throwaway database: pause a manual writer after reading the map, commit another key through the locking console protocol, resume the manual writer and record the final map. Preserve this as the baseline result, not a production incident claim.
-- [ ] Put each documented mutation inside `Database::transaction()`. Acquire `lockForUpdate('features', new stdClass())` before reading/modifying; reject a map that fails `isOverrideMap()` or cannot be JSON-encoded; persist the edited map as an object. Preserve every other key.
-- [ ] Keep explicit repair instructions separate from routine toggles. Explain that these manual commands do not create an actor-attributed console audit record; retain the ability to deliberately enable a console-blocked flag.
-- [ ] Rehearse the revised sequence with an absent row and an existing row. Assert both writers' key changes survive, including a writer following the console protocol. Also check that removing the last override stores `{}`, and corrupt/unwritable maps are refused without replacement.
-- [ ] Review the exact published command bodies, store the rehearsal receipt and commit only the runbook/evidence files for this task. This task alone does not require another application-wide PHPUnit run.
+- [x] Reproduce the collision with two connections to a throwaway database: pause a manual writer after reading the map, commit another key through the locking console protocol, resume the manual writer and record the final map. Preserve this as the baseline result, not a production incident claim.
+- [x] Put each documented mutation inside `Database::transaction()`. Acquire `lockForUpdate('features', new stdClass())` before reading/modifying; reject a map that fails `isOverrideMap()` or cannot be JSON-encoded; persist the edited map as an object. Preserve every other key.
+- [x] Keep explicit repair instructions separate from routine toggles. Explain that these manual commands do not create an actor-attributed console audit record; retain the ability to deliberately enable a console-blocked flag.
+- [x] Rehearse the revised sequence with an absent row and an existing row. Assert both writers' key changes survive, including a writer following the console protocol. Also check that removing the last override stores `{}`, and corrupt/unwritable maps are refused without replacement.
+- [x] Review the exact published command bodies, store the rehearsal receipt and commit only the runbook/evidence files for this task. This task alone does not require another application-wide PHPUnit run.
 
 ## Task 4 Document existing mode and recovery environment controls
 
