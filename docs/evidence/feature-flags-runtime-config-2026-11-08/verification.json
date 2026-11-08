@@ -1,0 +1,166 @@
+{
+  "recorded_at_utc": "2026-11-08T01:14:27.334467+00:00",
+  "base_revision": "b1d2a591b3846fda586cd66ffd2346438de8286c",
+  "tested_candidate_revision": "5ad42010c0184b5296b59ff69a039c6e957f1edd",
+  "branch": "codex/feature-flags-runtime-config",
+  "boundary": "Local isolated worktree; final follow-up contains documentation and receipts only; no publication or production checks.",
+  "runtime": {
+    "php": "8.5.4",
+    "phpunit": "11.5.56",
+    "database": "11.8.9-MariaDB-ubu2404",
+    "node": "v22.22.1"
+  },
+  "full_php_suite": {
+    "schema_preparation": "RB_TEST_FRESH=1 php -r 'require \"tests/bootstrap.php\";'",
+    "command": "COMPOSER_PROCESS_TIMEOUT=0 RB_TEST_FRESH=0 composer test -- --display-deprecations --display-skipped",
+    "private_database": "retroboards_flags_config_test",
+    "exit_code": 0,
+    "tests": 3580,
+    "assertions": 34043,
+    "deprecations": 8,
+    "skipped": 1,
+    "duration": "06:01.785",
+    "log": "full-suite.log",
+    "skipped_test": "Tests\\Integration\\Core\\AppThreadIntelligenceMigrationTest::test_0077_down_and_up_rehearsal_on_fixture_free_schema",
+    "skip_reason": "Requires its separate dedicated fixture-free throwaway database; migrations are unchanged by this branch.",
+    "deprecation_locations": [
+      {
+        "file": "tests/Unit/Core/DatabaseTlsTest.php",
+        "line": 80,
+        "symbol": "ReflectionMethod::setAccessible()",
+        "file_unchanged_from_base": true
+      },
+      {
+        "file": "tests/Unit/Core/DatabaseTlsTest.php",
+        "line": 38,
+        "symbol": "PDO::MYSQL_ATTR_SSL_CA",
+        "file_unchanged_from_base": true
+      },
+      {
+        "file": "tests/Unit/Core/DatabaseTlsTest.php",
+        "line": 39,
+        "symbol": "PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT",
+        "file_unchanged_from_base": true
+      },
+      {
+        "file": "src/Core/Database.php",
+        "line": 145,
+        "symbol": "PDO::MYSQL_ATTR_SSL_CA",
+        "file_unchanged_from_base": true
+      },
+      {
+        "file": "src/Core/Database.php",
+        "line": 151,
+        "symbol": "PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT",
+        "file_unchanged_from_base": true
+      },
+      {
+        "file": "tests/Unit/Core/DatabaseTlsTest.php",
+        "line": 71,
+        "symbol": "ReflectionMethod::setAccessible()",
+        "file_unchanged_from_base": true
+      },
+      {
+        "file": "src/Mail/CloudflareSmtpMailer.php",
+        "line": 110,
+        "symbol": "curl_close()",
+        "file_unchanged_from_base": true
+      },
+      {
+        "file": "src/Service/Packages/ThemeAssetScanner.php",
+        "line": 68,
+        "symbol": "imagedestroy()",
+        "file_unchanged_from_base": true
+      }
+    ],
+    "earlier_incomplete_invocations": [
+      {
+        "outcome": "Composer terminated its child at the default 300-second timeout; suite incomplete."
+      },
+      {
+        "outcome": "Stopped only the private parent/child processes after observing child fresh-schema DROP TABLE users blocked by the parent transaction; suite incomplete.",
+        "correction": "Freshen schema once outside the suite and run with RB_TEST_FRESH=0."
+      }
+    ]
+  },
+  "focused_php": [
+    {
+      "suite": "Moderation and existing admin safeguards",
+      "tests": 20,
+      "assertions": 175,
+      "log": "task-1-phpunit.log"
+    },
+    {
+      "suite": "Theme package",
+      "tests": 29,
+      "assertions": 283,
+      "deprecations": 1,
+      "log": "task-2-phpunit.log"
+    },
+    {
+      "suite": "Recovery email race environment check",
+      "tests": 9,
+      "assertions": 48,
+      "log": "race-environment-check.log"
+    },
+    {
+      "suite": "Focused unchanged baseline",
+      "tests": 36,
+      "assertions": 313,
+      "deprecations": 1,
+      "log": "baseline-focused.log"
+    }
+  ],
+  "browser": {
+    "command": "cd tests/browser && npm run evidence:runtime-config",
+    "passed": 4,
+    "browser": "Chromium",
+    "viewports": [
+      "1280x800",
+      "390x844"
+    ],
+    "javascript_modes": [
+      "enabled",
+      "disabled"
+    ],
+    "captures": 8,
+    "console_or_page_errors": 0,
+    "log": "task-1-browser.log",
+    "normal_discovery": {
+      "intended_skips": 4,
+      "log": "browser-default-discovery.log"
+    }
+  },
+  "database_rehearsal": {
+    "receipt": "runbook-lock-rehearsal.json",
+    "failures": [],
+    "refusal_cases": 10,
+    "concurrent_cases": [
+      "current_absent",
+      "current_existing",
+      "restore_with_console"
+    ],
+    "baseline_lost_update_reproduced": true
+  },
+  "independent_review": {
+    "range": "b1d2a591..b1fd7ce6",
+    "receipt": "independent-review.json",
+    "corrections_revision": "5ad42010c0184b5296b59ff69a039c6e957f1edd",
+    "second_review_dispatched": false
+  },
+  "input_sha256": {
+    "src/Core/App.php": "5354ebb74f91d322962b948912bc648b397f9822957110c0490015b5104a075f",
+    "src/Service/AdminSettingsService.php": "fed997339b6cae76dabb996b753a0eb44ba9a5bfd3871b2f0e18c580dcccbc99",
+    "src/Service/Packages/ThemeStateService.php": "a06c01ba6c0464c2f55ce29dd4fc42d1f70a44838fe8d6fdd13d1095125d9a19",
+    "tests/Integration/Core/AppAdminModerationTest.php": "c83c3a18b0a632fcdb65b95aea9c48ffbe0bf3d57c870a0ddb8577e1866e4471",
+    "tests/Integration/Core/AppThemePackageTest.php": "2634bff68a12405ff1ce31786ab0161f25fe72a4c6a450398df6f1baecd0d4d8",
+    "tests/browser/package.json": "8d034ba8d39ef8d355e269891b702f769e6763aa52c20e7e47a8d3b19f532a18",
+    "tests/browser/run-runtime-config.cjs": "a976b621f59c52a4ba22db8a606aeaa557118762baf61b838204b512027003aa",
+    "tests/browser/runtime-config-fixture.php": "8483d9cc2a833554a74e75b695a787e63c889a10cdee199d9911bf56ee6e44c3",
+    "tests/browser/runtime-configuration.spec.ts": "2f697a7b3f8ad0809ff9d7d2750ed882d9042718fb08e8d9e21f1d2dd0f6ee50",
+    ".env.example": "2784c0059b09c5862757f1cf023ee916af3c9b64ca6aa100f83867a19989f8c0",
+    "docs/runbooks/operations.md": "2fb85fab6bdbe4f278ef75b0d8f96718886f824cea9e7b19a9d370d3409f3115"
+  },
+  "checks_not_required": "No migrations, generated asset inputs or Worker inputs changed.",
+  "publication": "Not requested or performed."
+}

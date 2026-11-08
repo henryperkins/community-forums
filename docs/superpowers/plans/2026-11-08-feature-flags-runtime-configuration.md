@@ -10,7 +10,7 @@
 
 **Spec:** `DECISIONS.md` §2; `PRODUCT_DESIGN.md` §13; `ADMIN.md` §3.8 and §9.3; `AGENTS.md` write-path and release rules; `docs/adr/0049-guarded-feature-flag-toggles.md`; `docs/runbooks/operations.md` §2; `docs/runbooks/package_themes.md` §Safe Mode.
 
-**Status:** Implementation in progress; Tasks 1–4 implemented; final suite and independent review pending.
+**Status:** Tasks 1–4 implemented and verified on `codex/feature-flags-runtime-config`; independent review corrections verified. Publication remains outside scope. [Final evidence](../../evidence/feature-flags-runtime-config-2026-11-08/README.md).
 
 **Analysis revision:** `b1d2a591b3846fda586cd66ffd2346438de8286c`, current HEAD when inspected. References below use this committed revision. Unrelated working-tree edits are outside this plan.
 
@@ -113,10 +113,10 @@ Tasks 1–4 are independently reviewable. Start with Task 1, whose mismatch is r
 **Interfaces:**
 
 - Keep `setSafeMode(User $admin, bool $enabled, ?string $currentPassword = null): void`.
-- Consume `Database::transaction(callable $callback, ?array $writtenTables = null): mixed`, existing settings and audit methods, and the existing test helper `withoutHarnessTransaction(callable $callback): mixed`.
+- Consume `Database::transaction(callable $callback, ?array $writtenTables = null): mixed` and existing settings and audit methods. Execution used an independent `Database` connection instead of the planned `withoutHarnessTransaction()` helper; see [execution ruling 3](../../evidence/feature-flags-runtime-config-2026-11-08/execution-decisions.md).
 
 - [x] Add `test_safe_mode_audit_failure_preserves_the_previous_setting` using a private test database and an actual database write failure. On MySQL/MariaDB with foreign keys enforced, a deliberately non-existent actor id can reject the audit insert through `fk_modlog_actor` (`database/migrations/0010_moderation_log.php:23`). Assert that this exact failure occurred; do not silently replace it with a mocked repository.
-- [x] Execute that case inside `withoutHarnessTransaction()`, restoring any committed fixture state in `finally`. Assert the stored setting from the real database after the exception. A rollback assertion made only inside the normal test transaction does not prove atomicity here.
+- [x] Execute that case outside the harness transaction, restoring any committed fixture state in `finally`. The independent connection replaces the planned `withoutHarnessTransaction()` invocation. Assert the stored setting from the real database after the exception. A rollback assertion made only inside the normal test transaction does not prove atomicity here.
 - [x] Run the new case on the base revision and record the observed outcome. If the expected partial-write case is not reproduced, stop this task's patch and update the finding rather than claiming confirmation.
 - [x] Once reproduced, wrap the setting and audit writes together in `Database::transaction()`. Keep the existing account-state guard, password requirement for exit, stored string values and post-transaction telemetry.
 - [x] Verify one audit entry on successful entry and exit, no changed setting on rejected exit or failed audit, and continued forced-safe-mode behavior. Reuse `test_safe_mode_serves_system_theme_while_theme_active` and `test_admin_safe_mode_route_serves_system_theme_while_theme_active`.
@@ -158,8 +158,8 @@ Tasks 1–4 are independently reviewable. Start with Task 1, whose mismatch is r
 
 ## Final application verification
 
-- [ ] Review the combined diff and ensure unrelated edits are preserved.
-- [ ] Run `composer test` once for the final application candidate, after Tasks 1 and 2 are settled. Repeat only for changed inputs, failures or unresolved concerns.
-- [ ] Retain the focused Task 1 browser evidence and Task 2/3 database failure/concurrency receipts. Run generated-asset or Worker checks only if their inputs actually change.
-- [ ] Update `CHANGELOG.md` with shipped behavior only when implementation is verified. Any accepted deferral must remain in an ADR, not disappear from the work record.
-- [ ] Report implementation, verification and publication separately. A later release must follow the exact-deployment verification in ADR 0051 and the Cloud Run runbook; publication is outside this analysis/planning handoff.
+- [x] Review the combined diff and ensure unrelated edits are preserved.
+- [x] Run `composer test` once for the final application candidate, after Tasks 1 and 2 are settled. Repeat only for changed inputs, failures or unresolved concerns. Final completed run: 3,580 tests, 34,043 assertions, exit 0; eight PHP 8.5 deprecations and one dedicated-database rehearsal skip recorded in the evidence. Earlier incomplete invocations and their environment corrections are documented there.
+- [x] Retain the focused Task 1 browser evidence and Task 2/3 database failure/concurrency receipts. Run generated-asset or Worker checks only if their inputs actually change. Their inputs did not change.
+- [x] Update `CHANGELOG.md` with verified behavior under Unreleased. Any accepted deferral must remain in an ADR, not disappear from the work record. No implementation task was deferred.
+- [x] Report implementation, verification and publication separately. A later release must follow the exact-deployment verification in ADR 0051 and the Cloud Run runbook; publication is outside this handoff.

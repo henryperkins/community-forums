@@ -2,6 +2,18 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Runtime configuration controls
+
+- Show the effective anti-abuse mode in admin settings and record that mode in
+  the audit's before value, including an inherited environment setting.
+- Commit package-theme safe-mode changes and their audit entry together, so a
+  rejected audit write preserves the prior setting.
+- Serialize the manual feature-override recipes with console writes, preserve
+  other overrides and refuse malformed or unencodable maps before editing.
+- Document the existing anti-abuse posture and package/theme emergency controls
+  in `.env.example`. Verification:
+  [local evidence](docs/evidence/feature-flags-runtime-config-2026-11-08/README.md).
+
 ## [2026-11-07] - Conventional Forum theme
 
 - Replace the active Imladris presentation with neutral light/dark surfaces,
