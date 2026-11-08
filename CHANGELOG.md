@@ -2,6 +2,24 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-08] - Two-factor sign-in with an unreadable authenticator secret
+
+- When a member's stored authenticator (TOTP) secret cannot be opened with the
+  configured `APP_KEY`, two-factor sign-in no longer fails with a server error.
+  The authenticator check is skipped and never satisfies sign-in. A valid
+  recovery code still signs in, with the existing challenge, account,
+  attempt-limit and one-time-use checks. An authenticator code is refused with
+  a 422 that points the member to their recovery codes.
+- In that state a recovery code can also disable two-factor authentication, so
+  the member can enroll again. A pending setup that cannot be opened now asks
+  the member to restart setup instead of failing.
+- Each occurrence logs an operator line and marks the sign-in or disable audit
+  row with `totp_unavailable`. A missing `APP_KEY` still fails as a server
+  error.
+- This does not recover secrets or recovery codes whose `APP_KEY` is no longer
+  configured. Runbook: `docs/runbooks/two_factor.md`. Evidence:
+  [unreadable-secret evidence](docs/evidence/mfa-unreadable-secret-2026-11-08/README.md).
+
 ## [2026-11-08] - Runtime configuration controls
 
 - Show the effective anti-abuse mode in admin settings and record that mode in
