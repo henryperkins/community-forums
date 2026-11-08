@@ -1,0 +1,8 @@
+{
+  "full-phpunit.txt": "d224a3a3c054dc06c1610f578650702aa09d1e9ce3c8fa297374e2f53bb1e5f7",
+  "existing-baseline.txt": "9bc692c66d4d18947a3c1872edf38f1ce1e8029a7394a2cefba84984f39a7755",
+  "browser.txt": "be31411f40640a4781b64ed8982e2f03aee60b7aaaeb09e901b4822a4fd93111",
+  "browser-first.txt": "ac1055e4bec082a778eda5098e6133ee06f0ce358967ee0c68939e324c4c3182",
+  "red-baseline.txt": "a2fab82d3f491f4d05aea539e1939c8d1e7c5f2372ddb5cf9fd9c2920f7f4c95",
+  "focused-final.txt": "e08f621be44003c240723ad52040aa85503f259a839539be7a88bb3e154951f6"
+}

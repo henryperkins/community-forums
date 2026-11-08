@@ -2,6 +2,19 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-08] - Registry form error isolation
+
+- Keep registry validation errors and nonsecret drafts with the submitted action
+  and registry/key target. Failed pin, rotation and advisory forms reopen; a
+  rejected key revocation retains its reason on that key only.
+- Associate field errors and focus with the originating controls, leave password
+  fields empty, and preserve rotation/advisory JSON including leading newlines.
+  Other forms and registry cards receive none of the submission's errors or values.
+- Derive form context from the server action and route target; existing authority,
+  CSRF, reauthentication and target checks remain in force. Missing targets show
+  one page alert. Evidence:
+  [registry form errors](docs/evidence/registry-form-errors-2026-11-08/README.md).
+
 ## [2026-11-08] - Runtime configuration controls
 
 - Show the effective anti-abuse mode in admin settings and record that mode in

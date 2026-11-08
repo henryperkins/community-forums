@@ -1,0 +1,230 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Integration\Core;
+
+use App\Core\Response;
+use App\Repository\PackageRegistryRepository;
+use App\Repository\RegistryTrustKeyRepository;
+use App\Repository\SettingRepository;
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Support\Phase5\SigningHarness;
+use Tests\Support\TestCase;
+
+final class AppRegistryFormErrorsTest extends TestCase
+{
+    private int $registryA;
+    private int $registryB;
+    private int $keyA;
+    private int $otherKeyA;
+    private int $keyB;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+        (new SettingRepository($this->db))->set('features', ['package_registry' => true]);
+        $registries = new PackageRegistryRepository($this->db);
+        $keys = new RegistryTrustKeyRepository($this->db);
+        $this->registryA = $registries->create('forms-a', 'Forms A', 'https://a.example.test');
+        $this->registryB = $registries->create('forms-b', 'Forms B', 'https://b.example.test');
+        $this->keyA = $keys->pin($this->registryA, 'root-a', str_repeat('a', 32), null, null);
+        $this->otherKeyA = $keys->pin($this->registryA, 'other-a', str_repeat('b', 32), null, null);
+        $this->keyB = $keys->pin($this->registryB, 'root-b', str_repeat('c', 32), null, null);
+    }
+
+    private function route(string $action): string
+    {
+        return match ($action) {
+            'create' => '/admin/registries',
+            'enable' => '/admin/registries/' . $this->registryA . '/enabled',
+            'pin' => '/admin/registries/' . $this->registryA . '/keys',
+            'rotate' => '/admin/registries/' . $this->registryA . '/rotate',
+            'advisory' => '/admin/registries/' . $this->registryA . '/advisories',
+            'revoke' => '/admin/registry-keys/' . $this->keyA . '/revoke',
+            'block' => '/admin/blocklist',
+        };
+    }
+
+    private function draft(string $action): array
+    {
+        return match ($action) {
+            'create' => ['source_id' => 'draft-source', 'display_name' => 'Draft <source>', 'base_url' => 'https://draft.example.test'],
+            'enable' => [],
+            'pin' => ['key_id' => 'draft-<key>', 'public_key' => base64_encode(str_repeat('d', 32)),
+                'valid_from' => '2031-01-01 00:00:00', 'valid_until' => '2032-01-01 00:00:00'],
+            'rotate', 'advisory' => ['envelope' => "\n" . json_encode([
+                'document' => '{"note":"</textarea><script id=registry-draft-xss>draft</script>"}',
+                'signature' => base64_encode(str_repeat('s', 64)), 'key_id' => 'root-a',
+            ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n"],
+            'revoke' => ['reason' => 'Draft <reason> belongs to this key only'],
+        };
+    }
+
+    /** Only registry state is compared; normal HTTP presence/session bookkeeping is unrelated. */
+    private function registryState(): array
+    {
+        $state = [];
+        foreach (['package_registries', 'registry_trust_keys', 'package_advisories', 'local_package_blocks', 'moderation_log'] as $table) {
+            $state[$table] = $this->db->fetchAll('SELECT * FROM ' . $table . ' ORDER BY id');
+        }
+        return $state;
+    }
+
+    private function dom(Response $response): DOMXPath
+    {
+        $previous = libxml_use_internal_errors(true);
+        try {
+            $dom = new DOMDocument();
+            $dom->loadHTML($response->body());
+            return new DOMXPath($dom);
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+        }
+    }
+
+    private function value(DOMElement $field): string
+    {
+        // DOMDocument parses HTML4; browsers consume one initial textarea LF.
+        if ($field->tagName === 'textarea') {
+            return preg_replace('/^\n/', '', $field->textContent);
+        }
+        return $field->getAttribute('value');
+    }
+
+    private function assertScoped(Response $response, string $route, array $draft, string $invalidField): void
+    {
+        $this->assertStatus(422, $response);
+        $xpath = $this->dom($response);
+        $forms = $xpath->query('//form[@action="' . $route . '"]');
+        self::assertCount(1, $forms);
+        $origin = $forms->item(0);
+        $disclosures = $xpath->query('ancestor::details[1]', $origin);
+        if ($disclosures->length > 0) {
+            self::assertTrue($disclosures->item(0)->hasAttribute('open'), 'The originating disclosure stays open.');
+        }
+        foreach ($draft as $name => $value) {
+            $fields = $xpath->query('.//*[@name="' . $name . '"]', $origin);
+            self::assertCount(1, $fields);
+            self::assertSame($value, $this->value($fields->item(0)), 'Retain only this form\'s exact nonsecret draft.');
+        }
+        $invalid = $xpath->query('.//*[@name="' . $invalidField . '"]', $origin)->item(0);
+        self::assertSame('true', $invalid->getAttribute('aria-invalid'));
+        $description = $invalid->getAttribute('aria-describedby');
+        self::assertNotSame('', $description);
+        foreach (explode(' ', $description) as $id) {
+            self::assertCount(1, $xpath->query('//*[@id="' . $id . '"]'), 'Error ids must be globally unique.');
+            self::assertCount(1, $xpath->query('.//*[@id="' . $id . '"]', $origin), 'The field references its own form\'s error.');
+        }
+        self::assertCount(1, $xpath->query('//*[@autofocus]'));
+        self::assertCount(0, $xpath->query('//*[@id="registry-draft-xss"]'), 'Retained input is escaped.');
+        foreach ($xpath->query('//input[@type="password"]') as $password) {
+            self::assertSame('', $password->getAttribute('value'));
+        }
+        foreach ($xpath->query('//form') as $otherForm) {
+            if ($otherForm->getAttribute('action') === $route) { continue; }
+            self::assertCount(0, $xpath->query('.//*[@aria-invalid="true"]', $otherForm));
+            self::assertCount(0, $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " field-error ")]', $otherForm));
+            foreach ($draft as $name => $value) {
+                foreach ($xpath->query('.//*[@name="' . $name . '"]', $otherForm) as $field) {
+                    self::assertNotSame($value, $this->value($field), 'Drafts must not enter another action, registry or key.');
+                }
+            }
+        }
+    }
+
+    public static function actions(): array
+    {
+        return [['pin'], ['rotate'], ['advisory'], ['revoke'], ['create'], ['enable']];
+    }
+
+    #[DataProvider('actions')]
+    public function test_wrong_password_preserves_only_the_submitted_action_and_target(string $action): void
+    {
+        $before = $this->registryState();
+        $draft = $this->draft($action);
+        $response = $this->post($this->route($action), $draft + [
+            'current_password' => 'NEVER_REPOPULATE_THIS_PASSWORD',
+            'form_context' => 'rotate-' . $this->registryB, 'target_id' => $this->keyB, 'enabled' => '1',
+            'client_secret' => 'NEVER_REPOPULATE_THIS_EXTRA_SECRET',
+        ]);
+
+        $this->assertScoped($response, $this->route($action), $draft, 'current_password');
+        self::assertStringNotContainsString('NEVER_REPOPULATE_THIS_PASSWORD', $response->body());
+        self::assertStringNotContainsString('NEVER_REPOPULATE_THIS_EXTRA_SECRET', $response->body());
+        self::assertSame($before, $this->registryState(), 'A refused form does not mutate registry state or audit it as a change.');
+    }
+
+    public function test_malformed_rotation_json_is_associated_only_with_its_rotation_field(): void
+    {
+        $before = $this->registryState();
+        $draft = ['envelope' => '{"document":"Retain <this> unfinished JSON'];
+        $response = $this->post($this->route('rotate'), $draft + ['current_password' => 'password123']);
+        $this->assertScoped($response, $this->route('rotate'), $draft, 'envelope');
+        self::assertSame($before, $this->registryState());
+    }
+
+    public function test_malformed_advisory_json_stays_in_the_advisory_action(): void
+    {
+        $draft = ['envelope' => 'not JSON <advisory>'];
+        $this->assertScoped($this->post($this->route('advisory'), $draft + ['current_password' => 'password123']),
+            $this->route('advisory'), $draft, 'envelope');
+    }
+
+    public function test_pin_validation_keeps_dates_and_associates_its_public_key_error(): void
+    {
+        $draft = $this->draft('pin');
+        $draft['public_key'] = 'not-base64<public-key>';
+        $this->assertScoped($this->post($this->route('pin'), $draft + ['current_password' => 'password123']),
+            $this->route('pin'), $draft, 'public_key');
+    }
+
+    public function test_verification_failures_keep_the_rotation_and_advisory_contexts_separate(): void
+    {
+        $foreign = SigningHarness::generate('foreign-root');
+        foreach (['rotate', 'advisory'] as $action) {
+            $signed = $action === 'rotate' ? $foreign->mintRotation(SigningHarness::generate('next')) : $foreign->mintAdvisory();
+            $draft = ['envelope' => json_encode(['document' => $signed['json'],
+                'signature' => base64_encode($signed['signature']), 'key_id' => $signed['key_id']], JSON_THROW_ON_ERROR)];
+            $before = $this->registryState();
+            $this->assertScoped($this->post($this->route($action), $draft + ['current_password' => 'password123']),
+                $this->route($action), $draft, 'envelope');
+            self::assertSame($before, $this->registryState());
+        }
+    }
+
+    public function test_block_validation_does_not_put_its_reason_in_key_revocation_forms(): void
+    {
+        $before = $this->registryState();
+        $draft = ['reason' => 'A block draft is not a key revocation'];
+        $this->assertScoped($this->post('/admin/blocklist', $draft), '/admin/blocklist', $draft, 'package_uid');
+        self::assertSame($before, $this->registryState());
+    }
+
+    public function test_missing_targets_show_a_page_alert_without_borrowing_another_form(): void
+    {
+        foreach (['/admin/registries/999999/keys', '/admin/registry-keys/999999/revoke'] as $route) {
+            $response = $this->post($route, $this->draft('pin') + $this->draft('revoke') + ['current_password' => 'password123']);
+            $this->assertStatus(422, $response);
+            $xpath = $this->dom($response);
+            self::assertGreaterThan(0, $xpath->query('//*[@role="alert"]')->length);
+            self::assertCount(0, $xpath->query('//form//*[@aria-invalid="true"]'));
+            self::assertCount(0, $xpath->query('//input[@value="draft-<key>"]'));
+        }
+    }
+
+    public function test_form_context_never_grants_permission_or_bypasses_csrf(): void
+    {
+        $before = $this->registryState();
+        $payload = $this->draft('pin') + ['current_password' => 'password123', 'form_context' => 'pin-' . $this->registryA];
+        $this->assertStatus(403, $this->post($this->route('pin'), $payload, false));
+        $this->actingAs($this->makeUser(['password' => 'password123']));
+        $this->assertStatus(403, $this->post($this->route('pin'), $payload));
+        self::assertSame($before, $this->registryState());
+    }
+}

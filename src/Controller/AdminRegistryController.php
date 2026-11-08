@@ -58,7 +58,7 @@ final class AdminRegistryController extends Controller
             );
             return $this->noindex($this->redirectWithFlash('/admin/registries', 'Registry added (disabled until you enable it).'));
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, $e->old + $request->allInput(), 422);
+            return $this->formFailure($request, 'create', 0, $e->errors);
         }
     }
 
@@ -78,7 +78,7 @@ final class AdminRegistryController extends Controller
             );
             return $this->noindex($this->redirectWithFlash('/admin/registries', $enabled ? 'Registry enabled.' : 'Registry disabled.'));
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, $request->allInput(), 422);
+            return $this->formFailure($request, 'enable', (int) ($params['id'] ?? 0), $e->errors);
         }
     }
 
@@ -100,7 +100,7 @@ final class AdminRegistryController extends Controller
             );
             return $this->noindex($this->redirectWithFlash('/admin/registries', 'Trust key pinned.'));
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, $e->old + $request->allInput(), 422);
+            return $this->formFailure($request, 'pin', (int) ($params['id'] ?? 0), $e->errors);
         }
     }
 
@@ -122,9 +122,9 @@ final class AdminRegistryController extends Controller
             );
             return $this->noindex($this->redirectWithFlash('/admin/registries', 'Key rotation applied: successor pinned, old key retired.'));
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, $request->allInput(), 422);
+            return $this->formFailure($request, 'rotate', (int) ($params['id'] ?? 0), $e->errors);
         } catch (RegistryVerificationException $e) {
-            return $this->consoleView(['envelope' => 'Rotation refused (' . $e->code . '): ' . $e->getMessage()], $request->allInput(), 422);
+            return $this->formFailure($request, 'rotate', (int) ($params['id'] ?? 0), ['envelope' => 'Rotation refused (' . $e->code . '): ' . $e->getMessage()]);
         }
     }
 
@@ -143,7 +143,7 @@ final class AdminRegistryController extends Controller
             );
             return $this->noindex($this->redirectWithFlash('/admin/registries', 'Trust key revoked; everything it signed now fails closed.'));
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, $request->allInput(), 422);
+            return $this->formFailure($request, 'revoke', (int) ($params['id'] ?? 0), $e->errors);
         }
     }
 
@@ -166,9 +166,9 @@ final class AdminRegistryController extends Controller
             );
             return $this->noindex($this->redirectWithFlash('/admin/registries', 'Advisory ingested (action: ' . $out['action'] . ').'));
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, $request->allInput(), 422);
+            return $this->formFailure($request, 'advisory', (int) ($params['id'] ?? 0), $e->errors);
         } catch (RegistryVerificationException $e) {
-            return $this->consoleView(['advisory_envelope' => 'Advisory refused (' . $e->code . '): ' . $e->getMessage()], $request->allInput(), 422);
+            return $this->formFailure($request, 'advisory', (int) ($params['id'] ?? 0), ['envelope' => 'Advisory refused (' . $e->code . '): ' . $e->getMessage()]);
         }
     }
 
@@ -182,7 +182,7 @@ final class AdminRegistryController extends Controller
             $this->container->get(RegistryAdvisoryService::class)->acknowledge($admin, (int) ($params['id'] ?? 0));
             return $this->noindex($this->redirectWithFlash('/admin/registries', 'Advisory acknowledged.'));
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, [], 422);
+            return $this->formFailure($request, 'ack', (int) ($params['id'] ?? 0), $e->errors);
         }
     }
 
@@ -201,7 +201,7 @@ final class AdminRegistryController extends Controller
             );
             return $this->noindex($this->redirectWithFlash('/admin/registries', 'Local block added; it applies regardless of registry state.'));
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, $e->old + $request->allInput(), 422);
+            return $this->formFailure($request, 'block', 0, $e->errors);
         }
     }
 
@@ -219,7 +219,7 @@ final class AdminRegistryController extends Controller
             );
             return $this->noindex($this->redirectWithFlash('/admin/registries', 'Local block removed.'));
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, $request->allInput(), 422);
+            return $this->formFailure($request, 'unblock', (int) ($params['id'] ?? 0), $e->errors);
         }
     }
 
@@ -235,26 +235,74 @@ final class AdminRegistryController extends Controller
         return [(string) $decoded['document'], $signature, (string) ($decoded['key_id'] ?? '')];
     }
 
-    /** @param array<string,string> $errors @param array<string,mixed> $old */
-    private function consoleView(array $errors = [], array $old = [], int $status = 200): Response
+    /**
+     * Presentation context is derived from the action and route target, never POST data.
+     * Retain only that form's nonsecret fields; passwords do not reach the view model.
+     * @param array<string,string> $errors
+     */
+    private function formFailure(Request $request, string $action, int $target, array $errors): Response
+    {
+        $fields = match ($action) {
+            'create' => ['source_id', 'display_name', 'base_url'],
+            'pin' => ['key_id', 'public_key', 'valid_from', 'valid_until'],
+            'rotate', 'advisory' => ['envelope'],
+            'revoke' => ['reason'],
+            'block' => ['digest', 'package_uid', 'reason'],
+            default => [],
+        };
+        $old = [];
+        foreach ($fields as $field) {
+            $value = $request->post($field);
+            $old[$field] = is_string($value) ? $value : '';
+        }
+        // These service-level errors describe the same originating input.
+        foreach (['rotation' => 'envelope', 'advisory_envelope' => 'envelope', 'target' => 'package_uid'] as $from => $to) {
+            if (isset($errors[$from])) {
+                $errors[$to] = $errors[$from];
+                unset($errors[$from]);
+            }
+        }
+        return $this->consoleView($errors, $old, 422, $action . '-' . $target);
+    }
+
+    /** @param array<string,string> $errors @param array<string,string> $old */
+    private function consoleView(array $errors = [], array $old = [], int $status = 200, ?string $context = null): Response
     {
         $registryRepo = $this->container->get(PackageRegistryRepository::class);
         $keyRepo = $this->container->get(RegistryTrustKeyRepository::class);
         $snapshotRepo = $this->container->get(RegistrySnapshotRepository::class);
 
         $registries = [];
+        $contexts = ['create-0' => true, 'block-0' => true];
         foreach ($registryRepo->all() as $registry) {
             $registry['keys'] = $keyRepo->forRegistry((int) $registry['id']);
             $registry['latest_snapshot'] = $snapshotRepo->latestFor((int) $registry['id']);
             $registries[] = $registry;
+            foreach (['enable', 'pin', 'rotate', 'advisory'] as $action) {
+                $contexts[$action . '-' . $registry['id']] = true;
+            }
+            foreach ($registry['keys'] as $key) {
+                if ($key['status'] !== 'revoked') { $contexts['revoke-' . $key['id']] = true; }
+            }
         }
 
+        $blocks = $this->container->get(LocalPackageBlockRepository::class)->all();
+        $advisories = $this->container->get(PackageAdvisoryRepository::class)->all();
+        foreach ($blocks as $block) { $contexts['unblock-' . $block['id']] = true; }
+        foreach ($advisories as $advisory) {
+            if ($advisory['acknowledged_at'] === null) { $contexts['ack-' . $advisory['id']] = true; }
+        }
+        // A removed target has no form to reopen. Show its denial once on the page;
+        // never attach it or its draft to a different action/target. This is view
+        // matching only: service authorization and target validation already ran.
+        $available = $context !== null && isset($contexts[$context]);
         return $this->noindex($this->view('admin/registries', [
             'registries' => $registries,
-            'blocks' => $this->container->get(LocalPackageBlockRepository::class)->all(),
-            'advisories' => $this->container->get(PackageAdvisoryRepository::class)->all(),
-            'errors' => $errors,
-            'old' => $old,
+            'blocks' => $blocks,
+            'advisories' => $advisories,
+            'form_errors' => $available ? [$context => $errors] : [],
+            'form_old' => $available ? [$context => $old] : [],
+            'page_errors' => $available ? [] : $errors,
         ], $status));
     }
 }

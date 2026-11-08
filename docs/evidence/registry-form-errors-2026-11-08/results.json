@@ -1,0 +1,45 @@
+{
+  "base_revision": "eeceed780aa9ec92e2a85e9554020a6c6d85d503",
+  "tested_patch_sha256": "82af9d28ec0b11c12807dca2ab8ab36d38bd7bf6fb0555bd2cef52dc452a5bf0",
+  "existing_baseline": {
+    "exit_code": 0,
+    "tests": 5,
+    "assertions": 27
+  },
+  "regression_baseline": {
+    "exit_code": 1,
+    "tests": 5,
+    "failures": 5
+  },
+  "focused": {
+    "exit_code": 0,
+    "tests": 32,
+    "assertions": 787
+  },
+  "browser": {
+    "exit_code": 0,
+    "tests": 4,
+    "skipped": 0,
+    "seconds": 12.1,
+    "submissions_per_test": 6,
+    "viewports": [
+      "1280x800",
+      "390x844"
+    ],
+    "javascript": [
+      false,
+      true
+    ]
+  },
+  "full": {
+    "exit_code": 0,
+    "tests": 3589,
+    "assertions": 34621,
+    "deprecations": 8,
+    "skipped": 1,
+    "elapsed": "05:58.412"
+  },
+  "diff_check": "passed",
+  "asset_worker_checks": "No changed inputs; not required",
+  "not_run": "Production/provider execution, merging/deployment, options 3\u20135"
+}
