@@ -14,6 +14,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   Model prose that already contains `[^n]` is rejected. Only `kind = ai`
   briefs are rewritten, and an ordinal with no listed source is removed.
   Cite presentation is in the unlayered Forum theme.
+- Verified on the public site after publication (`11b63fb564c36ce9`, all 11
+  delivery files byte-identical) and recorded as deployed, retiring
+  `c66e3b55dba6da68` and its 18 exclusive files; receipts are in
+  `docs/evidence/asset-record-11b63fb564c36ce9/`.
 
 ## [2026-11-08] - Readable registry blocklist rows
 
