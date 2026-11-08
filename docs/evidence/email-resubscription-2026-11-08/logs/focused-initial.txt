@@ -1,0 +1,24 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+.........F..............[RetroBoards] Two-factor secret (enabled) for user #76 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #76 cannot be opened with the configured APP_KEY.
+..[RetroBoards] Two-factor secret (enabled) for user #85 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Ignoring invalid key configuration: APP_PREVIOUS_KEY_VERIFY_IDS entry 2 is not a 16-character lowercase hex HMAC key id. APP_PREVIOUS_KEY_VERIFY_IDS lists ffffffffffffffff, which is not the HMAC key id of any configured previous key.
+...........                            38 / 38 (100%)
+
+Time: 00:06.491, Memory: 26.00 MB
+
+There was 1 failure:
+
+1) Tests\Integration\Core\AppEmailResubscriptionTest::test_guest_and_missing_csrf_cannot_remove_an_unsubscribe
+Expected a redirect status.
+Failed asserting that an array contains 403.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:436
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:150
+
+FAILURES!
+Tests: 38, Assertions: 586, Failures: 1.

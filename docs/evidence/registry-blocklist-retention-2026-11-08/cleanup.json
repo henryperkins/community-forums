@@ -1,0 +1,23 @@
+{
+  "server": {
+    "pid": 436989,
+    "address": "127.0.0.1:8032",
+    "stopped": true
+  },
+  "databases_dropped": [
+    "retroboards_e2e_blocklist_layout_retention_20261108",
+    "retroboards_test_blocklist_layout_retention_20261108"
+  ],
+  "task_generated_account_dropped": true,
+  "account_and_database_absence_verified": true,
+  "private_password_file_deleted": true,
+  "private_runtime_context_deleted": true,
+  "removed_paths": [
+    "/tmp/rb-layout-retention-20261108-jdo10h3c/ratelimit",
+    "/tmp/rb-test-retroboards_test_blocklist_layout_retention_20261108",
+    "/tmp/rb-test-schema-220e001eade011d673a7eaa26e5435c1.fingerprint"
+  ],
+  "existing_shared_db_account_changed": false,
+  "production_changed": false,
+  "scratch_logs_retained": "/tmp/rb-layout-retention-20261108-jdo10h3c"
+}

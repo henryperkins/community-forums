@@ -9,46 +9,75 @@ use RuntimeException;
 /**
  * Small AES-256-GCM wrapper for app-local secrets. Callers store ciphertext,
  * nonce, and tag separately; plaintext never belongs in the database.
+ *
+ * Encryption always uses the active key and reports its encryption key id, which
+ * callers store beside the ciphertext (ADR 0059). Decryption with a recorded key
+ * id uses exactly that key. A legacy record without one is tried against each
+ * key that may decrypt, active first; GCM authentication rejects every wrong key.
  */
 final class SecretBox
 {
-    public function __construct(private string $appKey)
+    private readonly AppKeyRing $keys;
+
+    public function __construct(#[\SensitiveParameter] AppKeyRing|string $keys)
     {
+        $this->keys = $keys instanceof AppKeyRing ? $keys : AppKeyRing::single($keys);
     }
 
-    /** @return array{ciphertext:string,nonce:string,tag:string} */
+    public function keyRing(): AppKeyRing
+    {
+        return $this->keys;
+    }
+
+    /** @return array{ciphertext:string,nonce:string,tag:string,key_id:string} */
     public function encrypt(string $plaintext): array
     {
+        $key = $this->keys->active();
+        $encryptionKey = $key->encryptionKey();
         $nonce = random_bytes(12);
         $tag = '';
-        $ciphertext = openssl_encrypt($plaintext, 'aes-256-gcm', $this->key(), OPENSSL_RAW_DATA, $nonce, $tag);
+        $ciphertext = openssl_encrypt($plaintext, 'aes-256-gcm', $encryptionKey, OPENSSL_RAW_DATA, $nonce, $tag);
         if ($ciphertext === false || $tag === '') {
             throw new RuntimeException('Unable to encrypt secret.');
         }
-        return ['ciphertext' => $ciphertext, 'nonce' => $nonce, 'tag' => $tag];
+        return ['ciphertext' => $ciphertext, 'nonce' => $nonce, 'tag' => $tag, 'key_id' => (string) $key->encryptionId];
     }
 
-    public function decrypt(string $ciphertext, string $nonce, string $tag): string
+    /**
+     * @throws SecretUnavailableException when no permitted key can open the record
+     * @throws RuntimeException when no APP_KEY is configured
+     */
+    public function decrypt(string $ciphertext, string $nonce, string $tag, ?string $keyId = null): string
     {
-        $plaintext = openssl_decrypt($ciphertext, 'aes-256-gcm', $this->key(), OPENSSL_RAW_DATA, $nonce, $tag);
-        if ($plaintext === false) {
-            throw new RuntimeException('Unable to decrypt secret.');
-        }
-        return $plaintext;
+        return $this->open($ciphertext, $nonce, $tag, $keyId)['plaintext'];
     }
 
-    private function key(): string
+    /**
+     * Decrypt and report which encryption key opened the record.
+     *
+     * @return array{plaintext:string,key_id:string}
+     * @throws SecretUnavailableException when no permitted key can open the record
+     * @throws RuntimeException when no APP_KEY is configured
+     */
+    public function open(string $ciphertext, string $nonce, string $tag, ?string $keyId = null): array
     {
-        $raw = trim($this->appKey);
-        if ($raw === '') {
-            throw new RuntimeException('APP_KEY is required for secret encryption.');
+        // Same configuration failure as before the key ring: a missing APP_KEY is not an unreadable record.
+        $this->keys->active()->encryptionKey();
+        if ($keyId !== null && $keyId !== '') {
+            $key = $this->keys->forEncryptionId($keyId);
+            if ($key === null) {
+                throw new SecretUnavailableException('Unable to decrypt secret: encryption key ' . $keyId . ' is not configured.');
+            }
+            $candidates = [$key];
+        } else {
+            $candidates = $this->keys->decryptionKeys();
         }
-        if (ctype_xdigit($raw) && strlen($raw) >= 64) {
-            $bin = hex2bin(substr($raw, 0, 64));
-            if (is_string($bin) && strlen($bin) === 32) {
-                return $bin;
+        foreach ($candidates as $key) {
+            $plaintext = openssl_decrypt($ciphertext, 'aes-256-gcm', $key->encryptionKey(), OPENSSL_RAW_DATA, $nonce, $tag);
+            if ($plaintext !== false) {
+                return ['plaintext' => $plaintext, 'key_id' => (string) $key->encryptionId];
             }
         }
-        return hash('sha256', $raw, true);
+        throw new SecretUnavailableException('Unable to decrypt secret.');
     }
 }

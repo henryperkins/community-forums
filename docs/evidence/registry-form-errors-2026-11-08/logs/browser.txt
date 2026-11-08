@@ -1,0 +1,8 @@
+
+Running 4 tests using 1 worker
+
+[1/4] [desktop] › registry-form-errors.spec.ts:28:9 › no-js › each failed action retains only its own draft, error and target without a mutation
+[2/4] [desktop] › registry-form-errors.spec.ts:28:9 › js › each failed action retains only its own draft, error and target without a mutation
+[3/4] [mobile] › registry-form-errors.spec.ts:28:9 › no-js › each failed action retains only its own draft, error and target without a mutation
+[4/4] [mobile] › registry-form-errors.spec.ts:28:9 › js › each failed action retains only its own draft, error and target without a mutation
+  4 passed (12.1s)

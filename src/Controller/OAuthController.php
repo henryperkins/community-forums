@@ -12,6 +12,7 @@ use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\IdentityProviderRepository;
 use App\Repository\OAuthIdentityRepository;
+use App\Security\AppKeyRing;
 use App\Service\AccountService;
 use App\Service\EmailChangeService;
 use App\Service\MfaService;
@@ -392,7 +393,7 @@ final class OAuthController extends Controller
     {
         $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
         $b64 = $this->base64url((string) $json);
-        $sig = hash_hmac('sha256', $b64, $this->key());
+        $sig = $this->keys()->active()->hmac($b64);
         $secure = (bool) $this->config()->get('session.secure', true);
         // Apple uses response_mode=form_post, so its callback is a cross-site
         // top-level POST — a SameSite=Lax cookie would NOT be sent and the flow
@@ -419,7 +420,13 @@ final class OAuthController extends Controller
             return null;
         }
         [$b64, $sig] = explode('.', $raw, 2);
-        if (!hash_equals(hash_hmac('sha256', $b64, $this->key()), $sig)) {
+        // Signed with the active key; accepted under any key permitted to verify
+        // (ADR 0059), so a sign-in that straddles a key change still completes.
+        $verified = false;
+        foreach ($this->keys()->verificationKeys() as $key) {
+            $verified = $verified || hash_equals($key->hmac($b64), $sig);
+        }
+        if (!$verified) {
             return null;
         }
         $json = base64_decode(strtr($b64, '-_', '+/'), true);
@@ -435,9 +442,9 @@ final class OAuthController extends Controller
         $response->forgetCookie(self::STATE_COOKIE, (bool) $this->config()->get('session.secure', true));
     }
 
-    private function key(): string
+    private function keys(): AppKeyRing
     {
-        return (string) $this->config()->get('app.key', '');
+        return $this->container->get(AppKeyRing::class);
     }
 
     private function base64url(string $raw): string

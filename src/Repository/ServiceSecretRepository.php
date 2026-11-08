@@ -26,13 +26,14 @@ final class ServiceSecretRepository
         );
     }
 
-    /** @param array{ciphertext:string,nonce:string,tag:string} $enc */
+    /** @param array{ciphertext:string,nonce:string,tag:string,key_id?:string} $enc */
     public function insertCurrentVersion(int $secretId, int $version, array $enc): int
     {
+        // key_version stays at its legacy constant; key_id names the encryption key (ADR 0059).
         return $this->db->insert(
-            "INSERT INTO service_secret_versions (secret_id, version, ciphertext, nonce, tag, cipher, key_version, state, created_at)
-             VALUES (?, ?, ?, ?, ?, 'aes-256-gcm', 1, 'current', UTC_TIMESTAMP())",
-            [$secretId, $version, $enc['ciphertext'], $enc['nonce'], $enc['tag']],
+            "INSERT INTO service_secret_versions (secret_id, version, ciphertext, nonce, tag, cipher, key_version, key_id, state, created_at)
+             VALUES (?, ?, ?, ?, ?, 'aes-256-gcm', 1, ?, 'current', UTC_TIMESTAMP())",
+            [$secretId, $version, $enc['ciphertext'], $enc['nonce'], $enc['tag'], $enc['key_id'] ?? null],
         );
     }
 

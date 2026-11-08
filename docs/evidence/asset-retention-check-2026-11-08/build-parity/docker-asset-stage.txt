@@ -1,0 +1,6 @@
+Docker asset-stage parity run, 2026-11-08 (UTC).
+Command: git archive --format=tar <rev> | docker build --progress=plain --target assets -
+Build-input digest: sha256 of `git ls-tree -r <rev> -- Dockerfile package.json package-lock.json vite.config.mjs bin/build-assets.mjs src/client public/assets config/assets.json`
+  parity run: a936b896ef146f04e806202bb90b9a06c87c56a62eb1a78e960961504e21b3a2
+Any commit with the same digest has byte-identical asset build inputs. Check with:
+  git ls-tree -r HEAD -- Dockerfile package.json package-lock.json vite.config.mjs bin/build-assets.mjs src/client public/assets config/assets.json | sha256sum

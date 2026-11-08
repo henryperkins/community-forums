@@ -1,0 +1,46 @@
+
+Running 2 tests using 1 worker
+
+[1/2] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 320px no-js light › identifiers stay readable and the native removal remains usable
+  1) [desktop] › registry-blocklist-layout.spec.ts:55:13 › 320px no-js light › identifiers stay readable and the native removal remains usable
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 321
+    Received:    1085
+
+      77 |           writeFileSync(path.join(directory, 'dimensions.json'), JSON.stringify(metrics, null, 2) + '\n');
+      78 |           for (const m of metrics) {
+    > 79 |             expect(m.documentWidth).toBeLessThanOrEqual(m.viewportWidth + 1);
+         |                                     ^
+      80 |             expect(m.main.width).toBeGreaterThan(180);
+      81 |             expect(m.contentWidth).toBeLessThanOrEqual(m.main.width + 1);
+      82 |             for (const line of m.identifierLines) {
+        at /home/azureuser/rb-wt-registry-blocklist/tests/browser/registry-blocklist-layout.spec.ts:79:37
+
+    Error Context: ../../../../../tmp/rb-blocklist-layout-20261108-marr39v9/browser/.artifacts/registry-blocklist-layout--47f12-tive-removal-remains-usable-desktop/error-context.md
+
+
+[2/2] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 390px no-js light › identifiers stay readable and the native removal remains usable
+  2) [desktop] › registry-blocklist-layout.spec.ts:55:13 › 390px no-js light › identifiers stay readable and the native removal remains usable
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 391
+    Received:    1085
+
+      77 |           writeFileSync(path.join(directory, 'dimensions.json'), JSON.stringify(metrics, null, 2) + '\n');
+      78 |           for (const m of metrics) {
+    > 79 |             expect(m.documentWidth).toBeLessThanOrEqual(m.viewportWidth + 1);
+         |                                     ^
+      80 |             expect(m.main.width).toBeGreaterThan(180);
+      81 |             expect(m.contentWidth).toBeLessThanOrEqual(m.main.width + 1);
+      82 |             for (const line of m.identifierLines) {
+        at /home/azureuser/rb-wt-registry-blocklist/tests/browser/registry-blocklist-layout.spec.ts:79:37
+
+    Error Context: ../../../../../tmp/rb-blocklist-layout-20261108-marr39v9/browser/.artifacts/registry-blocklist-layout--a9b3e-tive-removal-remains-usable-desktop/error-context.md
+
+
+  2 failed
+    [desktop] › registry-blocklist-layout.spec.ts:55:13 › 320px no-js light › identifiers stay readable and the native removal remains usable
+    [desktop] › registry-blocklist-layout.spec.ts:55:13 › 390px no-js light › identifiers stay readable and the native removal remains usable

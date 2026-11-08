@@ -3,16 +3,22 @@
 $this->layout('layout');
 $this->section('title', 'Registry trust');
 $this->section('variant', 'admin');
-$regErrors = $errors ?? [];
-$regOld = $old ?? [];
-// A disclosure that owns an error must re-open on 422, or the operator is told
-// something failed and cannot see what.
-$pinOpen = !empty($regErrors['key_id']) || !empty($regErrors['public_key'])
-    || !empty($regErrors['valid_from']) || !empty($regErrors['valid_until']);
-$rotateOpen = !empty($regErrors['envelope']) || !empty($regErrors['rotation']);
-$ingestOpen = !empty($regErrors['advisory_envelope']);
+$formState = static function (string $action, int $target = 0) use ($form_errors, $form_old): array {
+    $context = $action . '-' . $target;
+    return [$form_errors[$context] ?? [], $form_old[$context] ?? [], 'registry-' . $context];
+};
+$formAlerts = static function (array $errors, array $fields, string $id): string {
+    $html = '';
+    foreach (array_diff_key($errors, array_fill_keys($fields, true)) as $field => $_) {
+        $html .= field_error($errors, $field, 'err-' . $id . '-' . $field, true);
+    }
+    return $html;
+};
 ?>
 <?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'registries', 'pane_class' => 'admin-packages packages-registries']) ?>
+    <?php foreach ($page_errors as $field => $_): ?>
+        <?= field_error($page_errors, $field, 'err-registry-page-' . $field, true) ?>
+    <?php endforeach; ?>
     <p class="pane-intro packages-lead">The private signing root lives offline with the operator; this console pins, rotates, and revokes public keys only. Trust changes require your password. The local blocklist works regardless of registry state.</p>
 
     <?php if (empty($registries)): ?>
@@ -30,6 +36,7 @@ $ingestOpen = !empty($regErrors['advisory_envelope']);
             <?php // feature-added: disabling takes no password, enabling requires one. The
                   // asymmetry is deliberate (the safe direction is free) and is now evident
                   // from the absent field rather than a parenthetical in the button. ?>
+            <?php [$regErrors, $regOld, $formId] = $formState('enable', (int) $reg['id']); ?>
             <form method="post" action="/admin/registries/<?= (int) $reg['id'] ?>/enabled" class="inline-form registry-toggle-form">
                 <?= $this->csrfField() ?>
                 <?php if (((int) $reg['is_enabled']) === 1): ?>
@@ -38,9 +45,11 @@ $ingestOpen = !empty($regErrors['advisory_envelope']);
                 <?php else: ?>
                     <input type="hidden" name="enabled" value="1">
                     <label class="sr-only" for="reg-enable-password-<?= (int) $reg['id'] ?>">Confirm your password to enable <?= $e($reg['display_name']) ?></label>
-                    <input class="packages-secret-input" type="password" id="reg-enable-password-<?= (int) $reg['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password" required>
+                    <input class="packages-secret-input" type="password" id="reg-enable-password-<?= (int) $reg['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password"<?= field_attrs($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?> required>
                     <button class="btn btn-small" type="submit">Enable registry</button>
                 <?php endif; ?>
+                <?= field_error($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?>
+                <?= $formAlerts($regErrors, ['current_password'], $formId) ?>
             </form>
         </div>
         <p class="registry-snapshot"><?= $e($reg['base_url']) ?>.
@@ -62,13 +71,17 @@ $ingestOpen = !empty($regErrors['advisory_envelope']);
                         <?php if ($key['status'] !== 'revoked'): ?>
                         <?php // feature-changed: the design offers a bare one-click Revoke.
                               // Revocation needs a reason and a password; both stay. ?>
+                        <?php [$keyErrors, $keyOld, $keyFormId] = $formState('revoke', (int) $key['id']); ?>
                         <form method="post" action="/admin/registry-keys/<?= (int) $key['id'] ?>/revoke" class="inline-form packages-revoke-form">
                             <?= $this->csrfField() ?>
                             <label class="sr-only" for="revoke-reason-<?= (int) $key['id'] ?>">Revocation reason for key <?= $e($key['key_id']) ?></label>
-                            <input class="packages-secret-input" type="text" id="revoke-reason-<?= (int) $key['id'] ?>" name="reason" placeholder="Revocation reason" required>
+                            <input class="packages-secret-input" type="text" id="revoke-reason-<?= (int) $key['id'] ?>" name="reason" placeholder="Revocation reason" value="<?= $e($keyOld['reason'] ?? '') ?>"<?= field_attrs($keyErrors, 'reason', 'err-' . $keyFormId . '-reason') ?> required>
                             <label class="sr-only" for="revoke-password-<?= (int) $key['id'] ?>">Your password to revoke key <?= $e($key['key_id']) ?></label>
-                            <input class="packages-secret-input" type="password" id="revoke-password-<?= (int) $key['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password" required>
+                            <input class="packages-secret-input" type="password" id="revoke-password-<?= (int) $key['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password"<?= field_attrs($keyErrors, 'current_password', 'err-' . $keyFormId . '-current_password') ?> required>
                             <button class="btn btn-small danger" type="submit">Revoke</button>
+                            <?= field_error($keyErrors, 'reason', 'err-' . $keyFormId . '-reason') ?>
+                            <?= field_error($keyErrors, 'current_password', 'err-' . $keyFormId . '-current_password') ?>
+                            <?= $formAlerts($keyErrors, ['reason', 'current_password'], $keyFormId) ?>
                         </form>
                         <?php else: ?>
                             <span class="packages-none">&mdash;</span>
@@ -83,51 +96,53 @@ $ingestOpen = !empty($regErrors['advisory_envelope']);
         </table>
         </div>
 
-        <?php // ADR 0023 deferral item 4 is still open for this file: these bare
-              // field-error paragraphs are restyled but not wired to field_error()/
-              // field_attrs(), because honest per-field ids need the controller to stop
-              // broadcasting one flat $errors/$old bag to every registry card. That is a
-              // behaviour change, not a restyle. ?>
-        <details class="packages-disclosure"<?= $pinOpen ? ' open' : '' ?>>
+        <?php [$regErrors, $regOld, $formId] = $formState('pin', (int) $reg['id']); ?>
+        <details class="packages-disclosure"<?= $regErrors !== [] ? ' open' : '' ?>>
             <summary>Pin a new public key</summary>
             <form method="post" action="/admin/registries/<?= (int) $reg['id'] ?>/keys" class="stacked">
                 <?= $this->csrfField() ?>
-                <label class="field"><span>Key id</span><input class="input" type="text" name="key_id" maxlength="190" value="<?= $e($regOld['key_id'] ?? '') ?>" required></label>
-                <?php if (!empty($regErrors['key_id'])): ?><p class="field-error"><?= $e($regErrors['key_id']) ?></p><?php endif; ?>
-                <label class="field"><span>Public key (base64, 32 bytes)</span><input class="input" type="text" name="public_key" value="<?= $e($regOld['public_key'] ?? '') ?>" required></label>
-                <?php if (!empty($regErrors['public_key'])): ?><p class="field-error"><?= $e($regErrors['public_key']) ?></p><?php endif; ?>
-                <label class="field"><span>Valid from (UTC, optional)</span><input class="input" type="text" name="valid_from" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e($regOld['valid_from'] ?? '') ?>"></label>
-                <label class="field"><span>Valid until (UTC, optional)</span><input class="input" type="text" name="valid_until" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e($regOld['valid_until'] ?? '') ?>"></label>
-                <?php if (!empty($regErrors['valid_from'])): ?><p class="field-error"><?= $e($regErrors['valid_from']) ?></p><?php endif; ?>
-                <?php if (!empty($regErrors['valid_until'])): ?><p class="field-error"><?= $e($regErrors['valid_until']) ?></p><?php endif; ?>
-                <label class="reauth-field"><span>Confirm your password</span><input class="packages-secret-input" type="password" name="current_password" autocomplete="current-password" required></label>
-                <?php if (!empty($regErrors['current_password'])): ?><p class="field-error"><?= $e($regErrors['current_password']) ?></p><?php endif; ?>
+                <label class="field"><span>Key id</span><input class="input" type="text" name="key_id" maxlength="190" value="<?= $e($regOld['key_id'] ?? '') ?>"<?= field_attrs($regErrors, 'key_id', 'err-' . $formId . '-key_id') ?> required></label>
+                <?= field_error($regErrors, 'key_id', 'err-' . $formId . '-key_id') ?>
+                <label class="field"><span>Public key (base64, 32 bytes)</span><input class="input" type="text" name="public_key" value="<?= $e($regOld['public_key'] ?? '') ?>"<?= field_attrs($regErrors, 'public_key', 'err-' . $formId . '-public_key') ?> required></label>
+                <?= field_error($regErrors, 'public_key', 'err-' . $formId . '-public_key') ?>
+                <label class="field"><span>Valid from (UTC, optional)</span><input class="input" type="text" name="valid_from" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e($regOld['valid_from'] ?? '') ?>"<?= field_attrs($regErrors, 'valid_from', 'err-' . $formId . '-valid_from') ?>></label>
+                <label class="field"><span>Valid until (UTC, optional)</span><input class="input" type="text" name="valid_until" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e($regOld['valid_until'] ?? '') ?>"<?= field_attrs($regErrors, 'valid_until', 'err-' . $formId . '-valid_until') ?>></label>
+                <?= field_error($regErrors, 'valid_from', 'err-' . $formId . '-valid_from') ?>
+                <?= field_error($regErrors, 'valid_until', 'err-' . $formId . '-valid_until') ?>
+                <label class="reauth-field"><span>Confirm your password</span><input class="packages-secret-input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?> required></label>
+                <?= field_error($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?>
+                <?= $formAlerts($regErrors, ['key_id', 'public_key', 'valid_from', 'valid_until', 'current_password'], $formId) ?>
                 <div class="form-actions"><button class="btn" type="submit">Pin key</button></div>
             </form>
         </details>
 
-        <details class="packages-disclosure"<?= $rotateOpen ? ' open' : '' ?>>
+        <?php [$regErrors, $regOld, $formId] = $formState('rotate', (int) $reg['id']); ?>
+        <details class="packages-disclosure"<?= $regErrors !== [] ? ' open' : '' ?>>
             <summary>Apply a signed key rotation</summary>
             <form method="post" action="/admin/registries/<?= (int) $reg['id'] ?>/rotate" class="stacked">
                 <?= $this->csrfField() ?>
-                <?php // $old['envelope'] is posted by two different forms on this page;
-                      // gate each on its own error key or a failed ingest pre-fills the
-                      // rotation textarea and vice versa. ?>
-                <label class="field"><span>Rotation envelope JSON</span><textarea class="input" name="envelope" rows="4" required><?= $rotateOpen ? $e($regOld['envelope'] ?? '') : '' ?></textarea></label>
-                <?php if (!empty($regErrors['envelope'])): ?><p class="field-error"><?= $e($regErrors['envelope']) ?></p><?php endif; ?>
-                <?php if (!empty($regErrors['rotation'])): ?><p class="field-error"><?= $e($regErrors['rotation']) ?></p><?php endif; ?>
-                <label class="reauth-field"><span>Confirm your password</span><input class="packages-secret-input" type="password" name="current_password" autocomplete="current-password" required></label>
+                <?php // HTML consumes the first literal newline in a textarea; preserve the member's leading newline after it. ?>
+                <label class="field"><span>Rotation envelope JSON</span><textarea class="input" name="envelope" rows="4"<?= field_attrs($regErrors, 'envelope', 'err-' . $formId . '-envelope') ?> required>
+<?= $e($regOld['envelope'] ?? '') ?></textarea></label>
+                <?= field_error($regErrors, 'envelope', 'err-' . $formId . '-envelope') ?>
+                <label class="reauth-field"><span>Confirm your password</span><input class="packages-secret-input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?> required></label>
+                <?= field_error($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?>
+                <?= $formAlerts($regErrors, ['envelope', 'current_password'], $formId) ?>
                 <div class="form-actions"><button class="btn" type="submit">Apply rotation</button></div>
             </form>
         </details>
 
-        <details class="packages-disclosure"<?= $ingestOpen ? ' open' : '' ?>>
+        <?php [$regErrors, $regOld, $formId] = $formState('advisory', (int) $reg['id']); ?>
+        <details class="packages-disclosure"<?= $regErrors !== [] ? ' open' : '' ?>>
             <summary>Ingest a signed advisory manually</summary>
             <form method="post" action="/admin/registries/<?= (int) $reg['id'] ?>/advisories" class="stacked">
                 <?= $this->csrfField() ?>
-                <label class="field"><span>Advisory envelope JSON</span><textarea class="input" name="envelope" rows="4" required><?= $ingestOpen ? $e($regOld['envelope'] ?? '') : '' ?></textarea></label>
-                <?php if (!empty($regErrors['advisory_envelope'])): ?><p class="field-error"><?= $e($regErrors['advisory_envelope']) ?></p><?php endif; ?>
-                <label class="reauth-field"><span>Confirm your password</span><input class="packages-secret-input" type="password" name="current_password" autocomplete="current-password" required></label>
+                <label class="field"><span>Advisory envelope JSON</span><textarea class="input" name="envelope" rows="4"<?= field_attrs($regErrors, 'envelope', 'err-' . $formId . '-envelope') ?> required>
+<?= $e($regOld['envelope'] ?? '') ?></textarea></label>
+                <?= field_error($regErrors, 'envelope', 'err-' . $formId . '-envelope') ?>
+                <label class="reauth-field"><span>Confirm your password</span><input class="packages-secret-input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?> required></label>
+                <?= field_error($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?>
+                <?= $formAlerts($regErrors, ['envelope', 'current_password'], $formId) ?>
                 <div class="form-actions"><button class="btn" type="submit">Ingest advisory</button></div>
             </form>
         </details>
@@ -136,16 +151,18 @@ $ingestOpen = !empty($regErrors['advisory_envelope']);
 
     <section class="card packages-record-card">
         <h3 class="packages-eyebrow">Add a registry source</h3>
+        <?php [$regErrors, $regOld, $formId] = $formState('create'); ?>
         <form method="post" action="/admin/registries" class="stacked">
             <?= $this->csrfField() ?>
-            <label class="field"><span>Source id</span><input class="input" type="text" name="source_id" maxlength="190" value="<?= $e($regOld['source_id'] ?? '') ?>" required></label>
-            <?php if (!empty($regErrors['source_id'])): ?><p class="field-error"><?= $e($regErrors['source_id']) ?></p><?php endif; ?>
-            <label class="field"><span>Display name</span><input class="input" type="text" name="display_name" maxlength="190" value="<?= $e($regOld['display_name'] ?? '') ?>" required></label>
-            <?php if (!empty($regErrors['display_name'])): ?><p class="field-error"><?= $e($regErrors['display_name']) ?></p><?php endif; ?>
-            <label class="field"><span>Base URL</span><input class="input" type="url" name="base_url" maxlength="512" value="<?= $e($regOld['base_url'] ?? '') ?>" required></label>
-            <?php if (!empty($regErrors['base_url'])): ?><p class="field-error"><?= $e($regErrors['base_url']) ?></p><?php endif; ?>
-            <label class="reauth-field"><span>Confirm your password</span><input class="packages-secret-input" type="password" name="current_password" autocomplete="current-password" required></label>
-            <?php if (!empty($regErrors['current_password'])): ?><p class="field-error"><?= $e($regErrors['current_password']) ?></p><?php endif; ?>
+            <label class="field"><span>Source id</span><input class="input" type="text" name="source_id" maxlength="190" value="<?= $e($regOld['source_id'] ?? '') ?>"<?= field_attrs($regErrors, 'source_id', 'err-' . $formId . '-source_id') ?> required></label>
+            <?= field_error($regErrors, 'source_id', 'err-' . $formId . '-source_id') ?>
+            <label class="field"><span>Display name</span><input class="input" type="text" name="display_name" maxlength="190" value="<?= $e($regOld['display_name'] ?? '') ?>"<?= field_attrs($regErrors, 'display_name', 'err-' . $formId . '-display_name') ?> required></label>
+            <?= field_error($regErrors, 'display_name', 'err-' . $formId . '-display_name') ?>
+            <label class="field"><span>Base URL</span><input class="input" type="url" name="base_url" maxlength="512" value="<?= $e($regOld['base_url'] ?? '') ?>"<?= field_attrs($regErrors, 'base_url', 'err-' . $formId . '-base_url') ?> required></label>
+            <?= field_error($regErrors, 'base_url', 'err-' . $formId . '-base_url') ?>
+            <label class="reauth-field"><span>Confirm your password</span><input class="packages-secret-input" type="password" name="current_password" autocomplete="current-password"<?= field_attrs($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?> required></label>
+            <?= field_error($regErrors, 'current_password', 'err-' . $formId . '-current_password') ?>
+            <?= $formAlerts($regErrors, ['source_id', 'display_name', 'base_url', 'current_password'], $formId) ?>
             <div class="form-actions"><button class="btn" type="submit">Add registry (starts disabled)</button></div>
         </form>
     </section>
@@ -157,30 +174,36 @@ $ingestOpen = !empty($regErrors['advisory_envelope']);
         <?php else: ?>
         <ul class="packages-rule-list">
             <?php foreach ($blocks as $block): ?>
-                <li class="packages-rule-row">
+                <li class="packages-rule-row packages-block-row">
                     <span class="packages-rule-main">
                         <code class="packages-rule-id"><?= $block['package_uid'] !== null ? $e($block['package_uid']) : $e(substr((string) $block['digest'], 0, 16)) . '…' ?></code>
                         <?php if (($block['reason'] ?? '') !== ''): ?><span class="packages-rule-detail"><?= $e((string) $block['reason']) ?></span><?php endif; ?>
                     </span>
                     <?php // Removing a block re-enables a package, so it re-auths. ?>
+                    <?php [$blockErrors, $blockOld, $blockFormId] = $formState('unblock', (int) $block['id']); ?>
                     <form class="inline-form packages-revoke-form" method="post" action="/admin/blocklist/<?= (int) $block['id'] ?>/remove">
                         <?= $this->csrfField() ?>
                         <label class="sr-only" for="block-remove-password-<?= (int) $block['id'] ?>">Your password to remove this block</label>
-                        <input class="packages-secret-input" type="password" id="block-remove-password-<?= (int) $block['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password" required>
+                        <input class="packages-secret-input" type="password" id="block-remove-password-<?= (int) $block['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password"<?= field_attrs($blockErrors, 'current_password', 'err-' . $blockFormId . '-current_password') ?> required>
                         <button class="btn btn-small" type="submit">Remove</button>
+                        <?= field_error($blockErrors, 'current_password', 'err-' . $blockFormId . '-current_password') ?>
+                        <?= $formAlerts($blockErrors, ['current_password'], $blockFormId) ?>
                     </form>
                 </li>
             <?php endforeach; ?>
         </ul>
         <?php endif; ?>
+        <?php [$regErrors, $regOld, $formId] = $formState('block'); ?>
         <form method="post" action="/admin/blocklist" class="stacked">
             <p class="packages-section-caption">Blocking takes effect immediately and needs no password; removing a block does.</p>
             <?= $this->csrfField() ?>
-            <label class="field"><span>Release digest (sha256 hex, optional)</span><input class="input" type="text" name="digest" value="<?= $e($regOld['digest'] ?? '') ?>"></label>
-            <?php if (!empty($regErrors['digest'])): ?><p class="field-error"><?= $e($regErrors['digest']) ?></p><?php endif; ?>
-            <label class="field"><span>Package uid (optional)</span><input class="input" type="text" name="package_uid" value="<?= $e($regOld['package_uid'] ?? '') ?>"></label>
-            <?php if (!empty($regErrors['target'])): ?><p class="field-error"><?= $e($regErrors['target']) ?></p><?php endif; ?>
-            <label class="field"><span>Reason (optional)</span><input class="input" type="text" name="reason" maxlength="255" value="<?= $e($regOld['reason'] ?? '') ?>"></label>
+            <label class="field"><span>Release digest (sha256 hex, optional)</span><input class="input" type="text" name="digest" value="<?= $e($regOld['digest'] ?? '') ?>"<?= field_attrs($regErrors, 'digest', 'err-' . $formId . '-digest') ?>></label>
+            <?= field_error($regErrors, 'digest', 'err-' . $formId . '-digest') ?>
+            <label class="field"><span>Package uid (optional)</span><input class="input" type="text" name="package_uid" value="<?= $e($regOld['package_uid'] ?? '') ?>"<?= field_attrs($regErrors, 'package_uid', 'err-' . $formId . '-package_uid') ?>></label>
+            <?= field_error($regErrors, 'package_uid', 'err-' . $formId . '-package_uid') ?>
+            <label class="field"><span>Reason (optional)</span><input class="input" type="text" name="reason" maxlength="255" value="<?= $e($regOld['reason'] ?? '') ?>"<?= field_attrs($regErrors, 'reason', 'err-' . $formId . '-reason') ?>></label>
+            <?= field_error($regErrors, 'reason', 'err-' . $formId . '-reason') ?>
+            <?= $formAlerts($regErrors, ['digest', 'package_uid', 'reason'], $formId) ?>
             <div class="form-actions"><button class="btn" type="submit">Block now</button></div>
         </form>
     </section>
@@ -198,9 +221,11 @@ $ingestOpen = !empty($regErrors['advisory_envelope']);
                         <span class="packages-rule-detail"><?= $a['package_uid'] !== null ? $e($a['package_uid']) : 'unresolved' ?> · <?= $e($a['severity']) ?> · action: <?= $e($a['action']) ?></span>
                     </span>
                     <?php if ($a['acknowledged_at'] === null): ?>
+                        <?php [$advisoryErrors, $advisoryOld, $advisoryFormId] = $formState('ack', (int) $a['id']); ?>
                         <form method="post" action="/admin/advisories/<?= (int) $a['id'] ?>/ack" class="inline-form">
                             <?= $this->csrfField() ?>
                             <button class="btn btn-small packages-textbtn" type="submit">Acknowledge</button>
+                            <?= $formAlerts($advisoryErrors, [], $advisoryFormId) ?>
                         </form>
                     <?php else: ?>
                         <span class="packages-rule-meta">acknowledged <?= $e($a['acknowledged_at']) ?> UTC</span>

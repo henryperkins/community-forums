@@ -1,0 +1,49 @@
+{
+  "base_revision": "402e8127a5848c203235d9780dd7097960d1deb5",
+  "php_version": "8.5.4",
+  "phpunit_version": "11.5.56",
+  "mariadb_version": "11.8.9-MariaDB-ubu2404",
+  "baseline_suspended": {
+    "exit_code": 1,
+    "tests": 1,
+    "failures": 1
+  },
+  "baseline_operator_change": {
+    "exit_code": 1,
+    "tests": 4,
+    "failures": 4
+  },
+  "focused": {
+    "exit_code": 0,
+    "tests": 38,
+    "assertions": 590
+  },
+  "full": {
+    "exit_code": 0,
+    "tests": 3634,
+    "assertions": 34607,
+    "deprecations": 8,
+    "skipped": 1,
+    "seconds": 356.962
+  },
+  "browser": {
+    "exit_code": 0,
+    "tests": 4,
+    "skipped": 0,
+    "seconds": 7.8,
+    "viewports": [
+      "1280x800",
+      "390x844"
+    ],
+    "javascript": [
+      false,
+      true
+    ]
+  },
+  "first_full_invocation": {
+    "exit_code": 1,
+    "reason": "Composer process timeout at 300 seconds",
+    "verification": "incomplete"
+  },
+  "asset_worker_checks": "No changed inputs; not required"
+}

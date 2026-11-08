@@ -1,0 +1,47 @@
+
+Running 1 test using 1 worker
+
+[1/1] [desktop] › registry-form-errors.spec.ts:28:9 › no-js › each failed action retains only its own draft, error and target without a mutation
+  1) [desktop] › registry-form-errors.spec.ts:28:9 › no-js › each failed action retains only its own draft, error and target without a mutation
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator: locator('form[action="/admin/registries/1/rotate"]').locator('[name="envelope"]')
+    Timeout: 5000ms
+    - Expected  - 1
+    + Received  + 0
+
+    @@ -1,6 +1,5 @@
+    -
+      {
+        "document": "{\"note\":\"</textarea><script id=registry-draft-xss>draft</script>\"}",
+        "signature": "c3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzcw==",
+        "key_id": "root-a"
+      }
+
+    Call log:
+      - Expect "toHaveValue" with timeout 5000ms
+      - waiting for locator('form[action="/admin/registries/1/rotate"]').locator('[name="envelope"]')
+        14 × locator resolved to <textarea rows="4" required="" class="input" name="envelope">{↵  "document": "{\"note\":\"</textarea><script i…</textarea>
+           - unexpected value "{
+      "document": "{\"note\":\"</textarea><script id=registry-draft-xss>draft</script>\"}",
+      "signature": "c3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzcw==",
+      "key_id": "root-a"
+    }
+    "
+
+
+      62 |         await page.waitForLoadState('load');
+      63 |         if (await disclosure.count()) await expect(disclosure).toHaveAttribute('open', '');
+    > 64 |         for (const [field, value] of Object.entries(item.draft)) await expect(form.locator(`[name="${field}"]`)).toHaveValue(value);
+         |                                                                                                                  ^
+      65 |         const errorField = form.locator(`[name="${item.error}"]`);
+      66 |         await expect(errorField).toHaveAttribute('aria-invalid', 'true');
+      67 |         await expect(errorField).toBeFocused();
+        at /home/azureuser/rb-wt-registry-form-errors/tests/browser/registry-form-errors.spec.ts:64:114
+
+    Error Context: ../../../../../tmp/rb-registry-forms-20261108-qi6njghq/browser/.artifacts/registry-form-errors-no-js-6436e-d-target-without-a-mutation-desktop/error-context.md
+
+
+  1 failed
+    [desktop] › registry-form-errors.spec.ts:28:9 › no-js › each failed action retains only its own draft, error and target without a mutation

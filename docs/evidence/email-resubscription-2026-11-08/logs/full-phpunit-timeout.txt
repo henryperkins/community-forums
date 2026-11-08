@@ -1,0 +1,113 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+.............................................................   61 / 3634 (  1%)
+.............................................................  122 / 3634 (  3%)
+.........................................................DDDD  183 / 3634 (  5%)
+.............................................................  244 / 3634 (  6%)
+................................D............................  305 / 3634 (  8%)
+.............................................................  366 / 3634 ( 10%)
+.............................................................  427 / 3634 ( 11%)
+.............................................................  488 / 3634 ( 13%)
+.......................................................DD....  549 / 3634 ( 15%)
+.............................................................  610 / 3634 ( 16%)
+.............................................................  671 / 3634 ( 18%)
+.............................................................  732 / 3634 ( 20%)
+.............................................................  793 / 3634 ( 21%)
+.............................................................  854 / 3634 ( 23%)
+.............................................................  915 / 3634 ( 25%)
+.................................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.......  976 / 3634 ( 26%)
+............................................................. 1037 / 3634 ( 28%)
+............................................................. 1098 / 3634 ( 30%)
+............................................................. 1159 / 3634 ( 31%)
+............................................................. 1220 / 3634 ( 33%)
+............................................................. 1281 / 3634 ( 35%)
+............................................................. 1342 / 3634 ( 36%)
+............................................................. 1403 / 3634 ( 38%)
+............................................................. 1464 / 3634 ( 40%)
+............................................................. 1525 / 3634 ( 41%)
+............................................................. 1586 / 3634 ( 43%)
+............................................................. 1647 / 3634 ( 45%)
+...................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.......................................... 1708 / 3634 ( 47%)
+............................................................. 1769 / 3634 ( 48%)
+............................................................. 1830 / 3634 ( 50%)
+...............[RetroBoards] Two-factor secret (enabled) for user #811 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #811 cannot be opened with the configured APP_KEY.
+..[RetroBoards] Two-factor secret (enabled) for user #820 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Ignoring invalid key configuration: APP_PREVIOUS_KEY_VERIFY_IDS entry 2 is not a 16-character lowercase hex HMAC key id. APP_PREVIOUS_KEY_VERIFY_IDS lists ffffffffffffffff, which is not the HMAC key id of any configured previous key.
+........................................... 1891 / 3634 ( 52%)
+............................................................. 1952 / 3634 ( 53%)
+...................................[RetroBoards] Two-factor secret (enabled) for user #1196 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1198 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1198 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1200 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1200 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1200 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1200 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1200 cannot be opened with the configured APP_KEY.
+..[RetroBoards] Two-factor secret (enabled) for user #1205 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1205 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1205 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1205 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1205 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1205 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1205 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1205 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1207 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1207 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (pending enrollment) for user #1209 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1211 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1211 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1213 cannot be opened with the configured APP_KEY.
+.................. 2013 / 3634 ( 55%)
+............................................................. 2074 / 3634 ( 57%)
+............................................................. 2135 / 3634 ( 58%)
+............................................................. 2196 / 3634 ( 60%)
+............................................................. 2257 / 3634 ( 62%)
+............................................................. 2318 / 3634 ( 63%)
+............................................................. 2379 / 3634 ( 65%)
+............................................................. 2440 / 3634 ( 67%)
+............................................................. 2501 / 3634 ( 68%)
+............................................................. 2562 / 3634 ( 70%)
+............................................................. 2623 / 3634 ( 72%)
+.......................D....DDDDD......................S..... 2684 / 3634 ( 73%)
+............................................................. 2745 / 3634 ( 75%)
+.[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+..[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+.......................................................... 2806 / 3634 ( 77%)
+............................................................. 2867 / 3634 ( 78%)
+............................................................. 2928 / 3634 ( 80%)
+............................................................. 2989 / 3634 ( 82%)
+............................................................. 3050 / 3634 ( 83%)
+............................................................. 3111 / 3634 ( 85%)
+............................................................. 3172 / 3634 ( 87%)
+............................................................. 3233 / 3634 ( 88%)
+............................................................. 3294 / 3634 ( 90%)
+...............D............................................. 3355 / 3634 ( 92%)
+............................................................. 3416 / 3634 ( 94%)
+.........The following exception is caused by a process timeout
+Check https://getcomposer.org/doc/06-config.md#process-timeout for details
+
+In Process.php line 1196:
+
+  The process "phpunit '--colors=never'" exceeded the timeout of 300 seconds.
+
+
+test [--dev] [--no-dev] [--] [<args>...]

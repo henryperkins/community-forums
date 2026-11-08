@@ -1,0 +1,171 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+Time: 00:02.781, Memory: 20.00 MB
+
+There were 5 errors:
+
+1) Tests\Unit\Security\SecretBoxTest::test_a_record_sealed_under_another_key_is_unavailable
+PHPUnit\Framework\Exception: Class "App\Security\SecretUnavailableException" does not exist
+
+Caused by
+ReflectionException: Class "App\Security\SecretUnavailableException" does not exist
+
+2) Tests\Unit\Security\SecretBoxTest::test_an_altered_record_is_unavailable
+PHPUnit\Framework\Exception: Class "App\Security\SecretUnavailableException" does not exist
+
+Caused by
+ReflectionException: Class "App\Security\SecretUnavailableException" does not exist
+
+3) Tests\Unit\Security\SecretBoxTest::test_a_missing_key_is_a_configuration_failure_not_an_unavailable_record
+PHPUnit\Framework\UnknownClassOrInterfaceException: Class or interface "App\Security\SecretUnavailableException" does not exist
+
+/home/azureuser/community-forums/tests/Unit/Security/SecretBoxTest.php:55
+
+4) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_expired_challenge_rejects_a_valid_recovery_code_without_consuming_it
+TypeError: Tests\Support\TestCase::assertSeeText(): Argument #1 ($response) must be of type App\Core\Response, string given, called in /home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php on line 127
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:440
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:127
+
+5) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_missing_app_key_is_a_configuration_failure_not_a_denial
+PHPUnit\Framework\UnknownClassOrInterfaceException: Class or interface "App\Security\SecretUnavailableException" does not exist
+
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:302
+
+--
+
+There were 9 failures:
+
+1) Tests\Unit\Security\SecretBoxTest::test_unavailability_is_still_a_runtime_exception_for_existing_callers
+Failed asserting that false is true.
+
+/home/azureuser/community-forums/tests/Unit/Security/SecretBoxTest.php:43
+
+2) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_valid_recovery_code_signs_in_when_the_totp_secret_cannot_be_opened
+Expected a redirect status.
+Failed asserting that an array contains 500.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:428
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:53
+
+3) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_authenticator_code_is_denied_with_guidance_and_the_challenge_stays_usable
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Error 500 · RetroBoards</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="o
+Failed asserting that 500 is identical to 422.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:423
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:72
+
+4) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_invalid_used_and_foreign_recovery_codes_follow_the_normal_denial_path
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Error 500 · RetroBoards</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="o
+Failed asserting that 500 is identical to 422.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:423
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:95
+
+5) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_attempt_limit_still_applies_when_the_totp_secret_cannot_be_opened
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Error 500 · RetroBoards</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="o
+Failed asserting that 500 is identical to 422.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:423
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:146
+
+6) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_recovery_code_disables_two_factor_when_the_totp_secret_cannot_be_opened
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Error 500 · RetroBoards</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="o
+Failed asserting that 500 is identical to 422.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:423
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:168
+
+7) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_unreadable_pending_enrollment_asks_for_a_restart_and_restart_succeeds
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Error 500 · RetroBoards</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="o
+Failed asserting that 500 is identical to 422.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:423
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:199
+
+8) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_switching_app_key_without_a_keyring_fails_closed_without_server_errors
+Unexpected HTTP status. Body: <!doctype html>
+<html lang="en"
+      data-theme="system"
+      data-density="comfortable"
+      data-font-size="medium"
+      >
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Error 500 · RetroBoards</title>
+    <meta name="description" content="RetroBoards — a community forum.">
+            <meta property="o
+Failed asserting that 500 is identical to 422.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:423
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:242
+
+9) Tests\Integration\Core\AppMfaUnreadableSecretTest::test_recovery_code_issued_under_the_active_key_works_while_the_totp_secret_needs_the_previous_key
+Expected a redirect status.
+Failed asserting that an array contains 500.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:428
+/home/azureuser/community-forums/tests/Integration/Core/AppMfaUnreadableSecretTest.php:267
+
+ERRORS!
+Tests: 15, Assertions: 73, Errors: 5, Failures: 9.
+phpunit exit=2

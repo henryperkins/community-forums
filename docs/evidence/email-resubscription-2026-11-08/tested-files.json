@@ -1,0 +1,16 @@
+{
+  "base_revision": "402e8127a5848c203235d9780dd7097960d1deb5",
+  "branch": "feat/app-key-keyring",
+  "files": {
+    "src/Controller/SettingsController.php": "a85c6a196ffa529963cf8aa5ff71fdfd0307787ca2133b74393acc8ab2146deb",
+    "src/Core/App.php": "4a5db98c82ab95431fe84ee7bd59f2b62d43494fe996632f2c71cd7673b6281e",
+    "src/Repository/EmailSuppressionRepository.php": "4c7ddc51e0a3491a4052f27f17deb281de33fef532d691d65753bf70a5df2cde",
+    "src/Service/NotificationSettingsService.php": "29a0172a34df92442a464f74d044e05a05ecd1ea576cc430800022f11d6465b0",
+    "tests/Integration/Core/AppEmailResubscriptionTest.php": "d9c62ff6770fe190d25f2aa868ccf0438efbb108905fe0fa18f72f0218aa3bb7",
+    "tests/browser/app-key-keyring.spec.ts": "b181f3c003984c9dc42faf12268079446df21d9c8c009dc6236114e7ec79af87",
+    "tests/browser/email-resubscription.spec.ts": "61fe6c88d965c3dc57486414fb8f09d9e29a7cf6bfccd1f69fbacf6633fa3cd5",
+    "tests/browser/email-resubscription-fixture.php": "155d30c1622a30edac37f8a676492135d73d14c7d8b08cb12af741d049649c2a"
+  },
+  "patch_sha256": "f5f3fd8cd333e8312876db64b41178f5288229d340cf205ac1982707455a52e9",
+  "patch_encoding": "gzip; patch_sha256 refers to the uncompressed bytes"
+}

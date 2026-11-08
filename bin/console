@@ -54,6 +54,7 @@ use App\Repository\UserRepository;
 use App\Repository\UserPreferenceRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
+use App\Security\AppKeyRing;
 use App\Security\EgressGuard;
 use App\Security\BoardPolicy;
 use App\Security\CapabilityResolver;
@@ -180,7 +181,7 @@ $packageIntegrations = static function (Database $db) use ($config): PackageInte
     $vault = new SecretVault(
         $db,
         new ServiceSecretRepository($db),
-        new SecretBox((string) $config->get('app.key', '')),
+        new SecretBox(AppKeyRing::fromConfig($config)),
         $audit,
         $flags,
         $config,
@@ -725,6 +726,41 @@ try {
             $log('APP_KEY=' . bin2hex(random_bytes(32)));
             break;
 
+        case 'key:check':
+            // Configuration only: never reads the database and never prints key
+            // material, just the derived key ids and permissions (ADR 0059).
+            $ring = AppKeyRing::fromConfig($config);
+            $log('Key ring:');
+            foreach ($ring->describe() as $row) {
+                $permissions = match (true) {
+                    !$row['decrypts'] => 'no encryption key',
+                    $row['verifies'] => 'decrypts and verifies',
+                    default => 'decrypts only',
+                };
+                $log(sprintf(
+                    '  %-20s %-8s encryption %-16s  hmac %s  %s%s',
+                    $row['source'],
+                    $row['role'],
+                    $row['encryption_id'] ?? '-',
+                    $row['hmac_id'],
+                    $permissions,
+                    $row['shares_encryption_key_with'] !== null ? ' (same encryption key as ' . $row['shares_encryption_key_with'] . ')' : '',
+                ));
+            }
+            $errors = $ring->errors();
+            if (!$ring->active()->hasEncryptionKey()) {
+                array_unshift($errors, 'APP_KEY is not set; nothing can be encrypted, decrypted or verified.');
+            }
+            foreach ($errors as $error) {
+                fwrite(STDERR, 'key:check: ' . $error . PHP_EOL);
+            }
+            if ($errors !== []) {
+                exit(1);
+            }
+            // Valid configuration is not evidence that stored records are readable.
+            $log('Key configuration is valid. This checks configuration only, not whether stored records can be read.');
+            break;
+
         // ---- Out-of-band account recovery ---------------------------------
         // Email fails closed when no From address is configured (DESIGN: in-app
         // notifications still deliver, mail does not), so /forgot cannot rescue a
@@ -1110,7 +1146,7 @@ try {
             $vault = new SecretVault(
                 $db,
                 new ServiceSecretRepository($db),
-                new SecretBox((string) $config->get('app.key', '')),
+                new SecretBox(AppKeyRing::fromConfig($config)),
                 new ModerationLogRepository($db),
                 new FeatureFlags(new SettingRepository($db)),
                 $config,
@@ -1124,7 +1160,7 @@ try {
             $vault = new SecretVault(
                 $db,
                 new ServiceSecretRepository($db),
-                new SecretBox((string) $config->get('app.key', '')),
+                new SecretBox(AppKeyRing::fromConfig($config)),
                 new ModerationLogRepository($db),
                 new FeatureFlags(new SettingRepository($db)),
                 $config,
@@ -1432,6 +1468,7 @@ try {
             $log('  migrate:rollback     Roll back applied migrations');
             $log('  migrate:status       Show migration status');
             $log('  key:generate         Print a fresh APP_KEY');
+            $log('  key:check            Validate APP_KEY and APP_PREVIOUS_KEY_* and print their key ids (no secrets)');
             $log('  user:list            List accounts (id, username, email, role, status)');
             $log('  user:password <email-or-username> [--password=SECRET]  Reset a password out of band and revoke that account\'s sessions');
             $log('  repair               Reconcile all denormalised counters + reputation');

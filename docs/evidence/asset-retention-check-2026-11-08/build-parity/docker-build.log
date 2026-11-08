@@ -1,0 +1,124 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load remote build context
+#1 DONE 5.9s
+
+#1 [internal] load remote build context
+#1 DONE 5.9s
+
+#2 copy /context /
+#2 DONE 1.0s
+
+#3 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#3 DONE 0.5s
+
+#4 docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#4 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
+#4 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 14.28MB / 14.28MB 0.2s
+#4 sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 14.28MB / 14.28MB 0.2s done
+#4 extracting sha256:9d2b4f57f9e20f33279375ce25c6ff14f30f64270ed5c7b613b2b30256754f62 0.1s done
+#4 DONE 0.4s
+
+#5 [internal] load metadata for docker.io/library/node:24-alpine
+#5 DONE 0.4s
+
+#6 [assets  1/10] FROM docker.io/library/node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
+#6 resolve docker.io/library/node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8 0.0s done
+#6 DONE 0.3s
+
+#6 [assets  1/10] FROM docker.io/library/node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
+#6 extracting sha256:881fc932939efef04ca120ad44bbd2c0917851eb247aa4995428afb1e80ede17
+#6 sha256:60ef5f57e09d3f24d91cfd5547a102a028a7bd629f03e79409f53a202cf9df54 441B / 441B 0.0s done
+#6 sha256:89a151fddb377af33d0dda6a24f40061bbde4b159f82c349fe01208baba8a84f 1.26MB / 1.26MB 0.1s done
+#6 extracting sha256:881fc932939efef04ca120ad44bbd2c0917851eb247aa4995428afb1e80ede17 0.1s done
+#6 sha256:b72829bc75b7701104d057fde78fe0aef6dc0c3eaf2423e7249e8a14c37ead57 57.38MB / 57.38MB 0.3s
+#6 sha256:b72829bc75b7701104d057fde78fe0aef6dc0c3eaf2423e7249e8a14c37ead57 57.38MB / 57.38MB 0.5s done
+#6 extracting sha256:b72829bc75b7701104d057fde78fe0aef6dc0c3eaf2423e7249e8a14c37ead57
+#6 extracting sha256:b72829bc75b7701104d057fde78fe0aef6dc0c3eaf2423e7249e8a14c37ead57 0.7s done
+#6 DONE 1.6s
+
+#6 [assets  1/10] FROM docker.io/library/node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
+#6 extracting sha256:89a151fddb377af33d0dda6a24f40061bbde4b159f82c349fe01208baba8a84f 0.0s done
+#6 extracting sha256:60ef5f57e09d3f24d91cfd5547a102a028a7bd629f03e79409f53a202cf9df54 0.0s done
+#6 DONE 1.7s
+
+#7 [assets  2/10] WORKDIR /build
+#7 DONE 0.8s
+
+#8 [assets  3/10] COPY package.json package-lock.json ./
+#8 DONE 0.1s
+
+#9 [assets  4/10] RUN npm ci
+#9 3.927 
+#9 3.927 added 174 packages, and audited 175 packages in 4s
+#9 3.927 
+#9 3.927 89 packages are looking for funding
+#9 3.927   run `npm fund` for details
+#9 3.928 
+#9 3.928 found 0 vulnerabilities
+#9 3.929 npm warn install-scripts 2 packages have install scripts not yet covered by allowScripts:
+#9 3.929 npm warn install-scripts   esbuild@0.28.2 (postinstall: node install.js)
+#9 3.929 npm warn install-scripts   workerd@1.20261023.1 (postinstall: node install.js)
+#9 3.929 npm warn install-scripts
+#9 3.929 npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+#9 3.930 npm notice
+#9 3.930 npm notice New major version of npm available! 11.19.1 -> 12.2.2
+#9 3.930 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+#9 3.930 npm notice To update run: npm install -g npm@12.2.2
+#9 3.930 npm notice
+#9 DONE 5.1s
+
+#10 [assets  5/10] COPY vite.config.mjs ./
+#10 DONE 0.1s
+
+#11 [assets  6/10] COPY bin/build-assets.mjs bin/build-assets.mjs
+#11 DONE 0.1s
+
+#12 [assets  7/10] COPY src/client/ src/client/
+#12 DONE 0.1s
+
+#13 [assets  8/10] COPY public/assets/ public/assets/
+#13 DONE 0.1s
+
+#14 [assets  9/10] COPY config/assets.json config/assets.json
+#14 DONE 0.1s
+
+#15 [assets 10/10] RUN npm run build
+#15 0.252 
+#15 0.252 > build
+#15 0.252 > node bin/build-assets.mjs
+#15 0.252 
+#15 0.420 vite v8.3.5 building client environment for production...
+#15 0.431 transforming...
+#15 0.585 ✓ 866 modules transformed.
+#15 0.655 rendering chunks...
+#15 0.721 computing gzip size...
+#15 0.729 ../tmp/retroboards-assets-bNgCAE/.vite/manifest.json               1.18 kB │ gzip:   0.34 kB
+#15 0.729 ../tmp/retroboards-assets-bNgCAE/wysiwyg-composer-BRAFF38E.css     1.12 kB │ gzip:   0.49 kB
+#15 0.729 ../tmp/retroboards-assets-bNgCAE/forum-theme-style-CNIV-nj8.css   25.87 kB │ gzip:   6.28 kB
+#15 0.729 ../tmp/retroboards-assets-bNgCAE/forum-base-style-DsiQn3Ye.css    98.87 kB │ gzip:  16.30 kB
+#15 0.729 ../tmp/retroboards-assets-bNgCAE/app-style-diYLPve0.css          486.35 kB │ gzip:  73.99 kB
+#15 0.729 ../tmp/retroboards-assets-bNgCAE/wysiwyg-composer-XlKwRXnh.js      1.66 kB │ gzip:   0.88 kB
+#15 0.729 ../tmp/retroboards-assets-bNgCAE/milkdown-adapter-DXUybFX0.js    467.21 kB │ gzip: 140.26 kB
+#15 0.729 
+#15 0.729 ✓ built in 309ms
+#15 0.819 Built 33 delivery files; staged 41 public assets for Workers.
+#15 DONE 0.9s
+
+#16 exporting to image
+#16 exporting layers
+#16 exporting layers 9.3s done
+#16 exporting manifest sha256:92d326e48ee1629e847219acc705b7c78fc775a3281233042ea36100e81a673a 0.0s done
+#16 exporting config sha256:25ec07e1edb690fa9532ae43a25d4c6c4774e91d9f013f445479867be1823453 0.0s done
+#16 exporting attestation manifest sha256:06f659464750304c1fc6f4da297a2b8478d469c232c2cc4d86555ef1260473bc 0.1s done
+#16 exporting manifest list sha256:a6b4db4bca7928e2375debe41dd86c8f1c53ae15bc285f6f3926ba900010e4b9
+#16 exporting manifest list sha256:a6b4db4bca7928e2375debe41dd86c8f1c53ae15bc285f6f3926ba900010e4b9 0.0s done
+#16 naming to docker.io/library/rb-assets-parity:c416144087b08d07e83f11878a56405bf1b1e072 done
+#16 unpacking to docker.io/library/rb-assets-parity:c416144087b08d07e83f11878a56405bf1b1e072
+#16 unpacking to docker.io/library/rb-assets-parity:c416144087b08d07e83f11878a56405bf1b1e072 2.5s done
+#16 DONE 12.1s
+
+real	0m39.374s
+user	0m7.436s
+sys	0m2.198s
+docker build exit=0

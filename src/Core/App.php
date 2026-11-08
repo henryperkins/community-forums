@@ -154,6 +154,7 @@ use App\Repository\WebAuthnChallengeRepository;
 use App\Repository\WebAuthnCredentialRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
+use App\Security\AppKeyRing;
 use App\Security\AuthorityGate;
 use App\Security\BoardAuthority;
 use App\Security\BoardPolicy;
@@ -317,6 +318,8 @@ use Throwable;
  */
 final class App
 {
+    private static bool $keyRingErrorsReported = false;
+
     /**
      * Core compatibility version (Foundation F2). Package releases declare
      * `core_min`/`core_max` (0049 package_releases) against this identity;
@@ -1194,7 +1197,17 @@ final class App
             $c->get(FeatureFlags::class),
         ));
         $c->bind(Telemetry::class, fn () => new Telemetry($config));
-        $c->bind(SecretBox::class, fn () => new SecretBox((string) $config->get('app.key', '')));
+        $c->bind(AppKeyRing::class, static function () use ($config): AppKeyRing {
+            $ring = AppKeyRing::fromConfig($config);
+            if (!$ring->isValid() && !self::$keyRingErrorsReported) {
+                // key:check refuses this configuration; at runtime the invalid
+                // entries are ignored, once reported per process (ADR 0059).
+                self::$keyRingErrorsReported = true;
+                error_log('[RetroBoards] Ignoring invalid key configuration: ' . implode(' ', $ring->errors()));
+            }
+            return $ring;
+        });
+        $c->bind(SecretBox::class, fn (Container $c) => new SecretBox($c->get(AppKeyRing::class)));
         $c->bind(Totp::class, fn () => new Totp());
         $c->bind(WriteGate::class, fn () => new WriteGate());
         $c->bind(BoardPolicy::class, fn () => new BoardPolicy());
@@ -1296,6 +1309,7 @@ final class App
         ));
         $c->bind(\App\Service\NotificationSettingsService::class, fn (Container $c) => new \App\Service\NotificationSettingsService(
             $c->get(Database::class), $c->get(UserRepository::class), $c->get(EmailPreferenceService::class), $c->get(WriteGate::class),
+            $c->get(EmailSuppressionRepository::class),
         ));
         $c->bind(NotificationReadService::class, fn (Container $c) => new NotificationReadService(
             $c->get(NotificationRepository::class), $c->get(NotificationVisibilityService::class), $c->get(ThreadReadService::class),
@@ -1914,6 +1928,7 @@ final class App
             $c->get(FeatureFlags::class)->enabled('passkeys') ? $c->get(PasskeyService::class) : null,
             $c->get(EmailDomainVerifier::class),
             $c->get(SettingRepository::class),
+            $c->get(AppKeyRing::class),
         ));
         $c->bind(ProtectedOwnerRepository::class, fn (Container $c) => new ProtectedOwnerRepository(
             $c->get(Database::class),
@@ -2261,6 +2276,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(ModerationLogRepository::class),
             $config,
+            $c->get(AppKeyRing::class),
         ));
         // One owner for "providers a member can sign in with right now": the
         // oauth master flag gates the whole set. Both lockout guards (oauth
@@ -2618,6 +2634,7 @@ final class App
         $r->get('/settings/notifications', [SettingsController::class, 'notificationsForm']);
         $r->post('/settings/notifications/subscriptions/{id}', [SubscriptionController::class, 'updateOwned']);
         $r->post('/settings/notifications', [SettingsController::class, 'updateNotifications']);
+        $r->post('/settings/notifications/email/resubscribe', [SettingsController::class, 'resubscribeEmail']);
         $r->get('/settings/sessions', [SettingsController::class, 'sessions']);
         $r->post('/settings/sessions/revoke', [SettingsController::class, 'revokeSession']);
         $r->post('/settings/sessions/revoke-others', [SettingsController::class, 'revokeOtherSessions']);

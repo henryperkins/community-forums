@@ -1,0 +1,85 @@
+{
+  "label": "2-recorded-then-all-four",
+  "version": "d3ee56066cd40e83",
+  "releases": [
+    "d3ee56066cd40e83",
+    "0ab71f5ca65e7fa0",
+    "5dc1b40f3b23d46d",
+    "c66e3b55dba6da68"
+  ],
+  "deployedReleases": [
+    "0ab71f5ca65e7fa0",
+    "5dc1b40f3b23d46d",
+    "c66e3b55dba6da68"
+  ],
+  "manifest_file_count": 45,
+  "live_release_files_missing": [],
+  "live_release_files": [
+    {
+      "url": "/assets/dist/app-9b906acd1f6f64c8.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/app-style-diYLPve0.css",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/composer-004f699d19dc5157.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/forum-base-style-DsiQn3Ye.css",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/forum-theme-style-CNIV-nj8.css",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/milkdown-adapter-DXUybFX0.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/passkeys-abc14d1e680e3beb.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/tour-4573ee743ebaf07c.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    },
+    {
+      "url": "/assets/dist/wysiwyg-composer-XlKwRXnh.js",
+      "in_manifest_files": true,
+      "in_public_dist": true,
+      "in_build_static": true
+    }
+  ]
+}

@@ -24,6 +24,13 @@ final class EmailSuppressionRepository
         ) !== false;
     }
 
+    /** The stored suppression reason for this address, or null when it is not suppressed. */
+    public function reasonFor(string $email): ?string
+    {
+        $reason = $this->db->fetchValue('SELECT reason FROM email_suppressions WHERE email = ? LIMIT 1', [strtolower($email)]);
+        return is_string($reason) ? $reason : null;
+    }
+
     public function suppress(string $email, string $reason): void
     {
         $this->db->run(
@@ -35,6 +42,15 @@ final class EmailSuppressionRepository
     public function unsuppress(string $email): void
     {
         $this->db->run('DELETE FROM email_suppressions WHERE email = ?', [strtolower($email)]);
+    }
+
+    /** A member cannot remove a suppression that an operator changed before this write. */
+    public function removeUnsubscribe(string $email): bool
+    {
+        return $this->db->run(
+            "DELETE FROM email_suppressions WHERE email = ? AND reason = 'unsubscribe'",
+            [strtolower($email)],
+        )->rowCount() > 0;
     }
 
     /**

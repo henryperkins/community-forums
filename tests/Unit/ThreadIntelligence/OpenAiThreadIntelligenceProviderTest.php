@@ -129,6 +129,30 @@ final class OpenAiThreadIntelligenceProviderTest extends TestCase
         self::assertStringNotContainsString(self::APP_KEY, $identifier, 'the app key itself never leaves the site');
     }
 
+    public function test_safety_identifier_follows_the_active_app_key(): void
+    {
+        // ADR 0059: after an APP_KEY rotation the provider sees a new site
+        // identifier. Neither value is stored by the forum.
+        $rotatedKey = 'rotated-unit-test-app-key-fedcba9876543210';
+        $rotated = new OpenAiThreadIntelligenceProvider(
+            $this->transport,
+            ThreadIntelligenceConfig::fromArray(['api_key' => 'sk-test-key']),
+            new ThreadIntelligencePromptBuilder(),
+            $rotatedKey,
+        );
+        $this->transport->queue(new OpenAiTransportResponse(200, $this->completedJson()));
+        $this->transport->queue(new OpenAiTransportResponse(200, $this->completedJson()));
+        $this->provider->generate($this->request());
+        $rotated->generate($this->request());
+
+        [$before, $after] = array_map(
+            static fn (array $sent): string => $sent['payload']['safety_identifier'],
+            $this->transport->requests(),
+        );
+        self::assertNotSame($before, $after);
+        self::assertSame(hash_hmac('sha256', 'retroboards-thread-intelligence-site', $rotatedKey), $after);
+    }
+
     // ---- successful parsing ----------------------------------------------------
 
     public function test_completed_response_yields_decoded_output_response_id_and_usage(): void

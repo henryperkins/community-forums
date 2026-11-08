@@ -1,0 +1,19 @@
+{
+  "keyring": {
+    "head": "b62a12a7d15c5480259bbaf4cb9d4d131d9bac90",
+    "status": ""
+  },
+  "registry_forms": {
+    "head": "ef3fe102c62df660fe60bb43702aea063bc26c63",
+    "status": ""
+  },
+  "retention": {
+    "head": "b0038b5b9ae5f48e4213312ed29f76c46b690ebc",
+    "status": " M docs/evidence/asset-retention-check-2026-11-08/live-check.py\n M docs/evidence/asset-retention-check-2026-11-08/repro.sh\n?? docs/evidence/asset-retention-check-2026-11-08/results/repro-rerun.log\n",
+    "working_files_sha256": {
+      "docs/evidence/asset-retention-check-2026-11-08/live-check.py": "938dbf4f63fa8acee76cca6727db310c8d8c50c79bbd5c34f55d846cd1b77eeb",
+      "docs/evidence/asset-retention-check-2026-11-08/repro.sh": "2db821b6a7d5646cf8ad194e739fc73165a3ae4626110625dec60b16cb146283",
+      "docs/evidence/asset-retention-check-2026-11-08/results/repro-rerun.log": "34764227d05875d005d7ad3b0a749dca10d5f1decad1918ff7c3dd58a4ff0462"
+    }
+  }
+}

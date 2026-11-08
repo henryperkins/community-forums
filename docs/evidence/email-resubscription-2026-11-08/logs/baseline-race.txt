@@ -1,0 +1,45 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+FFFF                                                                4 / 4 (100%)
+
+Time: 00:00.129, Memory: 12.00 MB
+
+There were 4 failures:
+
+1) Tests\Integration\Core\AppEmailResubscriptionTest::test_a_concurrent_operator_change_is_preserved_while_the_account_is_locked with data set "bounce, emulated" ('bounce', true)
+A newly committed operator suppression must survive the member delete.
+Failed asserting that null is identical to 'bounce'.
+
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:240
+/home/azureuser/community-forums/tests/Support/TestCase.php:93
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:212
+
+2) Tests\Integration\Core\AppEmailResubscriptionTest::test_a_concurrent_operator_change_is_preserved_while_the_account_is_locked with data set "complaint, emulated" ('complaint', true)
+A newly committed operator suppression must survive the member delete.
+Failed asserting that null is identical to 'complaint'.
+
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:240
+/home/azureuser/community-forums/tests/Support/TestCase.php:93
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:212
+
+3) Tests\Integration\Core\AppEmailResubscriptionTest::test_a_concurrent_operator_change_is_preserved_while_the_account_is_locked with data set "bounce, native" ('bounce', false)
+A newly committed operator suppression must survive the member delete.
+Failed asserting that null is identical to 'bounce'.
+
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:240
+/home/azureuser/community-forums/tests/Support/TestCase.php:93
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:212
+
+4) Tests\Integration\Core\AppEmailResubscriptionTest::test_a_concurrent_operator_change_is_preserved_while_the_account_is_locked with data set "complaint, native" ('complaint', false)
+A newly committed operator suppression must survive the member delete.
+Failed asserting that null is identical to 'complaint'.
+
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:240
+/home/azureuser/community-forums/tests/Support/TestCase.php:93
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:212
+
+FAILURES!
+Tests: 4, Assertions: 16, Failures: 4.

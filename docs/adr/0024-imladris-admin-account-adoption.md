@@ -297,6 +297,10 @@ discharged and what it deliberately did not, so nothing is silently dropped.
    Slices 12–18 each deferred this; it is a CI-shape decision, not a code change.
 4. **`registries.php` field-error wiring** (ADR 0023 deferral 4) — still open; closing it needs
    `AdminRegistryController::consoleView()` to stop broadcasting one flat bag to every registry card.
+   **Closed by the 2026-11-08 correction:** errors and nonsecret drafts now belong to one server action
+   and registry/key target, with accessible field associations and native disclosure recovery.
+   [Evidence](../evidence/registry-form-errors-2026-11-08/README.md); this updates the historical open
+   item above and makes no merge or deployment claim.
 5. **`FR-31`** — the duplicate badge-rule guard needs a unique index before the design's copy is honest.
 
 ### The merge blocker, restated with the values

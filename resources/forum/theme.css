@@ -237,6 +237,13 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
 .admin-console :is(.pager-label, .filter-result-count, .field-note, .form-note),
 .account-shell :is(.field-note, .form-note) { font-size: .875rem; line-height: 1.5; letter-spacing: normal; text-transform: none; }
 .admin-console :is(button, select, input), .account-shell :is(button, select, input) { font-size: 1rem; }
+/* Keep the blocked identity readable before its reauthentication form. Wrap
+   the action onto its own line when the row cannot fit both; other package
+   lists and key-revocation forms retain their existing layout. */
+.packages-block-row { flex-wrap: wrap; }
+.packages-block-row > .packages-rule-main { flex: 1 1 18rem; overflow-wrap: anywhere; }
+.packages-block-row > .packages-revoke-form { max-inline-size: 100%; }
+.packages-block-row .packages-secret-input { min-inline-size: 0; max-inline-size: 100%; min-block-size: 44px; }
 .profile-cover { background: #172b4d; background-image: none; color: #ffffff; }
 .profile-cover :is(h1, h2, .profile-name) { color: #ffffff; }
 .profile-cover :focus-visible { outline-color: var(--cover-accent); box-shadow: 0 0 0 2px #172b4d; }

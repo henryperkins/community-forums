@@ -1,0 +1,992 @@
+[WebServer] [Sun Nov  8 06:38:45 2026] PHP 8.5.4 Development Server (http://localhost:8047) started
+[WebServer] [Sun Nov  8 06:38:46 2026] 127.0.0.1:41004 Accepted
+[WebServer] [Sun Nov  8 06:38:46 2026] 127.0.0.1:41004 Closing
+
+Running 8 tests using 1 worker
+
+[WebServer] [Sun Nov  8 06:38:46 2026] 127.0.0.1:41018 Accepted
+[WebServer] [Sun Nov  8 06:38:46 2026] 127.0.0.1:41018 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41024 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41024 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41024 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41036 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41038 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41036 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41038 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41038 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41036 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41054 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41054 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41070 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41074 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41086 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41070 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41074 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41086 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41070 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41086 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41074 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41098 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41098 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41106 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41116 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41120 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41106 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41116 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41120 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41106 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41120 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41116 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41124 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41124 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41136 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41136 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41144 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41158 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41166 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41144 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41158 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41166 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41144 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41166 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41158 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41180 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41180 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41188 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41196 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41208 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41188 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41196 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41208 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41188 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41208 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41196 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41218 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41218 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41224 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41240 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41244 Accepted
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41224 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41240 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41244 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41224 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41244 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41240 Closing
+[WebServer] [Sun Nov  8 06:38:47 2026] 127.0.0.1:41256 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41256 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41266 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41266 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41278 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41292 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41296 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41278 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41292 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41296 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41278 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41296 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41292 Closing
+  ✓  1 [desktop] › mfa-unreadable-secret.spec.ts:100:9 › no-js › recovery code still works and the authenticator explains itself (no-js) (1.2s)
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41304 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41304 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41312 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41318 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41328 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41312 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41318 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41328 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41312 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41328 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41318 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41340 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41340 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41344 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41344 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41360 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41376 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41384 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41360 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41376 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41384 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41360 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41384 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41376 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41394 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41394 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41408 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41420 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41434 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41408 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41420 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41434 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41408 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41434 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41420 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41446 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] [RetroBoards] Two-factor secret (pending enrollment) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41446 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41452 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41454 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41462 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41452 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41454 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41462 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41452 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41462 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41454 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41478 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41478 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41488 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41490 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41500 Accepted
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41488 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41490 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41500 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41488 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41500 Closing
+[WebServer] [Sun Nov  8 06:38:48 2026] 127.0.0.1:41490 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41506 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41506 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41510 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41522 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41532 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41510 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41522 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41532 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41510 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41532 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41522 Closing
+  ✓  2 [desktop] › mfa-unreadable-secret.spec.ts:139:9 › no-js › an unreadable pending setup asks for a restart (no-js) (1.1s)
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41538 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41538 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41540 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41544 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41558 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41564 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41540 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41544 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41558 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41564 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41540 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41558 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41564 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41544 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41568 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41570 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41568 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41570 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41568 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41570 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41586 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41586 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41596 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41608 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41618 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41626 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41596 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41608 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41618 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41626 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41596 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41618 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41626 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41608 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41640 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41654 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41640 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41654 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41640 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41654 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41658 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41658 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41670 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41678 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41684 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41670 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41678 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41684 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41670 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41684 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41678 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41700 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41712 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41728 Accepted
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41700 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41712 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41728 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41700 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41712 Closing
+[WebServer] [Sun Nov  8 06:38:49 2026] 127.0.0.1:41728 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41740 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41740 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41756 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41756 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41758 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41774 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41790 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41798 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41758 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41774 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41790 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41798 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41758 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41790 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41798 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41774 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41800 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41808 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41820 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41800 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41800 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41808 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41820 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41808 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41820 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41836 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41840 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41836 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41840 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41854 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41854 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41860 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41864 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41874 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41876 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41860 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41864 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41874 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41876 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41860 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41874 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41876 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41864 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41880 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41890 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41900 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41880 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41890 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41900 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41880 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41890 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41900 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41906 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41922 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41906 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41922 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41930 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41930 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41932 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41934 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41936 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41932 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41934 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41936 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41932 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41936 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41934 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41950 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41952 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41958 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41962 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41950 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41952 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41958 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41962 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41950 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41952 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41958 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41962 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41968 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41980 Accepted
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41968 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41980 Closing
+[WebServer] [Sun Nov  8 06:38:50 2026] 127.0.0.1:41984 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:41984 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:41998 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:41998 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42000 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42014 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42018 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42028 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42000 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42014 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42018 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42028 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42000 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42018 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42028 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42014 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42042 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42046 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42060 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42042 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42046 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42060 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42042 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42046 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42060 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42068 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42070 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42068 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42070 Closing
+  ✓  3 [desktop] › mfa-unreadable-secret.spec.ts:100:9 › js › recovery code still works and the authenticator explains itself (js) (1.9s)
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42076 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42076 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42082 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42088 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42098 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42106 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42082 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42088 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42098 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42106 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42082 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42098 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42106 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42088 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42116 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42120 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42116 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42120 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42116 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42120 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42134 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42134 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42142 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42142 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42150 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42160 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42176 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42188 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42150 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42160 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42176 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42188 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42150 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42176 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42188 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42160 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42200 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42206 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42214 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42200 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42200 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42206 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42214 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42206 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42214 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42216 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42224 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42216 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42224 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42230 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42230 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42240 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42252 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42266 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42272 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42240 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42252 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42266 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42272 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42240 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42266 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42272 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42252 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42286 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42300 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42314 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42286 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42300 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42314 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42286 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42300 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42314 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42326 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42332 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42326 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42332 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42340 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] [RetroBoards] Two-factor secret (pending enrollment) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42340 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42348 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42362 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42372 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42348 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42362 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42372 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42348 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42372 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42362 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42382 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42396 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42402 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42418 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42382 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42396 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42402 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42418 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42382 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42396 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42402 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42418 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42428 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42434 Accepted
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42428 Closing
+[WebServer] [Sun Nov  8 06:38:51 2026] 127.0.0.1:42434 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42450 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42450 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42456 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42468 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42482 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42484 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42456 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42468 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42482 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42484 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42456 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42482 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42484 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42468 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42494 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42500 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42504 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42494 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42500 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42504 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42494 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42500 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42504 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42514 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42526 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42514 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42526 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42534 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42534 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42544 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42550 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42558 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42564 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42544 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42550 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42558 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42564 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42544 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42558 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42564 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42550 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42568 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42570 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42580 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42568 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42570 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42580 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42568 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42570 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42580 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42584 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42600 Accepted
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42584 Closing
+[WebServer] [Sun Nov  8 06:38:52 2026] 127.0.0.1:42600 Closing
+  ✓  4 [desktop] › mfa-unreadable-secret.spec.ts:139:9 › js › an unreadable pending setup asks for a restart (js) (1.6s)
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39944 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39944 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39958 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39966 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39974 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39958 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39966 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39974 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39958 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39974 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39966 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39978 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39978 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39982 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39990 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39992 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39982 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39990 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39992 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39982 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39992 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:39990 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40000 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40000 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40010 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40012 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40028 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40010 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40012 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40028 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40010 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40028 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40012 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40036 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40036 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40038 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40038 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40044 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40052 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40064 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40044 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40052 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40064 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40044 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40064 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40052 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40080 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40080 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40082 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40084 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40092 Accepted
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40082 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40084 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40092 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40082 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40092 Closing
+[WebServer] [Sun Nov  8 06:38:53 2026] 127.0.0.1:40084 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40094 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40094 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40096 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40098 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40114 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40096 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40098 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40114 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40096 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40114 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40098 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40118 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40118 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40134 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40134 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40138 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40148 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40154 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40138 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40148 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40154 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40138 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40154 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40148 Closing
+  ✓  5 [mobile] › mfa-unreadable-secret.spec.ts:100:9 › no-js › recovery code still works and the authenticator explains itself (no-js) (1.2s)
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40164 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40164 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40166 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40170 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40186 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40166 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40170 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40186 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40166 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40186 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40170 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40190 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40190 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40192 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40192 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40200 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40206 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40210 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40200 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40206 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40210 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40200 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40210 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40206 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40224 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40224 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40228 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40232 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40234 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40228 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40232 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40234 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40228 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40234 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40232 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40242 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] [RetroBoards] Two-factor secret (pending enrollment) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40242 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40244 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40258 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40266 Accepted
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40244 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40258 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40266 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40244 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40266 Closing
+[WebServer] [Sun Nov  8 06:38:54 2026] 127.0.0.1:40258 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40268 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40268 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40282 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40286 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40302 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40282 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40286 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40302 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40282 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40302 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40286 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40306 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40306 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40320 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40324 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40334 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40320 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40324 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40334 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40320 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40334 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40324 Closing
+  ✓  6 [mobile] › mfa-unreadable-secret.spec.ts:139:9 › no-js › an unreadable pending setup asks for a restart (no-js) (1.1s)
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40338 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40338 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40346 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40362 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40378 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40394 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40346 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40362 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40378 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40394 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40346 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40378 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40394 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40362 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40408 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40416 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40408 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40416 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40408 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40416 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40422 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40422 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40424 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40428 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40438 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40446 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40424 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40428 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40438 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40446 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40424 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40438 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40446 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40428 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40458 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40470 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40458 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40470 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40458 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40470 Closing
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40478 Accepted
+[WebServer] [Sun Nov  8 06:38:55 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:55 2026] 127.0.0.1:40478 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40492 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40504 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40516 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40492 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40492 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40504 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40504 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40516 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40530 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40516 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40534 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40550 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40530 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40534 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40550 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40530 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40534 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40550 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40560 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40560 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40570 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40570 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40582 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40584 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40590 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40598 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40582 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40584 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40590 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40598 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40582 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40590 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40598 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40584 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40602 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40616 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40628 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40602 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40602 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40616 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40616 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40628 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40628 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40634 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40650 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40634 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40650 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40656 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40656 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40668 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40674 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40682 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40688 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40668 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40674 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40682 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40688 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40668 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40682 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40688 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40674 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40690 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40700 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40706 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40690 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40700 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40706 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40690 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40700 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40706 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40710 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40716 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40710 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40716 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40722 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40722 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40738 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40744 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40750 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40738 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40744 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40758 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40738 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40744 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40772 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40780 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40750 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40758 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40784 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40750 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40758 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40772 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40780 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40784 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40772 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40780 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40784 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40790 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40802 Accepted
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40790 Closing
+[WebServer] [Sun Nov  8 06:38:56 2026] 127.0.0.1:40802 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40816 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] [RetroBoards] Two-factor secret (enabled) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40816 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40824 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40824 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40840 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40842 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40850 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40860 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40840 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40842 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40850 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40860 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40840 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40850 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40860 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40842 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40864 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40870 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40872 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40864 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40870 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40872 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40864 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40870 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40872 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40876 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40880 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40876 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40880 Closing
+  ✓  7 [mobile] › mfa-unreadable-secret.spec.ts:100:9 › js › recovery code still works and the authenticator explains itself (js) (1.9s)
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40882 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40882 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40892 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40906 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40910 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40914 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40892 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40906 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40910 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40914 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40892 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40910 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40914 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40906 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40916 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40926 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40916 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40926 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40916 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40926 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40928 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40928 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40932 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40932 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40946 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40948 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40950 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40954 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40946 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40948 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40950 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40954 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40946 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40950 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40954 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40948 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40960 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40966 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40976 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40960 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40960 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40966 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40976 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40966 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40976 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40980 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40990 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40980 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:40990 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41002 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41002 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41018 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41024 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41038 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41050 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41018 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41024 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41038 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41050 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41018 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41038 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41050 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41024 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41066 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41082 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41094 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41066 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41082 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41094 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41066 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41082 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41094 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41096 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41098 Accepted
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41096 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41098 Closing
+[WebServer] [Sun Nov  8 06:38:57 2026] 127.0.0.1:41112 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] [RetroBoards] Two-factor secret (pending enrollment) for user #24 cannot be opened with the configured APP_KEY.
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41112 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41124 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41130 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41138 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41124 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41140 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41156 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41124 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41130 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41162 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41138 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41130 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41138 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41140 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41156 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41176 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41140 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41156 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41162 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41162 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41176 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41176 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41186 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41198 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41186 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41198 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41214 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41214 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41218 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41226 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41236 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41252 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41218 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41226 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41236 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41252 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41218 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41236 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41252 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41226 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41254 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41266 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41272 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41254 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41266 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41272 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41254 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41266 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41272 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41288 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41290 Accepted
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41288 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41290 Closing
+[WebServer] [Sun Nov  8 06:38:58 2026] 127.0.0.1:41306 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41306 Closing
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41322 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41330 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41342 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41356 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41322 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41330 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41342 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41356 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41322 Closing
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41342 Closing
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41356 Closing
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41330 Closing
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41364 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41366 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41370 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41364 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41366 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41370 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41364 Closing
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41366 Closing
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41370 Closing
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41376 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41380 Accepted
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41376 Closing
+[WebServer] [Sun Nov  8 06:38:59 2026] 127.0.0.1:41380 Closing
+  ✓  8 [mobile] › mfa-unreadable-secret.spec.ts:139:9 › js › an unreadable pending setup asks for a restart (js) (1.6s)
+
+  8 passed (13.6s)

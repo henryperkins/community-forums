@@ -1,0 +1,16 @@
+
+Running 12 tests using 1 worker
+
+[1/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 320px no-js light › identifiers stay readable and the native removal remains usable
+[2/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 320px no-js dark › identifiers stay readable and the native removal remains usable
+[3/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 320px js light › identifiers stay readable and the native removal remains usable
+[4/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 320px js dark › identifiers stay readable and the native removal remains usable
+[5/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 390px no-js light › identifiers stay readable and the native removal remains usable
+[6/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 390px no-js dark › identifiers stay readable and the native removal remains usable
+[7/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 390px js light › identifiers stay readable and the native removal remains usable
+[8/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 390px js dark › identifiers stay readable and the native removal remains usable
+[9/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 1280px no-js light › identifiers stay readable and the native removal remains usable
+[10/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 1280px no-js dark › identifiers stay readable and the native removal remains usable
+[11/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 1280px js light › identifiers stay readable and the native removal remains usable
+[12/12] [desktop] › registry-blocklist-layout.spec.ts:55:13 › 1280px js dark › identifiers stay readable and the native removal remains usable
+  12 passed (12.9s)

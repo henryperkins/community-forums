@@ -1,0 +1,564 @@
+[WebServer] [Sun Nov  8 07:52:49 2026] PHP 8.5.4 Development Server (http://localhost:8048) started
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35446 Accepted
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35446 Closing
+
+Running 8 tests using 1 worker
+
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35450 Accepted
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35450 Closing
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35466 Accepted
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35476 Accepted
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35478 Accepted
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35466 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35476 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35478 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35466 Closing
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35478 Closing
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35476 Closing
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35486 Accepted
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35486 Closing
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35502 Accepted
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35512 Accepted
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35528 Accepted
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35502 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35512 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35528 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35502 Closing
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35528 Closing
+[WebServer] [Sun Nov  8 07:52:50 2026] 127.0.0.1:35512 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35530 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35530 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35534 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35534 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35550 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35562 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35566 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35550 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35562 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35566 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35550 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35566 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35562 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35572 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35572 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35574 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35574 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35578 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35584 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35596 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35578 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35584 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35596 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35578 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35596 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35584 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35612 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35612 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35624 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35624 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35636 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35652 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35654 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35636 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35652 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35654 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35636 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35654 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35652 Closing
+  ✓  1 [desktop] › app-key-keyring.spec.ts:61:9 › no-js › a previous-key link opts out and settings turn email back on (no-js) (863ms)
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35656 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35656 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35670 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35678 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35682 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35670 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35678 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35682 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35670 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35682 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35678 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35688 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35688 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35696 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35708 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35724 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35696 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35708 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35724 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35696 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35724 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35708 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35738 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35738 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35746 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35756 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35758 Accepted
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35746 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35756 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35758 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35746 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35758 Closing
+[WebServer] [Sun Nov  8 07:52:51 2026] 127.0.0.1:35756 Closing
+  ✓  2 [desktop] › app-key-keyring.spec.ts:99:9 › no-js › an active-key link opts out and offers Re-subscribe (no-js) (361ms)
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35770 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35770 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35786 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35794 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35810 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35822 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35786 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35794 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35810 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35822 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35786 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35810 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35822 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35794 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35830 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35834 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35830 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35834 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35830 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35834 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35840 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35840 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35850 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35864 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35866 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35876 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35850 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35864 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35866 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35876 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35850 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35866 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35876 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35864 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35880 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35890 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35880 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35890 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35880 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35890 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35900 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35900 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35902 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35902 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35912 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35928 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35930 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35946 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35912 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35928 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35930 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35946 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35912 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35930 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35946 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35928 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35960 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35968 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35960 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35968 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35960 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35968 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35980 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35980 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35988 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:35988 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36000 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36008 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36010 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36014 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36000 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36008 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36010 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36014 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36000 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36010 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36014 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36008 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36022 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36030 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36042 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36022 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36022 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36030 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36042 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36030 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36042 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36056 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36058 Accepted
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36056 Closing
+[WebServer] [Sun Nov  8 07:52:52 2026] 127.0.0.1:36058 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60724 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60724 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60732 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60732 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60742 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60758 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60772 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60784 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60742 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60758 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60772 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60784 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60742 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60772 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60784 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60758 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60800 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60816 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60820 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60800 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60816 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60820 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60800 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60816 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60820 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60836 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60844 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60836 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60844 Closing
+  ✓  3 [desktop] › app-key-keyring.spec.ts:61:9 › js › a previous-key link opts out and settings turn email back on (js) (1.7s)
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60858 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60858 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60872 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60878 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60890 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60900 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60872 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60878 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60890 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60900 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60872 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60890 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60900 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60878 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60912 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60926 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60912 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60926 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60912 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60926 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60942 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60942 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60948 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60960 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60962 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60970 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60948 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60960 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60962 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60970 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60948 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60962 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60970 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60960 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60972 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60988 Accepted
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60972 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60988 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60972 Closing
+[WebServer] [Sun Nov  8 07:52:53 2026] 127.0.0.1:60988 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:60998 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:60998 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32768 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32774 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32790 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32792 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32768 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32774 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32790 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32792 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32768 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32790 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32792 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32774 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32796 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32802 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32796 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32802 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32796 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32802 Closing
+  ✓  4 [desktop] › app-key-keyring.spec.ts:99:9 › js › an active-key link opts out and offers Re-subscribe (js) (683ms)
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32808 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32808 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32810 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32826 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32830 Accepted
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32810 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32826 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32830 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32810 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32830 Closing
+[WebServer] [Sun Nov  8 07:52:54 2026] 127.0.0.1:32826 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32840 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32840 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32850 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32852 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32868 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32850 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32852 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32868 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32850 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32868 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32852 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32876 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32876 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32884 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32884 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32886 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32902 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32912 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32886 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32902 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32912 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32886 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32912 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32902 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32926 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32926 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32928 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32928 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32936 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32948 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32960 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32936 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32948 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32960 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32936 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32960 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32948 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32976 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32976 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32988 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32988 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32994 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33002 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33014 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32994 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33002 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33014 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:32994 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33014 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33002 Closing
+  ✓  5 [mobile] › app-key-keyring.spec.ts:61:9 › no-js › a previous-key link opts out and settings turn email back on (no-js) (909ms)
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33020 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33020 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33030 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33044 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33056 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33030 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33044 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33056 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33030 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33056 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33044 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33062 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33062 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33068 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33078 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33094 Accepted
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33068 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33078 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33094 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33068 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33094 Closing
+[WebServer] [Sun Nov  8 07:52:55 2026] 127.0.0.1:33078 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33104 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33104 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33112 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33128 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33134 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33112 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33128 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33134 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33112 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33134 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33128 Closing
+  ✓  6 [mobile] › app-key-keyring.spec.ts:99:9 › no-js › an active-key link opts out and offers Re-subscribe (no-js) (380ms)
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33150 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33150 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33162 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33172 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33180 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33184 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33162 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33172 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33180 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33162 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33180 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33172 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33194 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33200 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33184 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33194 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33200 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33184 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33194 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33200 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33202 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33202 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33214 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33230 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33240 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33254 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33214 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33230 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33240 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33254 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33214 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33240 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33254 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33230 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33262 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33276 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33262 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33276 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33262 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33276 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33282 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33282 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33298 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33298 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33306 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33322 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33338 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33354 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33306 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33322 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33338 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33354 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33306 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33338 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33354 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33322 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33356 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33366 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33356 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33366 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33356 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33366 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33380 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33380 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33390 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33390 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33398 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33410 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33418 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33434 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33398 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33410 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33418 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33434 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33398 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33418 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33434 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33410 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33436 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33448 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33460 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33436 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33436 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33448 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33460 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33448 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33460 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33466 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33482 Accepted
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33466 Closing
+[WebServer] [Sun Nov  8 07:52:56 2026] 127.0.0.1:33482 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33492 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33492 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33506 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33506 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33518 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33526 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33540 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33542 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33518 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33526 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33540 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33542 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33518 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33540 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33542 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33526 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33544 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33550 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33544 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33560 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33550 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33560 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33544 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33550 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33560 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33566 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33582 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33566 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33582 Closing
+  ✓  7 [mobile] › app-key-keyring.spec.ts:61:9 › js › a previous-key link opts out and settings turn email back on (js) (1.7s)
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33594 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33594 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33600 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33606 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33610 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33614 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33600 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33606 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33610 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33614 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33600 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33610 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33614 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33606 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33616 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33632 Accepted
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33616 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33632 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33616 Closing
+[WebServer] [Sun Nov  8 07:52:57 2026] 127.0.0.1:33632 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33640 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33640 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33644 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33648 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33658 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33674 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33644 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33648 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33658 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33674 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33644 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33658 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33674 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33648 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33688 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33694 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33688 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33694 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33688 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33694 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33704 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33704 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33720 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33734 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33736 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33738 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33720 [200]: GET /assets/dist/forum-base-style-DsiQn3Ye.css
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33734 [200]: GET /assets/dist/app-style-diYLPve0.css
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33736 [200]: GET /assets/dist/forum-theme-style-CNIV-nj8.css
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33738 [200]: GET /assets/dist/app-9b906acd1f6f64c8.js
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33720 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33736 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33738 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33734 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33752 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33760 Accepted
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33752 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33760 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33752 Closing
+[WebServer] [Sun Nov  8 07:52:58 2026] 127.0.0.1:33760 Closing
+  ✓  8 [mobile] › app-key-keyring.spec.ts:99:9 › js › an active-key link opts out and offers Re-subscribe (js) (707ms)
+
+  8 passed (9.2s)

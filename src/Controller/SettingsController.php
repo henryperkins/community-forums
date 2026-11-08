@@ -186,8 +186,24 @@ final class SettingsController extends Controller
             'subscriptions' => $this->container->get(\App\Service\SubscriptionService::class)->listForUser($viewer),
             'timezones' => \DateTimeZone::listIdentifiers(),
             'pause_all_email' => $this->container->get(EmailPreferenceService::class)->pauseAllEmail($viewer->id()),
+            // Only a member's own unsubscribe is theirs to undo; bounces and
+            // complaints stay with the operator.
+            'unsubscribed' => $this->container->get(\App\Repository\EmailSuppressionRepository::class)->reasonFor($viewer->email()) === 'unsubscribe',
             'errors' => [], 'old' => [],
         ], $data), $status);
+    }
+
+    /**
+     * Signed-in resubscription (ADR 0059): the member undoes their own unsubscribe
+     * without needing a link signed with the active key.
+     */
+    public function resubscribeEmail(Request $request): Response
+    {
+        $user = $this->requireUser();
+        $removed = $this->container->get(\App\Service\NotificationSettingsService::class)->resubscribeEmail($user);
+        return $this->redirectWithFlash('/settings/notifications', $removed
+            ? 'Your email unsubscribe was removed. Your other notification settings still apply.'
+            : 'No unsubscribe was removed. Your email delivery settings are unchanged.');
     }
 
     public function updateNotifications(Request $request): Response

@@ -15,8 +15,21 @@ return [
         'debug' => Env::bool('APP_DEBUG', false),
         'url' => Env::get('APP_URL', 'http://localhost:8000'),
         'webauthn_rp_id' => Env::get('WEBAUTHN_RP_ID', ''),
-        // Used to derive CSRF tokens for guests and to sign cookies.
+        // The active application key (ADR 0059): it encrypts stored secrets (TOTP
+        // and the service-secret vault) and keys recovery codes, unsubscribe
+        // links, email-change confirmations and the OAuth state cookie.
         'key' => Env::get('APP_KEY', ''),
+        // Key rotation (ADR 0059). Each previous key is used byte for byte. Every
+        // configured previous key may decrypt stored secrets; a previous key may
+        // also verify links, cookies and recovery codes only when its HMAC key id
+        // (printed by `php bin/console key:check`) is listed in
+        // APP_PREVIOUS_KEY_VERIFY_IDS. Leave a compromised key off that list.
+        'previous_keys' => [
+            1 => Env::get('APP_PREVIOUS_KEY_1'),
+            2 => Env::get('APP_PREVIOUS_KEY_2'),
+            3 => Env::get('APP_PREVIOUS_KEY_3'),
+        ],
+        'previous_key_verify_ids' => Env::get('APP_PREVIOUS_KEY_VERIFY_IDS', ''),
         'name' => Env::get('APP_NAME', 'RetroBoards'),
     ],
 

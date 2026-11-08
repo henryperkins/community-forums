@@ -1,0 +1,59 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+Time: 00:01.190, Memory: 24.00 MB
+
+App Key Ring (Tests\Unit\Security\AppKeyRing)
+ ✔ Hex keys use the first 64 hex digits for encryption and the exact string for hmac
+ ✔ Non hex or short keys use sha256 of trimmed value for encryption and raw for hmac
+ ✔ Spellings that share an encryption key but differ in hmac coexist in the ring
+ ✔ Previous keys are decrypt only by default and verify permissions are per key
+ ✔ Invalid entries are rejected without leaking key material and never grant permissions
+
+App Key Ring Rotation (Tests\Integration\Core\AppKeyRingRotation)
+ ✔ Migration 0087 adds nullable key id columns and reapplies as a no op
+ ✔ Planned rotation keeps every record working until k1 is retired
+ ✔ S1a and s1 runtimes running side by side accept each others writes
+ ✔ Pre keyring code reads these writes only while the key is unchanged
+ ✔ A compromised key still decrypts but never verifies
+ ✔ A previous key link opts out but only the active key or the member resubscribes
+ ✔ An oauth state cookie signed with k1 completes only while k1 may verify
+ ✔ Messages record the key that signed their unsubscribe link when actually sent
+ ✔ A digest records the active key that signed its link
+ ✔ A historical key spelling keeps working from a normalized ring with data set "uppercase hex"
+ ✔ A historical key spelling keeps working from a normalized ring with data set "hex digits past the first 64"
+ ✔ A historical key spelling keeps working from a normalized ring with data set "trailing newline"
+ ✔ A historical key spelling keeps working from a normalized ring with data set "surrounding spaces"
+ ✔ Passkey login decoys change with the key while real credential ids do not
+ ✔ Thread intelligence latch follows the active key
+
+App Mfa Unreadable Secret (Tests\Integration\Core\AppMfaUnreadableSecret)
+ ✔ Valid recovery code signs in when the totp secret cannot be opened
+ ✔ Authenticator code is denied with guidance and the challenge stays usable
+ ✔ Invalid used and foreign recovery codes follow the normal denial path
+ ✔ Expired challenge rejects a valid recovery code without consuming it
+ ✔ Attempt limit still applies when the totp secret cannot be opened
+ ✔ Recovery code disables two factor when the totp secret cannot be opened
+ ✔ Unreadable pending enrollment asks for a restart and restart succeeds
+ ✔ Switching app key without a keyring fails closed without server errors
+ ✔ Recovery code issued under the active key works while the totp secret needs the previous key
+ ✔ Missing app key is a configuration failure not a denial
+
+Key Check Command (Tests\Unit\Security\KeyCheckCommand)
+ ✔ A valid ring prints ids and permissions but no key material
+ ✔ Configuration errors exit non zero without echoing secrets
+ ✔ A missing app key fails
+
+Secret Box (Tests\Unit\Security\SecretBox)
+ ✔ Round trips under the same key and returns encryption key id
+ ✔ Previous key opens both attributed and legacy records even when decrypt only
+ ✔ A record attributed to an unconfigured key id fails without trying other keys
+ ✔ A record sealed under another key is unavailable
+ ✔ An altered record is unavailable
+ ✔ Unavailability is still a runtime exception for existing callers
+ ✔ A missing key is a configuration failure not an unavailable record
+
+OK (40 tests, 574 assertions)
+phpunit exit=0

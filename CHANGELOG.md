@@ -12,6 +12,93 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   markers from the structured citations, and the thread page upgrades them to
   superscript anchors resolving to the cited posts, in source-list order.
 
+## [2026-11-08] - Readable registry blocklist rows
+
+- Keep blocked package identifiers and reasons readable on narrow screens;
+  move password/removal controls below the text when space is tight, with
+  a 44px password target. Other package lists keep their existing layout.
+- Retain native-form regressions at 320px, 390px and desktop in both themes
+  and JavaScript modes. Verification:
+  [local evidence](docs/evidence/registry-blocklist-layout-2026-11-08/README.md).
+- Depend on the live-release retention correction before this asset-changing
+  release; keep the live Forum stylesheet and use runtime credentials for the
+  evidence runner. Fresh checks and the shared-credential response are in the
+  [retention follow-up](docs/evidence/registry-blocklist-retention-2026-11-08/README.md).
+
+## [2026-11-08] - Registry form error isolation
+
+- Keep registry validation errors and nonsecret drafts with the submitted action
+  and registry/key target. Failed pin, rotation and advisory forms reopen; a
+  rejected key revocation retains its reason on that key only.
+- Associate field errors and focus with the originating controls, leave password
+  fields empty, and preserve rotation/advisory JSON including leading newlines.
+  Other forms and registry cards receive none of the submission's errors or values.
+- Derive form context from the server action and route target; existing authority,
+  CSRF, reauthentication and target checks remain in force. Missing targets show
+  one page alert. Evidence:
+  [registry form errors](docs/evidence/registry-form-errors-2026-11-08/README.md).
+
+## [2026-11-08] - Signed-in email resubscription authorization
+
+- Apply the existing notification delivery-increase policy to signed-in
+  resubscription. Recheck the current account and contact under an account lock;
+  restricted members receive the established denial while retaining their unsubscribe.
+- Remove only a suppression still marked `unsubscribe` at the write. Concurrent
+  bounce/complaint changes, another member's suppression, independent email pauses,
+  digest settings and subscription preferences remain intact. Feedback states
+  whether the unsubscribe was removed; other delivery controls still apply.
+- This correction depends on the signed-in resubscription route introduced by
+  the APP_KEY key ring in `402e8127`. Regression and browser evidence:
+  [email resubscription evidence](docs/evidence/email-resubscription-2026-11-08/README.md).
+
+## [2026-11-08] - APP_KEY key ring
+
+- Add a key ring for rotating `APP_KEY` (ADR 0059).
+  - `APP_PREVIOUS_KEY_1` to `_3` hold earlier keys byte for byte. Each may
+    decrypt TOTP secrets and vault versions.
+  - A previous key may also verify recovery codes, email-change links, the OAuth
+    state cookie and unsubscribe opt-outs only when its HMAC key id is listed in
+    `APP_PREVIOUS_KEY_VERIFY_IDS`, so a compromised key can be kept decrypt-only.
+  - The encryption and HMAC derivations are unchanged, including historical
+    spellings of a hex key (case, extra digits, whitespace).
+- Add `php bin/console key:check`, which prints each key's ids and permissions,
+  never the key. It exits 1 on a configuration error or a missing `APP_KEY`. At
+  runtime invalid entries are ignored and reported once.
+- Migration `0087` records the key behind each TOTP secret, vault version,
+  recovery-code batch, email-change confirmation and sent message's unsubscribe
+  link. Rows written before it stay "unknown". A legacy recovery-code batch is
+  attributed only after one of its codes verifies.
+- A link signed with a previous key still opts out but no longer offers
+  Re-subscribe, which needs the active key. Signed-in members whose own
+  unsubscribe is in effect can turn notification emails back on from
+  notification settings. Bounces and complaints stay with the operator.
+- Unsubscribe links are signed when a message is actually sent, and the signing
+  key is recorded then, so queued or retried mail carries the key active at
+  send time.
+- Derived identifiers stay on the active key. A key change alters passkey
+  sign-in decoys, the provider safety identifier, and the Thread Intelligence
+  latch, which then allows one provider request. These effects are documented
+  and pinned by tests. Evidence:
+  [key ring evidence](docs/evidence/app-key-keyring-2026-11-08/README.md).
+
+## [2026-11-08] - Two-factor sign-in with an unreadable authenticator secret
+
+- When a member's stored authenticator (TOTP) secret cannot be opened with the
+  configured `APP_KEY`, two-factor sign-in no longer fails with a server error.
+  The authenticator check is skipped and never satisfies sign-in. A valid
+  recovery code still signs in, with the existing challenge, account,
+  attempt-limit and one-time-use checks. An authenticator code is refused with
+  a 422 that points the member to their recovery codes.
+- In that state a recovery code can also disable two-factor authentication, so
+  the member can enroll again. A pending setup that cannot be opened now asks
+  the member to restart setup instead of failing.
+- Each occurrence logs an operator line and marks the sign-in or disable audit
+  row with `totp_unavailable`. A missing `APP_KEY` still fails as a server
+  error.
+- This does not recover secrets or recovery codes whose `APP_KEY` is no longer
+  configured. Runbook: `docs/runbooks/two_factor.md`. Evidence:
+  [unreadable-secret evidence](docs/evidence/mfa-unreadable-secret-2026-11-08/README.md).
+
 ## [2026-11-08] - Runtime configuration controls
 
 - Show the effective anti-abuse mode in admin settings and record that mode in
@@ -56,6 +143,10 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   5.3 fallback; add reading research, contrast-method status and standards
   context to the accessibility baseline. Qualification:
   `docs/evidence/forum-refinement/README.md`; ADR 0057.
+- Verified on the public site after publication (`0ab71f5ca65e7fa0`, all 11
+  delivery files byte-identical) and recorded as deployed, retiring
+  `3630440af0d45598` and its four exclusive files; receipts are in
+  `docs/evidence/asset-retention-check-2026-11-08/`.
 
 ## [2026-11-07] - Database portability and reaction identity
 

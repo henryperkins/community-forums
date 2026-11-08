@@ -1,0 +1,18 @@
+{
+  "stopped_server_pids": [
+    406275
+  ],
+  "dropped_databases": [
+    "retroboards_test_registry_forms_20261108",
+    "retroboards_e2e_registry_forms_20261108"
+  ],
+  "removed": [
+    "/tmp/rb-registry-forms-20261108-qi6njghq/ratelimit",
+    "/tmp/rb-test-retroboards_test_registry_forms_20261108",
+    "/tmp/rb-test-schema-d4bb0357d7a6b502ec2d173cef1d99bd.fingerprint"
+  ],
+  "shared_mariadb_preserved": true,
+  "original_workspace_preserved": true,
+  "retained_worktree": "/home/azureuser/rb-wt-registry-form-errors",
+  "retained_scratch_logs": "/tmp/rb-registry-forms-20261108-qi6njghq"
+}
