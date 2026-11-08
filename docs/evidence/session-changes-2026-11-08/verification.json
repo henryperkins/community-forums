@@ -1,0 +1,280 @@
+{
+  "recorded_at_utc": "2026-11-08T01:36:53.345154+00:00",
+  "base_revision": "b1d2a591b3846fda586cd66ffd2346438de8286c",
+  "tested_candidate_revision": "298201c50a3f7d74dc667feccbae31155bb2530b",
+  "branch": "codex/remaining-session-changes",
+  "push_target": "origin/codex/remaining-session-changes",
+  "scope": "Existing changes from the shared main checkout, copied without altering their contents. The shared checkout and main branch are preserved.",
+  "captured_files": 37,
+  "commits": [
+    {
+      "group": "database-portability",
+      "commit": "51211aaab4b7a86494bbe91ffa2419df22c45407",
+      "files": 28,
+      "subject": "fix: preserve database portability and reaction identity"
+    },
+    {
+      "group": "package-repair",
+      "commit": "2dd46c701fb10a6806b530253cfcdf3a4d68ce28",
+      "files": 6,
+      "subject": "fix: enforce package policy during repair and health checks"
+    },
+    {
+      "group": "editor-hooks",
+      "commit": "298201c50a3f7d74dc667feccbae31155bb2530b",
+      "files": 3,
+      "subject": "chore: add editor design-check hooks"
+    }
+  ],
+  "full_php_suite": {
+    "command": "COMPOSER_PROCESS_TIMEOUT=0 RB_TEST_FRESH=0 composer test -- --display-deprecations --display-skipped",
+    "schema_preparation": "RB_TEST_FRESH=1 php -r 'require \"tests/bootstrap.php\";'",
+    "private_database": "retroboards_sessions_php",
+    "database_engine": "MariaDB 11.8.9",
+    "php": "8.5.4",
+    "phpunit": "11.5.56",
+    "exit_code": 0,
+    "tests": 3579,
+    "assertions": 34054,
+    "deprecations": 8,
+    "skipped": 1,
+    "duration": "05:55.421",
+    "log": "phpunit.log",
+    "skipped_test": "Tests\\Integration\\Core\\AppThreadIntelligenceMigrationTest::test_0077_down_and_up_rehearsal_on_fixture_free_schema",
+    "skip_reason": "Migration 0077 down/up rehearsal requires its own dedicated fixture-free database.",
+    "deprecation_summary": "PHP 8.5 reflection accessibility methods, legacy PDO TLS constants, curl_close(), and imagedestroy(); full locations and triggering tests are in the log."
+  },
+  "asset_check": {
+    "command": "npm run check:assets",
+    "exit_code": 0,
+    "log": "asset-check.log"
+  },
+  "worker_tests": {
+    "command": "npm run test:assets",
+    "exit_code": 0,
+    "tests": 35,
+    "passed": 35,
+    "failed": 0,
+    "log": "worker-tests.log"
+  },
+  "browser": {
+    "command": "cd tests/browser && node node_modules/@playwright/test/cli.js test conversation-reactions.spec.ts --grep 'distinct supplementary emoji'",
+    "private_database": "retroboards_sessions_browser",
+    "browser": "Chromium",
+    "exit_code": 0,
+    "passed": 4,
+    "viewports": [
+      "1280x800",
+      "390x844"
+    ],
+    "javascript": [
+      "enabled",
+      "disabled"
+    ],
+    "log": "browser-results.log",
+    "captures": [
+      "browser/desktop/emoji-identity-enhanced.png",
+      "browser/desktop/emoji-identity-native.png",
+      "browser/mobile/emoji-identity-enhanced.png",
+      "browser/mobile/emoji-identity-native.png"
+    ],
+    "visually_inspected": "browser/mobile/emoji-identity-native.png"
+  },
+  "already_pushed_files_excluded": {
+    "branch": "origin/codex/feature-flags-runtime-config",
+    "revision": "e521b5b1ddd966ef49b978e7a383c16175ddec87",
+    "files": [
+      "docs/evidence/feature-flags-runtime-config-2026-11-08/analysis-mode-probe.json",
+      "docs/evidence/feature-flags-runtime-config-2026-11-08/analysis-mode-probe.php",
+      "docs/superpowers/plans/2026-11-08-feature-flags-runtime-configuration.md"
+    ],
+    "reason": "These earlier analysis artifacts already have committed versions on the previously pushed feature branch."
+  },
+  "captured_input_sha256": [
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "8359683aa24152db90bbb21ad42293dc3867d7e59aca2a87fa78441bc27bedb2",
+      "deleted": false
+    },
+    {
+      "path": "SCHEMA.md",
+      "sha256": "d15f9838949137da9e9fff4257744cfad594ca6a9ac3b324c4706ad04ee0265e",
+      "deleted": false
+    },
+    {
+      "path": "bin/console",
+      "sha256": "f313cfa4bd5ad81eaba1b1be24ebb4ffee709fc9119dba1a856cd4e7ae1e4518",
+      "deleted": false
+    },
+    {
+      "path": "config/assets.json",
+      "sha256": "5a01a6492a2cce87e63e27aad95b28531c8d51bc678481511d39a0d8d65f019d",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/forum-theme/README.md",
+      "sha256": "d3ebd57c78f55b2396e6a8e8e9e8e627bcbeeacc83778a6b86b5ec8a65d7b1f6",
+      "deleted": false
+    },
+    {
+      "path": "public/assets/dist/app-style-BQrKPQLm.css",
+      "deleted": true
+    },
+    {
+      "path": "src/Core/App.php",
+      "sha256": "8e9c2556cc318ac2aa4bf26252e1a2e1fc39c9b1ba6826ab2dc4fd1b17d3d252",
+      "deleted": false
+    },
+    {
+      "path": "src/Service/Packages/PackageHealthService.php",
+      "sha256": "49183fe6c9ac1fd716bb1816e492fb9fa75480e945a20ab0f4c7273b7e2e2693",
+      "deleted": false
+    },
+    {
+      "path": "src/Service/RepairService.php",
+      "sha256": "e668b20b5adb4de77fa7274eb4909a6f9a5608862bb6ae7735ab35e045d14706",
+      "deleted": false
+    },
+    {
+      "path": "src/Service/ThreadIntelligence/ThreadIntelligenceQueue.php",
+      "sha256": "120027ebaf7594ab82620d4a161e1b7c508355e99ded3b1cd9b65832a5e8cdab",
+      "deleted": false
+    },
+    {
+      "path": "tests/Integration/Admin/AdminAuditPageTest.php",
+      "sha256": "981433e0f5e21cc0f47217c546baaa62e204b0e9f71850152606eabe60f630c5",
+      "deleted": false
+    },
+    {
+      "path": "tests/Integration/Core/AppReactionTest.php",
+      "sha256": "a2f9d8edb05ec60d7aa06588158a9240cd10e3cfec1aab1a05b803563c433f65",
+      "deleted": false
+    },
+    {
+      "path": "tests/Integration/Service/RepairInstalledPackagesTest.php",
+      "sha256": "ab8a380d16e4965994ef6c6b1235c37a03a333c66ada2141e62c208a38c5e27b",
+      "deleted": false
+    },
+    {
+      "path": "tests/Integration/ThreadIntelligence/ThreadIntelligenceBudgetTest.php",
+      "sha256": "a06cd579b16bc0c05ed2491de17471dba3cf0c90a511ebbb8141fb2ea63c3d83",
+      "deleted": false
+    },
+    {
+      "path": "tests/Integration/Worker/PackageHealthWorkerTest.php",
+      "sha256": "260617ec33b2a096a8ad66001629f5fee6bcc97aa1d112e7460539f8b39f14f3",
+      "deleted": false
+    },
+    {
+      "path": "tests/browser/conversation-reactions.spec.ts",
+      "sha256": "8f6fa9e8d46e1e373a970a8c623f8f0798e48b4ec0c7a8a1be4459761469d27f",
+      "deleted": false
+    },
+    {
+      "path": ".codex/hooks.json",
+      "sha256": "e8d599c990a376ca90c9ced010c7b55233827de4dde8fef803b48d55546c2af9",
+      "deleted": false
+    },
+    {
+      "path": ".cursor/hooks.json",
+      "sha256": "ec1ad0c32dbcb7ddd944c241dbdc7ad8e500b7b40cf66fd018e85eeda2ec3e8e",
+      "deleted": false
+    },
+    {
+      "path": ".github/hooks/impeccable.json",
+      "sha256": "6cf779ac323c600915d833138a2d1899b2bb218032c39017e8c41375f1df2807",
+      "deleted": false
+    },
+    {
+      "path": "database/migrations/0086_reaction_emoji_identity.php",
+      "sha256": "75ad424e7fc82dc403c024e277baa16d72500c2fe48fca4143c97b758033b050",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/README.md",
+      "sha256": "35b41b7211b00f4d43b1da2a88455eb3b05ee86cfe2679613e08349fc1342ae7",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/browser-results.txt",
+      "sha256": "47ce2f000bf1f94ad8c1ceeb0a1def45d2a2e4db3ab524ca1eccfba76c8df4ad",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/browser/desktop/emoji-identity-enhanced.png",
+      "sha256": "72186a6237fad223acc717840f0eb472ae5793cd0070b03c113843017818285e",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/browser/desktop/emoji-identity-native.png",
+      "sha256": "40175ab51d593da05b39d165cbb38511231ac3fb03dea780e9f9e430befa2c6c",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/browser/mobile/emoji-identity-enhanced.png",
+      "sha256": "8027550c388ecbc2f7b8ffcc29c595da550606df0e5d8720900a1abcc52dc8a2",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/browser/mobile/emoji-identity-native.png",
+      "sha256": "b89b4961655dadd3734837d05cb13d77d4bd0dcf51a89d6d50b1e65f5f1c1a82",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/emoji-upgrade-maria1011.json",
+      "sha256": "e42a0fd2aedadff522502fee5cf84a965b5aad7d5a963a1114980620fffebb4b",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/emoji-upgrade-mysql84.json",
+      "sha256": "9dc8632047007631efd7cc26d9824bc18d5ffa885555bd1fe536e012a6af7fe2",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/emoji-upgrade-rehearsal.php",
+      "sha256": "fa5692a57e637cad752ca4faa0989ca021e71d745f9dbbef2ff0b66875d40fc5",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/full-suite.sh",
+      "sha256": "21a7b368c9d88b38ef9c4fe03a7a8c6409cd3a579795e853d008516e0db60ac6",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/logs/budget-maria1011.log",
+      "sha256": "4b8b43972d8eaccde7c5ea17ad128d846104152d1136bb93a7e2c0012a9905bc",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/logs/budget-maria11.log",
+      "sha256": "f7eac464a530658048ed3fce6a5f72e97cd1403175347ebc1ccdb4ae610fb70a",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/logs/budget-mysql84.log",
+      "sha256": "35e46f82b9be67c59ab2a6809e20a2f91e4c238e2ca35b8e4de46dc96a11ddd6",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/logs/phpunit-maria1011.log",
+      "sha256": "d56a50f760da9152ef397f82aed6f411831206b185c7fff57c82f969a7c70377",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/logs/phpunit-maria11.log",
+      "sha256": "8b5273fc45c2c6a428a01c46760140baef77a469134f3666e1e33aece7795d8f",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/logs/phpunit-mysql84.log",
+      "sha256": "c28bb21619ffdb48ad06427c43a97e02ccf6586c0ef261be59ecd3c9774c460e",
+      "deleted": false
+    },
+    {
+      "path": "docs/evidence/database-portability-2026-11-07/worker-runtime-result.json",
+      "sha256": "0f7e1ba7a2d5a2c22d9f1e3c6b5ef63e1244e9115af0e32e1566dd55460960d6",
+      "deleted": false
+    }
+  ],
+  "deployment": "No main update or production deployment is part of this branch push."
+}
