@@ -10,7 +10,7 @@
 
 **Spec:** `DECISIONS.md` §2; `PRODUCT_DESIGN.md` §13; `ADMIN.md` §3.8 and §9.3; `AGENTS.md` write-path and release rules; `docs/adr/0049-guarded-feature-flag-toggles.md`; `docs/runbooks/operations.md` §2; `docs/runbooks/package_themes.md` §Safe Mode.
 
-**Status:** Implementation in progress; Tasks 1–3 verified, Task 4 pending.
+**Status:** Implementation in progress; Tasks 1–4 implemented; final suite and independent review pending.
 
 **Analysis revision:** `b1d2a591b3846fda586cd66ffd2346438de8286c`, current HEAD when inspected. References below use this committed revision. Unrelated working-tree edits are outside this plan.
 
@@ -150,11 +150,11 @@ Tasks 1–4 are independently reviewable. Start with Task 1, whose mismatch is r
 
 - Document existing keys; do not change the executable configuration array.
 
-- [ ] Add `ANTIABUSE_MODE=observe`, noting that a nonempty stored `antiabuse_mode` takes precedence and listing `observe|flag|hold|block`.
-- [ ] Add `PACKAGE_EXECUTION_DISABLED=false`, explaining its flag-independent OR relationship with the stored emergency-disable setting and linking `docs/runbooks/package_integrations.md`.
-- [ ] Add `THEME_SAFE_MODE=false`, explaining that it forces safe mode until removed/disabled and linking `docs/runbooks/package_themes.md`.
-- [ ] Compare names and defaults directly with `config/config.php:221,329-336`; check surrounding template comments and links. Do not add schema-only or reserved-feature enablement instructions.
-- [ ] Review and commit the template-only diff. Do not write a test that merely mirrors these three static assignments.
+- [x] Add `ANTIABUSE_MODE=observe`, noting that a nonempty stored `antiabuse_mode` takes precedence and listing `observe|flag|hold|block`.
+- [x] Add `PACKAGE_EXECUTION_DISABLED=false`, explaining its flag-independent OR relationship with the stored emergency-disable setting and linking `docs/runbooks/package_integrations.md`.
+- [x] Add `THEME_SAFE_MODE=false`, explaining that it forces safe mode until removed/disabled and linking `docs/runbooks/package_themes.md`.
+- [x] Compare names and defaults directly with `config/config.php:221,329-336`; check surrounding template comments and links. Do not add schema-only or reserved-feature enablement instructions.
+- [x] Review and commit the template-only diff. Do not write a test that merely mirrors these three static assignments.
 
 ## Final application verification
 
