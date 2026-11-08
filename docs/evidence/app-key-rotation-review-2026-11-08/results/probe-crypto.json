@@ -1,0 +1,58 @@
+{
+    "php": "8.5.4",
+    "gcm": {
+        "k1_roundtrip": true,
+        "random_wrong_keys_tried": 2000,
+        "random_wrong_keys_accepted": 0,
+        "k2_accepts_k1_ciphertext": false,
+        "tampered_ciphertext_accepted": false,
+        "ciphertext_has_no_key_identifier": true
+    },
+    "key_material": {
+        "uppercase_variant_decrypts_k1_ciphertext": true,
+        "uppercase_variant_same_hmac": false,
+        "extra_trailing_hex_decrypts_k1_ciphertext": true,
+        "extra_trailing_hex_same_hmac": false,
+        "passphrase_key_roundtrip": true,
+        "note": "SecretBox uses hex2bin(first 64 hex) or sha256(trimmed raw); every HMAC consumer uses the raw string."
+    },
+    "unsubscribe_token": {
+        "deterministic_per_address": true,
+        "format_is_bare_hmac_hex": true,
+        "verifies_under_k1": true,
+        "verifies_under_k2": false,
+        "verifies_with_keyring_trial_k2_then_k1": true,
+        "verifies_after_k1_removed_keyring_k2_only": false
+    },
+    "recovery_code_verifier": {
+        "code_entropy_bits": 40,
+        "k2_recomputation_matches_k1_stored": false,
+        "keyring_candidates_k2_k1_include_stored": true,
+        "after_k1_removed_candidates_include_stored": false,
+        "rewrap_possible_without_plaintext": false
+    },
+    "email_change_verifier": {
+        "k2_recomputation_matches_k1_stored": false,
+        "ttl_seconds_default_min_max": [
+            3600,
+            300,
+            86400
+        ]
+    },
+    "oauth_state_cookie": {
+        "verifies_under_k1": true,
+        "verifies_under_k2": false,
+        "cookie_ttl_seconds": 600
+    },
+    "passkey_decoy": {
+        "stable_under_one_key": true,
+        "changes_when_key_changes": true
+    },
+    "candidate_key_id": {
+        "k1": "3e011d734ceb37ba",
+        "k2": "5c88d908644148cd",
+        "k1_uppercase_same_id": true,
+        "k1_extra_hex_same_id": true,
+        "implication": "Same encryption root, different HMAC key: the keyring must reject two entries with one root."
+    }
+}

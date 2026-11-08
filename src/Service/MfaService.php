@@ -14,11 +14,15 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\UserRepository;
 use App\Security\ReauthGate;
 use App\Security\SecretBox;
+use App\Security\SecretUnavailableException;
 use App\Security\Totp;
 use App\Security\WriteGate;
 
 final class MfaService
 {
+    /** Shown when the stored TOTP secret cannot be opened (sealed under a key this deployment lacks). */
+    private const TOTP_UNAVAILABLE = 'Authenticator codes cannot be checked for this account right now.';
+
     public function __construct(
         private MfaRepository $mfa,
         private UserRepository $users,
@@ -82,7 +86,14 @@ final class MfaService
             throw new ValidationException(['totp_code' => 'Start two-factor enrollment before verifying a code.']);
         }
 
-        $secret = $this->decryptSecret($row);
+        try {
+            $secret = $this->decryptSecret($row);
+        } catch (SecretUnavailableException) {
+            // Sealed under a key this deployment no longer has. Starting again
+            // overwrites the pending row with a secret sealed under the current key.
+            $this->reportUnreadableSecret($user->id(), 'pending enrollment');
+            throw new ValidationException(['totp_code' => 'This setup can no longer be verified. Restart setup to get a new authenticator secret.']);
+        }
         $step = $this->totp->verify($secret, $code, null);
         if ($step === null) {
             throw new ValidationException(['totp_code' => 'Enter the current 6-digit code from your authenticator app.']);
@@ -127,17 +138,20 @@ final class MfaService
             throw new ValidationException(['code' => 'That account cannot sign in.']);
         }
 
-        $method = $this->verifySecondFactor($user->id(), $code);
+        $check = $this->verifySecondFactor($user->id(), $code);
+        $method = $check['method'];
         if ($method === null) {
             // De-silence failed second factors so brute-force leaves an audit trail.
-            $this->log($user->id(), 'mfa_login_failed', null, ['method' => 'unknown']);
-            throw new ValidationException(['code' => 'Enter a valid authenticator or recovery code.']);
+            $this->log($user->id(), 'mfa_login_failed', null, $this->auditDetail(['method' => 'unknown'], $check));
+            throw new ValidationException(['code' => $check['totp_unavailable']
+                ? self::TOTP_UNAVAILABLE . ' Enter one of your recovery codes instead, or contact the forum operator.'
+                : 'Enter a valid authenticator or recovery code.']);
         }
         if (!$this->mfa->consumeLoginChallenge((int) $challenge['id'])) {
             throw new ValidationException(['code' => 'That two-factor challenge was already used. Please sign in again.']);
         }
 
-        $this->log($user->id(), $method === 'totp' ? 'mfa_totp_login' : 'mfa_recovery_login', null, ['method' => $method]);
+        $this->log($user->id(), $method === 'totp' ? 'mfa_totp_login' : 'mfa_recovery_login', null, $this->auditDetail(['method' => $method], $check));
         return ['user' => $user, 'next' => (string) $challenge['next_path'], 'method' => $method];
     }
 
@@ -163,12 +177,15 @@ final class MfaService
         if (!$this->enabledForUser($user->id())) {
             throw new ValidationException(['totp' => 'Two-factor authentication is not enabled.']);
         }
-        if ($this->verifySecondFactor($user->id(), $code) === null) {
-            throw new ValidationException(['disable_code' => 'Enter a valid authenticator or recovery code to disable two-factor authentication.']);
+        $check = $this->verifySecondFactor($user->id(), $code);
+        if ($check['method'] === null) {
+            throw new ValidationException(['disable_code' => $check['totp_unavailable']
+                ? self::TOTP_UNAVAILABLE . ' Enter one of your recovery codes to disable two-factor authentication.'
+                : 'Enter a valid authenticator or recovery code to disable two-factor authentication.']);
         }
 
         $this->mfa->disableTotp($user->id());
-        $this->log($user->id(), 'mfa_totp_disabled', ['enabled' => true], ['enabled' => false]);
+        $this->log($user->id(), 'mfa_totp_disabled', ['enabled' => true], $this->auditDetail(['enabled' => false], $check));
     }
 
     private function requirePassword(User $user, string $currentPassword): void
@@ -180,25 +197,54 @@ final class MfaService
         );
     }
 
-    private function verifySecondFactor(int $userId, string $code): ?string
+    /**
+     * Check an authenticator code, then a one-time recovery code. A stored TOTP
+     * secret that cannot be opened never satisfies the check: the authenticator
+     * step is skipped, the recovery code is still evaluated (and consumed
+     * atomically), and the caller learns the secret was unavailable.
+     *
+     * @return array{method:?string,totp_unavailable:bool}
+     */
+    private function verifySecondFactor(int $userId, string $code): array
     {
         $row = $this->mfa->totpForUser($userId);
         if ($row === null || $row['enabled_at'] === null || $row['disabled_at'] !== null) {
-            return null;
+            return ['method' => null, 'totp_unavailable' => false];
         }
 
-        $secret = $this->decryptSecret($row);
-        $lastStep = $row['last_used_step'] === null ? null : (int) $row['last_used_step'];
-        $step = $this->totp->verify($secret, $code, $lastStep);
-        if ($step !== null) {
-            $this->mfa->markTotpUsed($userId, $step);
-            return 'totp';
+        $secret = null;
+        try {
+            $secret = $this->decryptSecret($row);
+        } catch (SecretUnavailableException) {
+            $this->reportUnreadableSecret($userId, 'enabled');
+        }
+        if ($secret !== null) {
+            $lastStep = $row['last_used_step'] === null ? null : (int) $row['last_used_step'];
+            $step = $this->totp->verify($secret, $code, $lastStep);
+            if ($step !== null) {
+                $this->mfa->markTotpUsed($userId, $step);
+                return ['method' => 'totp', 'totp_unavailable' => false];
+            }
         }
 
-        if ($this->mfa->consumeRecoveryCodeHash($userId, $this->recoveryHash($code))) {
-            return 'recovery';
-        }
-        return null;
+        $method = $this->mfa->consumeRecoveryCodeHash($userId, $this->recoveryHash($code)) ? 'recovery' : null;
+        return ['method' => $method, 'totp_unavailable' => $secret === null];
+    }
+
+    /**
+     * @param array<string,mixed> $detail
+     * @param array{method:?string,totp_unavailable:bool} $check
+     * @return array<string,mixed>
+     */
+    private function auditDetail(array $detail, array $check): array
+    {
+        return $check['totp_unavailable'] ? $detail + ['totp_unavailable' => true] : $detail;
+    }
+
+    /** Operator signal: the member's secret was sealed under a key this deployment does not have. */
+    private function reportUnreadableSecret(int $userId, string $state): void
+    {
+        error_log(sprintf('[RetroBoards] Two-factor secret (%s) for user #%d cannot be opened with the configured APP_KEY.', $state, $userId));
     }
 
     /** @param array<string,mixed> $row */

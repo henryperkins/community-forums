@@ -1,0 +1,17 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+Time: 00:00.101, Memory: 18.00 MB
+
+There was 1 failure:
+
+1) Tests\Diagnostics\KeyRotationDiagnosticTest::test_switching_app_key_without_a_keyring
+Failed asserting that 404 is identical to 200.
+
+/home/azureuser/community-forums/docs/evidence/app-key-rotation-review-2026-11-08/diagnostics/KeyRotationDiagnosticTest.php:68
+
+FAILURES!
+Tests: 2, Assertions: 31, Failures: 1.
+phpunit exit=1

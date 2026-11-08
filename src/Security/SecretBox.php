@@ -28,11 +28,16 @@ final class SecretBox
         return ['ciphertext' => $ciphertext, 'nonce' => $nonce, 'tag' => $tag];
     }
 
+    /**
+     * @throws SecretUnavailableException when the configured key cannot open the record
+     * @throws RuntimeException when no APP_KEY is configured
+     */
     public function decrypt(string $ciphertext, string $nonce, string $tag): string
     {
-        $plaintext = openssl_decrypt($ciphertext, 'aes-256-gcm', $this->key(), OPENSSL_RAW_DATA, $nonce, $tag);
+        $key = $this->key();
+        $plaintext = openssl_decrypt($ciphertext, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $nonce, $tag);
         if ($plaintext === false) {
-            throw new RuntimeException('Unable to decrypt secret.');
+            throw new SecretUnavailableException('Unable to decrypt secret.');
         }
         return $plaintext;
     }

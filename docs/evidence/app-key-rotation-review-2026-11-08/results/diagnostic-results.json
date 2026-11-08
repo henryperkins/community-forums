@@ -1,0 +1,19 @@
+{
+    "switch_without_keyring": {
+        "totp_code_under_k2_status": 500,
+        "k1_recovery_code_under_k2_status": 500,
+        "unused_recovery_codes_after_attempts": 10,
+        "k1_unsubscribe_link_under_k2_status": 404,
+        "k1_unsubscribe_link_under_k2_message_present": true,
+        "k1_unsubscribe_link_under_k1_status": 200
+    },
+    "undecryptable_totp_blocks_recovery": {
+        "k2_recovery_code_with_k1_wrapped_totp_status": 500,
+        "unused_recovery_codes_while_blocked": 10,
+        "totp_secret_unchanged_by_rewrap": true,
+        "k2_recovery_code_after_rewrap_status": 303,
+        "k2_recovery_code_after_rewrap_location": "/inbox",
+        "totp_code_after_rewrap_status": 303,
+        "totp_code_after_rewrap_location": "/inbox"
+    }
+}

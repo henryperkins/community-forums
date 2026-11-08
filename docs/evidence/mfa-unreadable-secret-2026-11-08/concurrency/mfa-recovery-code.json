@@ -1,0 +1,88 @@
+{
+    "schema": "retroboards_mfa_recovery_race",
+    "cases": [
+        {
+            "case": "two_challenges_same_code",
+            "competing_lock_observed": true,
+            "parent": {
+                "outcome": "signed_in",
+                "user_id": 2,
+                "method": "recovery"
+            },
+            "child": {
+                "outcome": "denied",
+                "error": "Authenticator codes cannot be checked for this account right now. Enter one of your recovery codes instead, or contact the forum operator."
+            },
+            "child_exit": 0,
+            "code_used_once": true,
+            "losing_challenge_consumed": false
+        },
+        {
+            "case": "same_challenge_double_submit",
+            "competing_lock_observed": true,
+            "parent": {
+                "outcome": "signed_in",
+                "user_id": 2,
+                "method": "recovery"
+            },
+            "child": {
+                "outcome": "denied",
+                "error": "Authenticator codes cannot be checked for this account right now. Enter one of your recovery codes instead, or contact the forum operator."
+            },
+            "child_exit": 0,
+            "code_used_once": true,
+            "losing_challenge_consumed": null
+        },
+        {
+            "case": "uncontended_control",
+            "child": {
+                "outcome": "signed_in",
+                "user_id": 2,
+                "method": "recovery"
+            },
+            "child_exit": 0
+        }
+    ],
+    "unused_recovery_codes": 0,
+    "audit": [
+        {
+            "action": "mfa_recovery_login",
+            "after": {
+                "method": "recovery",
+                "totp_unavailable": true
+            }
+        },
+        {
+            "action": "mfa_login_failed",
+            "after": {
+                "method": "unknown",
+                "totp_unavailable": true
+            }
+        },
+        {
+            "action": "mfa_recovery_login",
+            "after": {
+                "method": "recovery",
+                "totp_unavailable": true
+            }
+        },
+        {
+            "action": "mfa_login_failed",
+            "after": {
+                "method": "unknown",
+                "totp_unavailable": true
+            }
+        },
+        {
+            "action": "mfa_recovery_login",
+            "after": {
+                "method": "recovery",
+                "totp_unavailable": true
+            }
+        }
+    ],
+    "child_stderr": [
+        "Two-factor secret (enabled) for user #N cannot be opened with the configured APP_KEY."
+    ]
+}
+{"fixture_rows_remaining":0}
