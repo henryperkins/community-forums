@@ -1621,6 +1621,7 @@ final class App
             $c->get(Database::class),
             (int) $config->get('community.solved_bonus', 5),
             $c->get(ThemeStateService::class),
+            $c->get(PackageHealthService::class),
         ));
         $c->bind(SearchService::class, fn (Container $c) => new MysqlSearchService($c->get(Database::class)));
         $c->bind(ComposerSuggestionService::class, fn (Container $c) => new ComposerSuggestionService(
