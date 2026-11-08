@@ -1,9 +1,9 @@
 {
-  "version": "11b63fb564c36ce9",
+  "version": "23ca787930a7a0a7",
   "urls": {
-    "forum-base.css": "/assets/dist/forum-base-style-DsiQn3Ye.css",
-    "app.css": "/assets/dist/app-style-diYLPve0.css",
-    "forum-theme.css": "/assets/dist/forum-theme-style-Ba2Ycb6L.css",
+    "forum-base.css": "/assets/dist/forum-base-style-CwCGWLhh.css",
+    "app.css": "/assets/dist/app-style-jg6AulwD.css",
+    "forum-theme.css": "/assets/dist/forum-theme-style-DDFaGbhp.css",
     "conversation-entry.js": "/assets/dist/conversation-entry-74964ff3b56c482d.js",
     "app.js": "/assets/dist/app-9b906acd1f6f64c8.js",
     "composer.js": "/assets/dist/composer-004f699d19dc5157.js",
@@ -14,7 +14,7 @@
   },
   "files": {
     "/assets/app.css": {
-      "sha256": "92a151f9610eb684388f901527c9949bce527f41a183fe4d802dacb42afdc865",
+      "sha256": "e5cd269e574030e81a3b5463521d2861a2a32710af4f2f25f34cb7484e30f58b",
       "immutable": false
     },
     "/assets/app.js": {
@@ -41,6 +41,10 @@
       "sha256": "5cd49db5135263e2422446bee6995b34cba60eb8f714c037ae57befb24f90ef4",
       "immutable": true
     },
+    "/assets/dist/app-style-jg6AulwD.css": {
+      "sha256": "a4f308268aaf6860df207119f4d905dc6e9dd67923590977b67bc9980752aaa9",
+      "immutable": true
+    },
     "/assets/dist/app-style-QOPBXP9w.css": {
       "sha256": "f61c365c4459876012c971a6b06e49f3f2b5893eecf9e4acd4f88b5124f48fd8",
       "immutable": true
@@ -57,6 +61,10 @@
       "sha256": "9933a3aced95dfcfba789466e40aaa448d4243f1dff4e918898d9855b955cab2",
       "immutable": true
     },
+    "/assets/dist/forum-base-style-CwCGWLhh.css": {
+      "sha256": "8d7503b05cfd9728908c882e5bed7407ff9fc7bad90dbec2ba092e7ee33d0bb3",
+      "immutable": true
+    },
     "/assets/dist/forum-base-style-DsiQn3Ye.css": {
       "sha256": "b55ab9eb913c1c37116e8aad3dbc55fcf8190fd69af67bd7ce9b7c3861588899",
       "immutable": true
@@ -71,6 +79,10 @@
     },
     "/assets/dist/forum-theme-style-CNIV-nj8.css": {
       "sha256": "9b3d799538defa568122a8678ab03d7ea04a2c651144b733fc86c1baa1983bfc",
+      "immutable": true
+    },
+    "/assets/dist/forum-theme-style-DDFaGbhp.css": {
+      "sha256": "ace4b69c6d3a67831560bf09eff374552e309a785e9622c27eebef8ebe874944",
       "immutable": true
     },
     "/assets/dist/milkdown-adapter-DXUybFX0.js": {
@@ -94,11 +106,11 @@
       "immutable": true
     },
     "/assets/forum-base.css": {
-      "sha256": "2239dd5e2ec701355564a7d9b321718224861f1d4abdca7a3138e4b4a69b6119",
+      "sha256": "45a4463013ffcc8ec5bd1c63696c0a6fb9beb95192f0dbe6f72f896c884da4a4",
       "immutable": false
     },
     "/assets/forum-theme.css": {
-      "sha256": "f6ded1d41787fe53b3a769d620ee437717ae92b901579fe9237d4e90e4262339",
+      "sha256": "0dc322e74f2677e63a82ea3cf9cf38c9206d08c91ee9582eff56c4bd66d7eace",
       "immutable": false
     },
     "/assets/passkeys.js": {
@@ -111,6 +123,22 @@
     }
   },
   "releases": [
+    {
+      "version": "23ca787930a7a0a7",
+      "files": [
+        "/assets/dist/app-9b906acd1f6f64c8.js",
+        "/assets/dist/app-style-jg6AulwD.css",
+        "/assets/dist/composer-004f699d19dc5157.js",
+        "/assets/dist/conversation-entry-74964ff3b56c482d.js",
+        "/assets/dist/forum-base-style-CwCGWLhh.css",
+        "/assets/dist/forum-theme-style-DDFaGbhp.css",
+        "/assets/dist/milkdown-adapter-DXUybFX0.js",
+        "/assets/dist/passkeys-abc14d1e680e3beb.js",
+        "/assets/dist/tour-4573ee743ebaf07c.js",
+        "/assets/dist/wysiwyg-composer-BRAFF38E.css",
+        "/assets/dist/wysiwyg-composer-XlKwRXnh.js"
+      ]
+    },
     {
       "version": "11b63fb564c36ce9",
       "files": [

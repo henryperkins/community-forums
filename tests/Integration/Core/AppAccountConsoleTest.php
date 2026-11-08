@@ -211,13 +211,13 @@ final class AppAccountConsoleTest extends TestCase
             ['/settings/preferences', 'Reading', 'book'],
             ['/settings/composing', 'Composing', 'edit-3'],
             ['/drafts', 'Drafts', 'file'],
-            ['/settings/boards', 'Boards', 'menu'],
+            ['/settings/boards', 'Boards', 'boards'],
             ['/settings/notifications', 'Notifications', 'bell'],
             ['/settings/connections', 'Connections', 'link'],
             ['/settings/blocks', 'Blocks', 'ban'],
             ['/settings/sessions', 'Sessions', 'monitor'],
             ['/settings/account/lifecycle', 'Account', 'archive'],
-            ['/appeals', 'Appeals', 'flag'],
+            ['/appeals', 'Appeals', 'appeal'],
         ];
 
         $previous = -1;

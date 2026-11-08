@@ -76,7 +76,7 @@ $this->start('subheader_leading');
                     <?php endif; ?>
                     <?php if (!empty($can_post)): ?>
                         <button class="btn btn-accent" type="button" hidden data-open-topic-composer aria-controls="new-topic" aria-expanded="false">
-                            <?= $this->partial('partials/icon', ['name' => 'plus']) ?>
+                            <?= $this->partial('partials/icon', ['name' => 'new-topic']) ?>
                             <span>New topic</span>
                         </button>
                     <?php endif; ?>
@@ -144,7 +144,7 @@ $this->start('subheader_leading');
 
         <?php if (empty($threads)): ?>
             <div class="board-empty">
-                <?= $this->partial('partials/icon', ['name' => 'message-square', 'class' => 'board-empty-mark']) ?>
+                <?= $this->partial('partials/icon', ['name' => 'board-empty', 'class' => 'board-empty-mark']) ?>
                 <p class="board-empty-headline">No topics here yet.</p>
                 <?php if (!empty($can_post)): ?>
                     <p class="board-empty-sub">Be the first to open one in #<?= $e($board['name']) ?>.</p>
@@ -180,6 +180,6 @@ $this->start('subheader_leading');
     </section>
 
     <?php if (!empty($can_post)): ?>
-        <a class="fab" href="#new-topic" aria-label="Start a new topic"><?= $this->partial('partials/icon', ['name' => 'plus']) ?></a>
+        <a class="fab" href="#new-topic" aria-label="Start a new topic"><?= $this->partial('partials/icon', ['name' => 'new-topic']) ?></a>
     <?php endif; ?>
 </div>

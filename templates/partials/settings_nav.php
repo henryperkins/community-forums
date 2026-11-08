@@ -17,7 +17,7 @@ $groups = [
             ['key' => 'reading', 'label' => 'Reading', 'href' => '/settings/preferences', 'icon' => 'book'],
             ['key' => 'composing', 'label' => 'Composing', 'href' => '/settings/composing', 'icon' => 'edit-3'],
             ['key' => 'drafts', 'label' => 'Drafts', 'href' => '/drafts', 'icon' => 'file', 'feature' => 'drafts'],
-            ['key' => 'boards', 'label' => 'Boards', 'href' => '/settings/boards', 'icon' => 'menu'],
+            ['key' => 'boards', 'label' => 'Boards', 'href' => '/settings/boards', 'icon' => 'boards'],
         ],
     ],
     [
@@ -28,7 +28,7 @@ $groups = [
             ['key' => 'blocks', 'label' => 'Blocks', 'href' => '/settings/blocks', 'icon' => 'ban'],
             ['key' => 'sessions', 'label' => 'Sessions', 'href' => '/settings/sessions', 'icon' => 'monitor'],
             ['key' => 'account', 'label' => 'Account', 'href' => '/settings/account/lifecycle', 'icon' => 'archive', 'feature' => 'account_lifecycle'],
-            ['key' => 'appeals', 'label' => 'Appeals', 'href' => '/appeals', 'icon' => 'flag', 'feature' => 'appeals'],
+            ['key' => 'appeals', 'label' => 'Appeals', 'href' => '/appeals', 'icon' => 'appeal', 'feature' => 'appeals'],
         ],
     ],
 ];

@@ -19,6 +19,15 @@ $thumb = static fn (string $mode): string => '<span class="theme-thumb-mode" dat
 // community default (ADR 0054), so the selected card matches the page.
 $density = (string) ($appearance['density'] ?? $prefs['density'] ?? 'comfortable');
 $font = (string) ($prefs['font_size'] ?? 'medium');
+$iconSize = (string) ($prefs['icon_size'] ?? 'standard');
+// Each card previews its own size, whatever the member draws today.
+$iconPreview = function (string $scale): string {
+    $out = '';
+    foreach (['bell', 'edit-3', 'settings'] as $previewIcon) {
+        $out .= $this->partial('partials/icon', ['name' => $previewIcon, 'scale' => $scale]);
+    }
+    return $out;
+};
 $motion = !empty($prefs['reduced_motion']);
 $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' : '';
 ?>
@@ -56,6 +65,17 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
                 <label class="choice-card"><input type="radio" name="density" value="compact"<?= $density === 'compact' ? ' checked' : '' ?>>
                     <span class="density-prev is-compact"><span></span><span></span><span></span><span></span></span>
                     <span class="choice-card-title">Compact</span><span class="choice-card-desc">Less space for scanning</span></label>
+            </div>
+        </div>
+        <h3 class="account-subhead">Icon size</h3>
+        <div class="field">
+            <div class="choice-cards">
+                <label class="choice-card"><input type="radio" name="icon_size" value="standard"<?= $iconSize === 'standard' ? ' checked' : '' ?>>
+                    <span class="icon-size-prev" aria-hidden="true"><?= $iconPreview('standard') ?></span>
+                    <span class="choice-card-title">Standard</span><span class="choice-card-desc">Sized to the text</span></label>
+                <label class="choice-card"><input type="radio" name="icon_size" value="large"<?= $iconSize === 'large' ? ' checked' : '' ?>>
+                    <span class="icon-size-prev is-large" aria-hidden="true"><?= $iconPreview('large') ?></span>
+                    <span class="choice-card-title">Larger</span><span class="choice-card-desc">Bigger icons in menus and toolbars</span></label>
             </div>
         </div>
         <label class="field field-narrow">

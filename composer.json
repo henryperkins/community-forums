@@ -42,6 +42,8 @@
     "scripts": {
         "build:forum": "php bin/build-forum-css.php",
         "check:forum": "php bin/build-forum-css.php --check",
+        "build:icons": "php bin/build-icons.php",
+        "check:icons": "php bin/build-icons.php --check",
         "verify:forum": [
             "@check:forum",
             "phpunit tests/Unit/Core/ForumRuntimeAssetTest.php tests/Integration/Core/AppForumRuntimeTest.php"

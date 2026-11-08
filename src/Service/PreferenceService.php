@@ -43,10 +43,11 @@ final class PreferenceService
     }
 
     /**
-     * The appearance subset (theme/density/font_size/reduced_motion) used to
-     * stamp the document root so there is no theme flash and no-JS still themes.
+     * The appearance subset (theme/density/font_size/icon_size/reduced_motion)
+     * used to stamp the document root so there is no theme flash and no-JS
+     * still themes. The icon partial also reads icon_size to pick its artwork.
      *
-     * @return array{theme:string,density:string,font_size:string,reduced_motion:bool}
+     * @return array{theme:string,density:string,font_size:string,icon_size:string,reduced_motion:bool}
      */
     public function appearance(int $userId, ?string $densityDefault = null): array
     {
@@ -55,6 +56,7 @@ final class PreferenceService
             'theme' => (string) $r['theme'],
             'density' => $this->density($userId, $r, $densityDefault),
             'font_size' => (string) $r['font_size'],
+            'icon_size' => (string) $r['icon_size'],
             'reduced_motion' => (bool) $r['reduced_motion'],
         ];
     }

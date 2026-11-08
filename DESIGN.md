@@ -121,9 +121,14 @@ fit a full line, including padding, at the member's chosen text size.
 
 Use restrained 4–12px corners, small shadows for overlays and simple separators.
 The default mark is a conversation bubble; uploaded community logos take
-precedence. Icons are conventional: one five-point star for starring and
-commends, a settings mark for Topic tools, a sparkle only for generated Living
-Brief content, and muted, task-relevant empty-state marks. Decorative fantasy
+precedence. Icons are conventional Fluent System Icons (ADR 0060), Regular by
+default and Filled for a selected state: one five-point star for starring and
+commends, filled once set; a settings mark for Topic tools; a sparkle only for
+generated Living Brief content; the Comment family for discussion and Chat for
+conversations; and muted, task-relevant empty-state marks. Icons draw at 16px,
+or 20px for members who choose larger icons, with artwork made for that size;
+row marks, reactions and empty-state marks keep their own sizes. Icons are
+filled artwork in the text colour; do not stroke them. Decorative fantasy
 stars, textures and photograph backgrounds do not belong behind reading or
 authentication content. Authored images retain their existing content and
 alternative-text behavior.

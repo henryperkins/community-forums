@@ -1,0 +1,91 @@
+Same 12 specs, one worker, one prepare.sh seed per database, run with the same command.
+Branch: feat/fluent-icons before the svg.icon theme rule, port 8197, retroboards_e2e_fluent
+        (that database also carried the forum-inbox fixture from earlier fluent-icons runs).
+Main:   3a0f2c28, port 8198, retroboards_e2e_fluent_head.
+Specs:  header-polish mobile-controls thread-view-study create-menu-subheader unified-chrome
+        header-unread-marks settings-hardening profile-surface conversation-reactions
+        account-console composer-shell forum-refinement
+
+Branch: {'failed': 70, 'skipped': 66, 'passed': 172}
+Main:   {'failed': 61, 'skipped': 66, 'passed': 181}
+
+Failed on both (61):
+   [desktop] › composer-shell.spec.ts:465:5 › draft counter preview and textarea auto-growth stay inside the shell
+   [desktop] › composer-shell.spec.ts:617:5 › textarea colon autocomplete respects boundaries and inserts unicode and custom emoji
+   [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 1024px
+   [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 1280px
+   [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 1440px
+   [desktop] › create-menu-subheader.spec.ts:204:9 › member route matrix 861px
+   [desktop] › create-menu-subheader.spec.ts:272:5 › classic scrollbar and Large text fit 320px
+   [desktop] › create-menu-subheader.spec.ts:276:13 › native with JS › guest and dms-off routes retain the conditional row
+   [desktop] › create-menu-subheader.spec.ts:276:13 › native without JS › guest and dms-off routes retain the conditional row
+   [desktop] › create-menu-subheader.spec.ts:312:13 › native with JS › representative page and open menu captures
+   [desktop] › create-menu-subheader.spec.ts:312:13 › native without JS › representative page and open menu captures
+   [desktop] › create-menu-subheader.spec.ts:343:9 › no JavaScript › member route matrix and native creation preserve leading content and draft errors
+   [desktop] › header-polish.spec.ts:140:5 › shortcut hints appear only where the shortcut works, in the platform's own modifier
+   [desktop] › header-polish.spec.ts:188:7 › without JavaScript › no shortcut is claimed, because nothing answers it
+   [desktop] › header-polish.spec.ts:217:5 › the bell is current on the notifications page, as a route is on its own
+   [desktop] › header-polish.spec.ts:67:5 › a focused control keeps its own corner and wears the gold halo
+   [desktop] › header-unread-marks.spec.ts:172:5 › the bell keeps its square target when it has nothing to count
+   [desktop] › header-unread-marks.spec.ts:95:7 › the Inbox count leads and the other counts share one quiet chip (day)
+   [desktop] › header-unread-marks.spec.ts:95:7 › the Inbox count leads and the other counts share one quiet chip (twilight)
+   [desktop] › mobile-controls.spec.ts:258:9 › enhanced reactions › responsive reaction pickers stay inside the viewport and retain native submission
+   [desktop] › mobile-controls.spec.ts:312:11 › enhanced reactions › banned reaction counts keep visible names without reactor identities
+   [desktop] › mobile-controls.spec.ts:312:11 › enhanced reactions › suspended reaction counts keep visible names without reactor identities
+   [desktop] › profile-surface.spec.ts:278:5 › profile review: phone activity titles remain fully readable
+   [desktop] › profile-surface.spec.ts:363:5 › profile review: search controls align and activity timestamps retain exact instants
+   [desktop] › profile-surface.spec.ts:494:5 › profile controls use system sizing, focus, current states and stable disabled fills
+   [desktop] › profile-surface.spec.ts:552:5 › profile states match the approved anatomy in light and dark themes
+   [desktop] › settings-hardening.spec.ts:107:7 › settings resilience with native forms › organization 422 alerts span the form and keep long values and digest choices
+   [desktop] › settings-hardening.spec.ts:143:7 › settings resilience with native forms › board state and subscription delivery stay operable with 44px labelled targets
+   [desktop] › settings-hardening.spec.ts:168:7 › settings resilience with native forms › digest errors focus the invalid control and native navigation names Appeals
+   [desktop] › settings-hardening.spec.ts:194:5 › tablet widths and enlarged text adapt to pane width in both registers
+   [desktop] › settings-hardening.spec.ts:213:5 › dark-system and forced-colour fields retain native affordances and keyboard focus
+   [desktop] › settings-hardening.spec.ts:84:7 › settings resilience with native forms › custom labels persist, invalid profile text is retained and keyboard focus is clear
+   [desktop] › thread-view-study.spec.ts:649:5 › post menu rows stack full-width with no user-agent chrome
+   [desktop] › unified-chrome.spec.ts:151:5 › the bar and the rail are the design system's, at its geometry, in both registers
+   [mobile] › composer-shell.spec.ts:465:5 › draft counter preview and textarea auto-growth stay inside the shell
+   [mobile] › composer-shell.spec.ts:837:5 › mobile compact dock expands to a contained formatting overflow and anonymous disclosure
+   [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 320px
+   [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 390px
+   [mobile] › create-menu-subheader.spec.ts:204:9 › member route matrix 860px
+   [mobile] › create-menu-subheader.spec.ts:276:13 › native with JS › guest and dms-off routes retain the conditional row
+   [mobile] › create-menu-subheader.spec.ts:276:13 › native without JS › guest and dms-off routes retain the conditional row
+   [mobile] › create-menu-subheader.spec.ts:312:13 › native with JS › representative page and open menu captures
+   [mobile] › create-menu-subheader.spec.ts:312:13 › native without JS › representative page and open menu captures
+   [mobile] › create-menu-subheader.spec.ts:343:9 › no JavaScript › member route matrix and native creation preserve leading content and draft errors
+   [mobile] › header-polish.spec.ts:110:5 › on a phone the lockup holds only what it shows
+   [mobile] › header-polish.spec.ts:217:5 › the bell is current on the notifications page, as a route is on its own
+   [mobile] › header-polish.spec.ts:67:5 › a focused control keeps its own corner and wears the gold halo
+   [mobile] › header-unread-marks.spec.ts:95:7 › the Inbox count leads and the other counts share one quiet chip (day)
+   [mobile] › header-unread-marks.spec.ts:95:7 › the Inbox count leads and the other counts share one quiet chip (twilight)
+   [mobile] › profile-surface.spec.ts:278:5 › profile review: phone activity titles remain fully readable
+   [mobile] › profile-surface.spec.ts:363:5 › profile review: search controls align and activity timestamps retain exact instants
+   [mobile] › profile-surface.spec.ts:494:5 › profile controls use system sizing, focus, current states and stable disabled fills
+   [mobile] › profile-surface.spec.ts:552:5 › profile states match the approved anatomy in light and dark themes
+   [mobile] › settings-hardening.spec.ts:107:7 › settings resilience with native forms › organization 422 alerts span the form and keep long values and digest choices
+   [mobile] › settings-hardening.spec.ts:143:7 › settings resilience with native forms › board state and subscription delivery stay operable with 44px labelled targets
+   [mobile] › settings-hardening.spec.ts:168:7 › settings resilience with native forms › digest errors focus the invalid control and native navigation names Appeals
+   [mobile] › settings-hardening.spec.ts:213:5 › dark-system and forced-colour fields retain native affordances and keyboard focus
+   [mobile] › settings-hardening.spec.ts:84:7 › settings resilience with native forms › custom labels persist, invalid profile text is retained and keyboard focus is clear
+   [mobile] › thread-view-study.spec.ts:475:5 › Study layout matches desktop and mobile geometry
+   [mobile] › thread-view-study.spec.ts:649:5 › post menu rows stack full-width with no user-agent chrome
+   [mobile] › unified-chrome.spec.ts:151:5 › the bar and the rail are the design system's, at its geometry, in both registers
+
+Failed only on the branch (9):
+   [desktop] › header-polish.spec.ts:199:5 › counts carry their words on their links, as the bell's do
+   [desktop] › profile-surface.spec.ts:617:5 › tabs, search, sorting, paging, menu, copy link, and keyboard focus work
+   [desktop] › profile-surface.spec.ts:766:5 › Commends meets contrast in both themes and every empty state keeps the shared frame
+   [desktop] › thread-view-study.spec.ts:910:5 › the star pill uses the commend star and never wraps the facts row
+   [desktop] › unified-chrome.spec.ts:665:5 › persistent bell keeps complete primary routes and mobile controls reachable at 320px
+   [desktop] › unified-chrome.spec.ts:742:7 › narrow primary navigation without JavaScript › all three full primary labels remain native destinations at 320px
+   [mobile] › header-polish.spec.ts:199:5 › counts carry their words on their links, as the bell's do
+   [mobile] › profile-surface.spec.ts:617:5 › tabs, search, sorting, paging, menu, copy link, and keyboard focus work
+   [mobile] › profile-surface.spec.ts:766:5 › Commends meets contrast in both themes and every empty state keeps the shared frame
+
+Failed only on main (0):
+
+Focused rerun of the branch-only failures from fresh prepare.sh seeds (final candidate):
+  branch: 10 passed (33.8s)
+  main: 1 skipped, 11 passed (35.6s)
+  branch, thread-view-study.spec.ts "the star pill uses the commend star" (moved to line 911): 1 passed, 1 skipped (desktop-only)

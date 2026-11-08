@@ -7,7 +7,7 @@
                     <?php continue; ?>
                 <?php endif; ?>
                 <?php $isActive = $active === $item['key']; ?>
-                <a class="settings-rail-link<?= $isActive ? ' is-active' : '' ?>" data-settings-key="<?= $e($item['key']) ?>" href="<?= $e($item['href']) ?>"<?= $isActive ? ' aria-current="page"' : '' ?>><?= $this->partial('partials/icon', ['name' => $item['icon']]) ?><span><?= $e($item['label']) ?></span></a>
+                <a class="settings-rail-link<?= $isActive ? ' is-active' : '' ?>" data-settings-key="<?= $e($item['key']) ?>" href="<?= $e($item['href']) ?>"<?= $isActive ? ' aria-current="page"' : '' ?>><?= $this->partial('partials/icon', ['name' => $item['icon'], 'filled' => $isActive]) ?><span><?= $e($item['label']) ?></span></a>
             <?php endforeach; ?>
         </div>
     <?php endforeach; ?>

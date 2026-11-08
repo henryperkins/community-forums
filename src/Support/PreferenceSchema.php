@@ -27,12 +27,14 @@ final class PreferenceSchema
      * validated independently against its own spec, so older blobs stay readable
      * without an explicit migration; `__v` is a forward-compat marker only.
      */
-    public const VERSION = 4;
+    public const VERSION = 5;
 
     public const THREADS_PER_PAGE = [20, 25, 50, 100];
     public const POSTS_PER_PAGE = [10, 20, 40];
     public const DIRECTORY_SORTS = ['category', 'active', 'newest', 'unanswered', 'top', 'solved'];
     public const DIRECTORY_PEEKS = [0, 3, 5];
+    /** Standard draws icons at 16px; large draws them at 20px (ADR 0060). */
+    public const ICON_SIZES = ['standard', 'large'];
 
     /**
      * section => [ key => spec ]. spec.type ∈ {enum, enumint, bool}.
@@ -44,6 +46,7 @@ final class PreferenceSchema
             'theme'          => ['type' => 'enum', 'values' => ['system', 'light', 'dark'], 'default' => 'system'],
             'density'        => ['type' => 'enum', 'values' => ['comfortable', 'compact'], 'default' => 'comfortable'],
             'font_size'      => ['type' => 'enum', 'values' => ['small', 'medium', 'large'], 'default' => 'medium'],
+            'icon_size'      => ['type' => 'enum', 'values' => self::ICON_SIZES, 'default' => 'standard'],
             'reduced_motion' => ['type' => 'bool', 'default' => false],
         ],
         'reading' => [
@@ -148,7 +151,8 @@ final class PreferenceSchema
      * v1 → v2 was purely additive (the reading-display + composing toggles were
      * introduced at v2). v3 retires thread_sort from the managed schema without
      * transforming it, so legacy blobs preserve it as unknown data. v4 adds the
-     * member-surface panel/directory choices. {@see transformTo} remains the home
+     * member-surface panel/directory choices, and v5 the appearance icon size
+     * (additive: a blob without it draws standard icons). {@see transformTo} remains the home
      * for a future breaking change (e.g. a renamed enum value) so old blobs keep
      * working across a schema bump. resolve() runs this on every read; a save
      * (updateSection) re-stamps the version, so storage converges.

@@ -82,6 +82,7 @@ const glyph = (el: Element) => {
     stroke: style.stroke,
     color: style.color,
     box: svg.getBoundingClientRect().width,
+    d: svg.querySelector('path')?.getAttribute('d') ?? '',
   };
 };
 
@@ -105,10 +106,13 @@ test('the queue star is the commend star, outlined until the topic is starred', 
   const offGlyph = await off.evaluate(glyph);
   expect(onGlyph.classes).toBe('icon icon-commend-star');
   expect(offGlyph.classes).toBe('icon icon-commend-star is-outline');
-  // Shape, not only ink: the two inks are close in lightness.
+  // Shape, not only ink: the two inks are close in lightness. The unset star is
+  // Fluent's Star Regular outline and the set star Star Filled (ADR 0060);
+  // both are painted shapes, so the artwork differs rather than the stroke.
   expect(onGlyph.fill).not.toBe('none');
-  expect(offGlyph.fill).toBe('none');
-  expect(offGlyph.stroke).not.toBe('none');
+  expect(offGlyph.fill).not.toBe('none');
+  expect(offGlyph.stroke).toBe('none');
+  expect(offGlyph.d).not.toBe(onGlyph.d);
   expect(onGlyph.color).not.toBe(offGlyph.color);
 
   await page.locator('[data-inbox-list]').screenshot({ path: shot(info.project.name, 'queue-stars') });

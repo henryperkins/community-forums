@@ -23,7 +23,7 @@ $composeHref = '/compose' . ($composeBoard !== '' ? '?board=' . rawurlencode($co
                 </div>
             </details>
         <?php else: ?>
-            <a class="create-trigger" data-create-trigger href="<?= $e($composeHref) ?>" aria-label="New topic"<?= $path === '/compose' ? ' aria-current="page"' : '' ?>><?= $this->partial('partials/icon', ['name' => 'plus']) ?><span class="create-label">New topic</span></a>
+            <a class="create-trigger" data-create-trigger href="<?= $e($composeHref) ?>" aria-label="New topic"<?= $path === '/compose' ? ' aria-current="page"' : '' ?>><?= $this->partial('partials/icon', ['name' => 'new-topic']) ?><span class="create-label">New topic</span></a>
         <?php endif; ?>
     <?php endif; ?>
 </div>

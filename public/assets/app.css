@@ -2288,6 +2288,10 @@ body[data-route="thread"] .thread-conversation {
 .density-prev { display: flex; flex-direction: column; gap: 4px; margin-bottom: 9px; }
 .density-prev span { height: 8px; border-radius: 3px; background: var(--surface-sunken); }
 .density-prev.is-compact span { height: 4px; }
+/* Each icon-size card previews its own size, whatever the member draws today. */
+.icon-size-prev { display: flex; align-items: center; gap: 10px; min-height: 20px; margin-bottom: 9px; color: var(--text-muted); }
+.icon-size-prev .icon { width: 16px; height: 16px; }
+.icon-size-prev.is-large .icon { width: 20px; height: 20px; }
 .switchline { display: flex; align-items: flex-start; gap: 11px; padding: 8px 0; cursor: pointer; }
 .switch {
     appearance: none; -webkit-appearance: none; flex: 0 0 auto; position: relative;
@@ -3159,9 +3163,8 @@ textarea.textarea-engraved {
 }
 .settings-rail .icon {
     flex: 0 0 auto;
-    width: 15px;
-    height: 15px;
-    stroke-width: 1.7;
+    width: var(--icon-size);
+    height: var(--icon-size);
 }
 .settings-rail .subnav-action {
     display: flex;
@@ -3488,7 +3491,7 @@ textarea.textarea-engraved {
         cursor: pointer;
     }
     .admin-area-menu > summary::-webkit-details-marker { display: none; }
-    .admin-area-menu > summary .icon { flex: none; width: 16px; height: 16px; }
+    .admin-area-menu > summary .icon { flex: none; width: var(--icon-size); height: var(--icon-size); }
     .admin-area-menu[open] > summary .icon { transform: rotate(180deg); }
     .admin-area-menu > summary strong { margin-left: auto; font-weight: var(--weight-medium); }
     .admin-mobile-areas {
@@ -8695,7 +8698,7 @@ textarea.textarea-engraved {
     text-decoration: none;
 }
 .dm-back:hover { background: var(--surface-sunken); color: var(--brand); }
-.dm-back .icon { width: 18px; height: 18px; }
+.dm-back .icon { width: max(18px, var(--icon-size)); height: max(18px, var(--icon-size)); }
 .dm-thread-id {
     display: flex;
     align-items: center;
@@ -8765,7 +8768,7 @@ textarea.textarea-engraved {
 }
 .dm-iconbtn:hover { background: var(--surface-sunken); color: var(--brand); }
 .dm-iconbtn.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); border-color: var(--dm-brand-line); }
-.dm-iconbtn .icon { width: 18px; height: 18px; }
+.dm-iconbtn .icon { width: max(18px, var(--icon-size)); height: max(18px, var(--icon-size)); }
 
 /* The header ··· overflow — a native <details> popover (works with no JS). */
 .dm-menu { position: relative; display: inline-flex; }
@@ -8804,7 +8807,7 @@ textarea.textarea-engraved {
 }
 .dm-menu-item:hover { background: var(--surface-sunken); }
 .dm-menu-item.danger { color: var(--danger); }
-.dm-menu-item .icon { width: 16px; height: 16px; color: var(--text-muted); flex: 0 0 auto; }
+.dm-menu-item .icon { width: var(--icon-size); height: var(--icon-size); color: var(--text-muted); flex: 0 0 auto; }
 .dm-menu-item.danger .icon { color: var(--danger); }
 .profile-block > summary { list-style: none; width: 100%; }
 .profile-block > summary::-webkit-details-marker { display: none; }
@@ -8870,7 +8873,7 @@ form[data-submit-once] button[aria-disabled="true"] { opacity: .55; cursor: prog
 .dm-rail-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 10px; border-radius: var(--radius-md); background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: .95rem; color: var(--text-body); text-decoration: none; }
 .dm-rail-btn:hover { background: var(--surface-sunken); }
 .dm-rail-btn.danger { color: var(--danger); }
-.dm-rail-btn .icon { width: 16px; height: 16px; color: var(--text-muted); flex: 0 0 auto; }
+.dm-rail-btn .icon { width: var(--icon-size); height: var(--icon-size); color: var(--text-muted); flex: 0 0 auto; }
 .dm-rail-btn.danger .icon { color: var(--danger); }
 
 /* Group members list in the rail */
@@ -16500,7 +16503,7 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 /* The commend star is the one esteem glyph. In outline it is the unset state of
    a control that sets it, so a toggle's two states differ in shape as well as
    in ink: the two inks it moves between are close in lightness. */
-.icon-commend-star.is-outline { fill: none; stroke: currentColor; stroke-width: 7; stroke-linejoin: round; }
+.icon-commend-star.is-outline { fill: currentColor; stroke: none; }
 .thread-row-inbox .thread-snippet {
     display: -webkit-box;
     margin: 3px 0 0;
@@ -17672,7 +17675,7 @@ a.presence-person:hover { text-decoration: none; }
     cursor: pointer;
 }
 .create-trigger::-webkit-details-marker { display: none; }
-.create-trigger > .icon { width: 16px; height: 16px; flex: none; }
+.create-trigger > .icon { width: var(--icon-size); height: var(--icon-size); flex: none; }
 .create-trigger > .icon:last-child:not(:first-child) { width: 12px; height: 12px; }
 .create-trigger:hover { color: var(--text-strong); background: var(--surface-sunken); text-decoration: none; }
 .create-menu-panel {
@@ -17883,7 +17886,7 @@ html:not(.has-js) .forum-subheader :is(.inbox-actions, .dm-search-menu, .notific
 .inbox-menu-panel > button { width: 100%; }
 .inbox-menu-panel > button .inbox-menu-note { margin-top: var(--space-1); }
 .inbox-help-open { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-.inbox-help-open .icon { width: 16px; height: 16px; }
+.inbox-help-open .icon { width: var(--icon-size); height: var(--icon-size); }
 [data-inbox-help-open][hidden], [data-inbox-help-close][hidden], [data-inbox-clear-selection][hidden], .inbox-help[hidden] { display: none; }
 .inbox-help-dialog {
     position: fixed;
@@ -17914,7 +17917,7 @@ html:not(.has-js) .forum-subheader :is(.inbox-actions, .dm-search-menu, .notific
 .inbox-sweep [data-inbox-selection-label] { margin-inline-end: auto; font-size: var(--text-fine); }
 .inbox-sweep .inbox-bulk-menu > summary { background: var(--surface-raised); }
 .inbox-sweep > .inbox-clear-selection { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; padding: 0; border-color: transparent; background: transparent; }
-.inbox-clear-selection .icon { width: 18px; height: 18px; }
+.inbox-clear-selection .icon { width: max(18px, var(--icon-size)); height: max(18px, var(--icon-size)); }
 .inbox-sweep > [data-inbox-clear-selection][hidden] { display: none; }
 .inbox-list:has([data-inbox-select]:checked) .inbox-sweep { display: flex; }
 .thread-row-inbox:has([data-inbox-select]:checked) { background: var(--brand-subtle); }
@@ -18246,7 +18249,7 @@ a.users-online-page:hover { background: var(--surface-sunken); text-decoration: 
 
 /* ADR 0032 adaptation: persistent notification entry and locally anchored badge. */
 [data-bell] { flex: 0 0 40px; width: 40px; height: 40px; justify-content: center; border-radius: var(--radius); }
-.forum-bar-bell > .icon { width: 18px; height: 18px; }
+.forum-bar-bell > .icon { width: max(18px, var(--icon-size)); height: max(18px, var(--icon-size)); }
 [data-bell] > .bell-count { top: 0; right: 0; }
 .notification-count { display: inline-block; min-width: 16px; padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: var(--brand-accent-contrast, var(--ink-900)); font-size: max(var(--text-floor), 11px); line-height: 16px; text-align: center; font-weight: var(--weight-semibold); }
 [data-notification-count][hidden] { display: none; }

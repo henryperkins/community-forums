@@ -903,9 +903,10 @@ test('standing chips sit above the title and state status as a word alone', asyn
 });
 
 /**
- * B3. One esteem glyph in the system — the four-point commend star that already
- * marks regard and the accepted answer — and a facts row that does not break to
- * a second line when "Star" grows into "Starred".
+ * B3. One esteem glyph in the system — the five-point commend star (Fluent's
+ * Star, ADR 0060) that already marks regard and the accepted answer — and a
+ * facts row that does not break to a second line when "Star" grows into
+ * "Starred".
  */
 test('the star pill uses the commend star and never wraps the facts row', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'the wrap this guards against is a desktop-width failure');
@@ -918,9 +919,12 @@ test('the star pill uses the commend star and never wraps the facts row', async 
   await expect(star).toHaveAccessibleName(/^Star(red)?$/);
   await expect(star.locator('svg.icon-commend-star')).toHaveCount(1);
   await expect(star.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+  // Star Filled from the 20px artwork in both states: the pill's colour and
+  // label carry the state.
+  await expect(star.locator('svg')).toHaveAttribute('viewBox', '0 0 20 20');
   await expect(star.locator('svg path')).toHaveAttribute(
     'd',
-    'M50 8 60.6 37.4 91.9 38.4 67.1 57.6 75.9 87.6 50 70 24.1 87.6 32.9 57.6 8.1 38.4 39.4 37.4Z',
+    'M9.1 2.9a1 1 0 0 1 1.8 0l1.93 3.91 4.31.63a1 1 0 0 1 .56 1.7l-3.12 3.05.73 4.3a1 1 0 0 1-1.45 1.05L10 15.51l-3.86 2.03a1 1 0 0 1-1.45-1.05l.74-4.3L2.3 9.14a1 1 0 0 1 .56-1.7l4.31-.63z',
   );
   // No second star glyph anywhere in the head.
   expect(await page.locator('.thread-study-head').innerText()).not.toMatch(/[★☆]/);

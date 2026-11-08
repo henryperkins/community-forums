@@ -2,6 +2,23 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-08] - Fluent System Icons and an icon size choice
+
+- Draw every icon in the forum's icon partial with Microsoft's Fluent UI
+  System Icons (`@fluentui/svg-icons` 1.1.341, MIT), generated from pinned
+  sources by `composer build:icons` and checked by `composer check:icons`
+  (ADR 0060). Icons are Regular, and Filled for a selected state: the set
+  star and the current settings section.
+- Give borrowed jobs their own marks: Comment icons for new topics, the
+  Boards setting, a post's Copy link and an empty board; Emoji Add for
+  reactions; a bin for Delete; a gavel for Appeals; Alert Off for muting a
+  conversation, which had drawn a muted speaker. The accepted-answer star is
+  now solid; an older rule had drawn it as a hairline outline.
+- Add Appearance → Icon size: Standard (16px, the default) or Larger (20px)
+  for menus, toolbars, the settings rail and buttons. Row marks, reactions
+  and empty-state marks keep their sizes. Preference schema version 5.
+- Verification: [local evidence](docs/evidence/fluent-icons-2026-11-08/README.md).
+
 ## [2026-11-08] - Living Brief citation anchors and subset-citation rendering
 
 - Fix ADR 0026 Finding F1: an AI generation citing a subset of its evidence

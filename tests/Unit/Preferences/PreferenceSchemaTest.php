@@ -20,6 +20,7 @@ final class PreferenceSchemaTest extends TestCase
         self::assertSame('system', $d['theme']);
         self::assertSame('comfortable', $d['density']);
         self::assertSame('medium', $d['font_size']);
+        self::assertSame('standard', $d['icon_size']);
         self::assertFalse($d['reduced_motion']);
         self::assertTrue($d['show_signatures']);
         self::assertTrue($d['enter_to_send']);
@@ -37,10 +38,28 @@ final class PreferenceSchemaTest extends TestCase
 
     public function test_retired_thread_sort_is_preserved_as_legacy_unknown_data(): void
     {
-        self::assertSame(4, PreferenceSchema::VERSION);
+        self::assertSame(5, PreferenceSchema::VERSION);
         self::assertArrayNotHasKey('thread_sort', PreferenceSchema::fields('reading'));
         $legacy = PreferenceSchema::resolve(['__v' => 2, 'thread_sort' => 'replies']);
         self::assertSame('replies', $legacy['thread_sort']);
+    }
+
+    public function test_icon_size_is_an_additive_appearance_choice(): void
+    {
+        // ADR 0060: v5 adds the icon size; a v4 blob draws standard icons.
+        self::assertSame(['standard', 'large'], PreferenceSchema::fields('appearance')['icon_size']['values']);
+        $v4 = PreferenceSchema::resolve(['__v' => 4, 'theme' => 'dark']);
+        self::assertSame('standard', $v4['icon_size']);
+        self::assertSame('dark', $v4['theme']);
+
+        self::assertSame('large', PreferenceSchema::resolve(['icon_size' => 'large'])['icon_size']);
+        self::assertSame('standard', PreferenceSchema::resolve(['icon_size' => 'huge'])['icon_size']);
+        self::assertSame('standard', PreferenceSchema::resolve(['icon_size' => ['large']])['icon_size']);
+
+        // The appearance form writes every key, so a missing value restores the default.
+        $changes = PreferenceSchema::validateSection('appearance', ['theme' => 'light', 'icon_size' => 'large']);
+        self::assertSame('large', $changes['icon_size']);
+        self::assertSame('standard', PreferenceSchema::validateSection('appearance', ['theme' => 'light'])['icon_size']);
     }
 
     public function test_member_surface_preferences_are_versioned_and_validated(): void

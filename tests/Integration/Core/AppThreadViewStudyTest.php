@@ -264,7 +264,7 @@ final class AppThreadViewStudyTest extends TestCase
         self::assertStringContainsString('data-post-toolbar', $member->body());
         self::assertStringContainsString('data-quote-post', $member->body());
         self::assertStringContainsString('data-copy-post', $member->body());
-        self::assertStringContainsString('icon-plus', $member->body());
+        self::assertStringContainsString('aria-label="Add a reaction"><svg class="icon icon-emoji-add"', $member->body());
         self::assertStringContainsString('icon-quote', $member->body());
         self::assertStringContainsString('icon-more-horizontal', $member->body());
         self::assertStringNotContainsString('Remove (warden)', $member->body());

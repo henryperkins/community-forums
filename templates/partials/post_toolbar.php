@@ -19,7 +19,7 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
 <div class="post-toolbar" data-post-toolbar>
     <?php if ($canReact): ?>
         <details class="reaction-add post-toolbar-reactions">
-            <summary class="post-toolbar-button" aria-label="Add a reaction"><?= $this->partial('partials/icon', ['name' => 'plus']) ?></summary>
+            <summary class="post-toolbar-button" aria-label="Add a reaction"><?= $this->partial('partials/icon', ['name' => 'emoji-add']) ?></summary>
             <div class="reaction-menu">
                 <?php foreach ($allowed as $emoji): ?>
                     <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
@@ -70,12 +70,12 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
                     </form>
                 <?php endif; ?>
             </div>
-            <a href="<?= $e($permalink) ?>" data-copy-post><?= $this->partial('partials/icon', ['name' => 'copy']) ?><span>Copy link</span></a>
+            <a href="<?= $e($permalink) ?>" data-copy-post><?= $this->partial('partials/icon', ['name' => 'post-link']) ?><span>Copy link</span></a>
             <?php if ($canOwnerWrite): ?>
                 <button type="button" data-post-disclosure-open="post-edit-<?= (int) $p['id'] ?>" hidden><?= $this->partial('partials/icon', ['name' => 'edit-3']) ?><span>Edit</span></button>
                 <form method="post" action="/posts/<?= (int) $p['id'] ?>/delete">
                     <?= $this->csrfField() ?>
-                    <button class="danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'x']) ?><span><?= $opRemoval ? 'Delete topic' : 'Delete' ?></span></button>
+                    <button class="danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'delete']) ?><span><?= $opRemoval ? 'Delete topic' : 'Delete' ?></span></button>
                 </form>
             <?php endif; ?>
             <?php if ($canRemove): ?>

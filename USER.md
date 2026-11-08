@@ -198,7 +198,10 @@ These make the forum *theirs*. Defaults are inherited from site settings (ADMIN.
 | Skin | Default (Hybrid) · Retro 2002 (when available, P2) |
 | Density | Comfortable · Compact |
 | Font size | Small · Default · Large |
+| Icon size | Standard · Larger |
 | Reduce motion | On · Off (also respects OS `prefers-reduced-motion`) |
+
+Icon size draws icons at 16px (Standard, the default) or 20px (Larger) in menus, toolbars, the settings rail and buttons; row marks, reactions and empty-state marks keep their own sizes (ADR 0060).
 
 Appearance prefs are **client-applied** (instant) and override the site default for that user only. The Light, Dark and System choices show thumbnails of the community's resolved theme — the active package or style preset with operator colours (ADR 0054). Until a member saves a density, the community's default density applies; saving the appearance page records the member's own choice, which a later change to the community default never overrides.
 

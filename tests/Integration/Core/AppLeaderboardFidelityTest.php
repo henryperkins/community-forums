@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Support\IconSet;
 use Tests\Support\TestCase;
 
 /**
@@ -42,7 +43,8 @@ final class AppLeaderboardFidelityTest extends TestCase
         $res = $this->get('/leaderboard');
         $this->assertStatus(200, $res);
         $this->assertSeeText($res, 'icon-commend-star star-marker');
-        $this->assertSeeText($res, 'M50 8 60.6 37.4 91.9 38.4 67.1 57.6 75.9 87.6 50 70 24.1 87.6 32.9 57.6 8.1 38.4 39.4 37.4Z');
+        // Fluent's Star Filled (ADR 0060).
+        $this->assertSeeText($res, IconSet::GLYPHS['commend-star']['filled'][20][0]['d']);
         $this->assertDontSeeText($res, '✦');
         $this->assertDontSeeText($res, '★');
     }

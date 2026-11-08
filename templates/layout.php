@@ -1,7 +1,7 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 $variant = $this->block('variant', 'app');
-$appearance = $appearance ?? ['theme' => 'system', 'density' => 'comfortable', 'font_size' => 'medium', 'reduced_motion' => false];
+$appearance = $appearance ?? ['theme' => 'system', 'density' => 'comfortable', 'font_size' => 'medium', 'icon_size' => 'standard', 'reduced_motion' => false];
 $composing = $composing ?? ['enter_to_send' => true, 'show_preview' => true, 'smart_lists' => true];
 $memberSurfaces = $member_surfaces ?? ['rail_open' => true, 'inbox_reading_open' => true, 'directory_sort' => 'category', 'directory_peek' => 3];
 $brand = $branding ?? ['name' => $site_name, 'logo_path' => null, 'favicon_path' => null, 'color_primary' => '#2f6fed', 'color_accent' => '#7c3aed'];
@@ -48,6 +48,7 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer'])
       data-theme="<?= $e($appearance['theme']) ?>"
       data-density="<?= $e($appearance['density']) ?>"
       data-font-size="<?= $e($appearance['font_size']) ?>"
+      data-icon-size="<?= $e($appearance['icon_size'] ?? 'standard') ?>"
       <?= !empty($appearance['reduced_motion']) ? 'data-reduced-motion="1"' : '' ?><?php
       // Curated style (ADR 0054): fixed vocabularies mapped to tokens by
       // app.css. Recovery pages keep the built-in style, as they keep the

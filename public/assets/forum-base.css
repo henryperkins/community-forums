@@ -18,6 +18,12 @@
    Shipped to consumers as part of the styles.css closure.
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* ── Icons ────────────────────────────────────────────────────────────────
+   Fluent System Icons (ADR 0060) draw at --icon-size unless a component sets
+   its own size: 16px, or 20px for a member who chooses larger icons. Marks
+   sized for rows, chips and empty states keep their own rules. */
+.icon { width: var(--icon-size); height: var(--icon-size); }
+
 /* ── Buttons ──────────────────────────────────────────────────────────────
    Labels are lapidary Marcellus, lightly tracked, sentence case. */
 .btn {
@@ -2242,7 +2248,7 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
 /* The commend star is the one esteem glyph. In outline it is the unset state of
    a control that sets it, so a toggle's two states differ in shape as well as
    in ink: the two inks it moves between are close in lightness. */
-.icon-commend-star.is-outline { fill: none; stroke: currentColor; stroke-width: 7; stroke-linejoin: round; }
+.icon-commend-star.is-outline { fill: currentColor; stroke: none; }
 .thread-row-inbox .thread-snippet {
     display: -webkit-box;
     margin: 3px 0 0;

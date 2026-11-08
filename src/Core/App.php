@@ -821,7 +821,7 @@ final class App
 
         // Appearance prefs stamp the document root (no theme flash; no-JS themes).
         // Guests use the site default; a signed-in user's resolved prefs win.
-        $appearance = ['theme' => 'system', 'density' => 'comfortable', 'font_size' => 'medium', 'reduced_motion' => false];
+        $appearance = ['theme' => 'system', 'density' => 'comfortable', 'font_size' => 'medium', 'icon_size' => 'standard', 'reduced_motion' => false];
         // The community's default density (ADR 0054 increment 4) applies to
         // visitors and to members who have never chosen one.
         $densityDefault = !empty($features['branding'])

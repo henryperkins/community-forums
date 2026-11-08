@@ -4,6 +4,11 @@ html { font-size: 100%; }
 html[data-font-size="small"] { font-size: 87.5%; }
 html[data-font-size="medium"] { font-size: 100%; }
 html[data-font-size="large"] { font-size: 112.5%; }
+html[data-icon-size="large"] { --icon-size: 20px; }
+/* The icon partial draws filled Fluent artwork (ADR 0060). Older rules that
+   stroke an svg inside .fab, .chip, .badge, .accepted-flag or .nav-toggle-ic
+   were written for the retired stroked glyphs and would outline it. */
+svg.icon { fill: currentColor; stroke: none; }
 body { font-family: var(--font-body); font-size: 1rem; line-height: 1.6; background-color: var(--surface-page); }
 button, input, select, textarea { font-family: var(--font-label); font-size: 1rem; }
 h1, h2, h3, h4, .page-title, .display { font-family: var(--font-display); font-weight: 600; line-height: 1.25; letter-spacing: -.015em; }
@@ -261,7 +266,7 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
 .living-brief-cite { font-family: var(--font-meta); font-size: max(var(--text-floor), .68rem); line-height: 0; }
 .living-brief-cite a { color: var(--accent); text-decoration: none; }
 .living-brief-cite a:hover { text-decoration: underline; }
-.topic-tools-open .icon, .topic-tools-mark .icon { width: 16px; height: 16px; color: currentColor; }
+.topic-tools-open .icon, .topic-tools-mark .icon { width: var(--icon-size); height: var(--icon-size); color: currentColor; }
 
 /* Stored style keys are retained for compatibility; the old font families are
    retired. These are optional heading variations on a sans-serif UI. */

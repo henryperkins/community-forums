@@ -868,6 +868,10 @@ final class AppImladrisFidelityTest extends TestCase
                 . "   so the colour lands; the Forum theme draws it as a muted Inbox outline\n"
                 . "   (ADR 0057). A 56px rule left over from an earlier inbox had also been\n"
                 . '   sizing it. */',
+            // ADR 0060: the unset star is Fluent's Star Regular artwork, so the
+            // rule paints it rather than stroking the filled glyph.
+            '.icon-commend-star.is-outline { fill: none; stroke: currentColor; stroke-width: 7; stroke-linejoin: round; }'
+                => '.icon-commend-star.is-outline { fill: currentColor; stroke: none; }',
         ];
         foreach (array_keys($deliberate) as $archived) {
             self::assertSame(1, substr_count($memberCss, $archived), 'The archived text for a deliberate edit moved.');

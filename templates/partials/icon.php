@@ -1,93 +1,34 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 /**
- * Lucide-style inline SVG icons — CSP-safe (no sprite, no CDN, no inline style).
- * One self-contained <svg> per call; decorative by default (aria-hidden).
+ * Fluent System Icons (ADR 0060) as inline SVG — CSP-safe (no sprite, no CDN,
+ * no inline style). One self-contained <svg> per call, decorative by default
+ * (aria-hidden), painted with currentColor.
  *
  *   $this->partial('partials/icon', ['name' => 'plus']);
  *   $this->partial('partials/icon', ['name' => 'flag', 'class' => 'danger']);
+ *   $this->partial('partials/icon', ['name' => 'bell', 'filled' => true]);       // a selected state
+ *   $this->partial('partials/icon', ['name' => 'bell', 'scale' => 'large']);     // a fixed preview
  *
- * Most marks are stroked (Lucide register, stroke ~1.8, round caps); a few
- * (more-horizontal) are filled dots. Paths are static, trusted markup — the one
- * sanctioned raw echo. Unknown names render nothing. The map is seeded with the
- * icons the DM reading room needs and grows as later phases add surfaces.
+ * The artwork comes from App\Support\IconSet, generated from resources/icons/
+ * by bin/build-icons.php, which validated every path; that data is the one
+ * sanctioned raw echo here. App\Support\Icons picks the 16px or 20px artwork
+ * for the member's icon-size preference. The `commend-star` draws Star Filled,
+ * and Star Regular while its class carries `is-outline` (an unset star, ADR
+ * 0036). CSS sets the drawn size; width/height are only the fallback.
+ * Unknown names render nothing.
  */
 $iconName = (string) ($name ?? '');
 $iconExtra = isset($class) && is_string($class) && $class !== '' ? ' ' . $class : '';
-
-$iconStroke = [
-    'plus'            => '<path d="M12 5v14M5 12h14"/>',
-    'search'          => '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
-    'panel-left'      => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
-    'panel-right'     => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/>',
-    'users'           => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-    'user'            => '<path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/>',
-    // The account-settings rail's profile mark, intentionally distinct from the
-    // generic user glyph above.
-    'settings-profile'=> '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-    // Lucide settings-2: the account menu's Settings, distinct from Profile's person.
-    'settings'        => '<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
-    'user-plus'       => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
-    'bell-off'        => '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/>',
-    'edit-3'          => '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
-    'log-out'         => '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
-    'ban'             => '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
-    'flag'            => '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
-    'copy'            => '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
-    'quote'           => '<path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/><path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/>',
-    'x'               => '<path d="M18 6 6 18M6 6l12 12"/>',
-    'check'           => '<path d="M20 6 9 17l-5-5"/>',
-    'heart'           => '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
-    'laugh'           => '<circle cx="12" cy="12" r="9"/><path d="m7 9 1.5-1L10 9m4 0 1.5-1L17 9M8 14h8a4 4 0 0 1-8 0Z"/>',
-    'party-popper'    => '<path d="m4 20 4-13 9 9-13 4ZM8 7l9 9M14 3v3m4-2-1 3m4 3h-3M3 12l4 1M6 16l6 2"/><path d="m12 7 2 2m5 6 2 1"/>',
-    'flame'           => '<path d="M12 3c1 4 4 5 4 9 1-1 2-2 2-4 3 4 3 8 0 11a8 8 0 0 1-12 0C1 14 7 8 12 3Z"/><path d="M12 13c-3 3-4 5-2 7a3 3 0 0 0 4 0c2-2 1-4-2-7Z"/>',
-    'surprised'       => '<circle cx="12" cy="12" r="9"/><path d="M8 8h.01M16 8h.01"/><circle cx="12" cy="15" r="2.5"/>',
-    'frown'           => '<circle cx="12" cy="12" r="9"/><path d="M8 8h.01M16 8h.01M8 17a4 4 0 0 1 8 0"/>',
-    'lightbulb'       => '<path d="M9 18h6M9 21h6M8.5 14.5a6 6 0 1 1 7 0c-1 .7-1.5 1.5-1.5 3.5h-4c0-2-.5-2.8-1.5-3.5Z"/>',
-    'arrow-up'        => '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>',
-    'chevron-left'    => '<path d="M15 18l-6-6 6-6"/>',
-    'chevron-right'   => '<path d="m9 6 6 6-6 6"/>',
-    'chevron-down'    => '<path d="M6 9l6 6 6-6"/>',
-    'lock'            => '<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
-    'star'            => '<path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/>',
-    // The user-profile moderator strip's mark.
-    'shield'          => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
-    'eye'             => '<path d="M2 12c3-5 6-7 10-7s7 2 10 7c-3 5-6 7-10 7s-7-2-10-7Z"/><circle cx="12" cy="12" r="3"/>',
-    'sun'             => '<circle cx="12" cy="12" r="4.6"/><path d="M12 1.5v2.2M12 20.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
-    'book'            => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
-    'file'            => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
-    'menu'            => '<path d="M3 7h18M3 12h18M3 17h18"/>',
-    'bell'            => '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
-    'link'            => '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
-    'monitor'         => '<rect x="3" y="3" width="18" height="14" rx="1.5"/><path d="M8 21h8M12 17v4"/>',
-    'archive'         => '<path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>',
-    'pause'           => '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
-    // The clock-rewind that marks "Catch me up": a dial turned back, not a
-    // plain clock.
-    'history'         => '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/>',
-    // Neutral empty-state marks (ADR 0057).
-    'inbox'           => '<path d="M3 13h5l1.5 3h5l1.5-3h5"/><path d="M5.5 5h13l2.5 8v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5z"/>',
-    'message-square'  => '<path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/>',
-];
-$iconFilled = [
-    'more-horizontal' => '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',
-    // Solid, not the Lucide outline: at the small size the board row's Pinned
-    // mark renders it, a stroked pin turns to mush.
-    'pin'             => '<path d="M14 2l8 8-3 1-2 6-4-4-6 6-1-1 6-6-4-4 6-2z"/>',
-    'star-filled'     => '<path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/>',
-];
-$iconCustomFilled = [
-    // The one star for starring a topic and for commends: a conventional
-    // five-point star (ADR 0057). The is-outline class strokes it while unset.
-    'commend-star' => '<path d="M50 8 60.6 37.4 91.9 38.4 67.1 57.6 75.9 87.6 50 70 24.1 87.6 32.9 57.6 8.1 38.4 39.4 37.4Z"/>',
-    // A four-point sparkle marks generated Living Brief content.
-    'sparkle' => '<path d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"/>',
-];
+$iconStyle = !empty($filled) ? 'filled' : null;
+if ($iconName === 'commend-star' && preg_match('/(?:^|\s)is-outline(?:\s|$)/', $iconExtra) === 1) {
+    $iconStyle = 'regular';
+}
+$iconScale = isset($scale) && is_string($scale)
+    ? $scale
+    : (string) ((isset($appearance) && is_array($appearance) ? $appearance['icon_size'] ?? null : null) ?? 'standard');
+$iconGlyph = \App\Support\Icons::glyph($iconName, $iconScale, $iconStyle);
 ?>
-<?php if (isset($iconCustomFilled[$iconName])): ?>
-<svg class="icon icon-<?= $e($iconName) . $e($iconExtra) ?>" viewBox="0 0 100 100" width="16" height="16" fill="currentColor" stroke="none" aria-hidden="true"><?= $iconCustomFilled[$iconName] /* static, trusted markup */ ?></svg>
-<?php elseif (isset($iconFilled[$iconName])): ?>
-<svg class="icon icon-<?= $e($iconName) . $e($iconExtra) ?>" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none" aria-hidden="true"><?= $iconFilled[$iconName] /* static, trusted markup */ ?></svg>
-<?php elseif (isset($iconStroke[$iconName])): ?>
-<svg class="icon icon-<?= $e($iconName) . $e($iconExtra) ?>" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?= $iconStroke[$iconName] /* static, trusted markup */ ?></svg>
+<?php if ($iconGlyph !== null): ?>
+<svg class="icon icon-<?= $e($iconName) . $e($iconExtra) ?>" viewBox="0 0 <?= (int) $iconGlyph['size'] ?> <?= (int) $iconGlyph['size'] ?>" width="16" height="16" fill="currentColor" aria-hidden="true"><?php foreach ($iconGlyph['paths'] as $iconPath): ?><path d="<?= $iconPath['d'] /* validated path data */ ?>"<?= isset($iconPath['rule']) ? ' fill-rule="' . $e($iconPath['rule']) . '"' : '' ?>/><?php endforeach; ?></svg>
 <?php endif; ?>
