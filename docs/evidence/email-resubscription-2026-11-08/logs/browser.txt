@@ -1,0 +1,8 @@
+
+Running 4 tests using 1 worker
+
+[1/4] [desktop] › email-resubscription.spec.ts:39:9 › no-js › account state, operator suppressions and independent delivery controls survive native submits
+[2/4] [desktop] › email-resubscription.spec.ts:39:9 › js › account state, operator suppressions and independent delivery controls survive native submits
+[3/4] [mobile] › email-resubscription.spec.ts:39:9 › no-js › account state, operator suppressions and independent delivery controls survive native submits
+[4/4] [mobile] › email-resubscription.spec.ts:39:9 › js › account state, operator suppressions and independent delivery controls survive native submits
+  4 passed (7.8s)

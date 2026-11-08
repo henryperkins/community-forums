@@ -200,11 +200,10 @@ final class SettingsController extends Controller
     public function resubscribeEmail(Request $request): Response
     {
         $user = $this->requireUser();
-        $suppressions = $this->container->get(\App\Repository\EmailSuppressionRepository::class);
-        if ($suppressions->reasonFor($user->email()) === 'unsubscribe') {
-            $suppressions->unsuppress($user->email());
-        }
-        return $this->redirectWithFlash('/settings/notifications', 'Notification emails are back on.');
+        $removed = $this->container->get(\App\Service\NotificationSettingsService::class)->resubscribeEmail($user);
+        return $this->redirectWithFlash('/settings/notifications', $removed
+            ? 'Your email unsubscribe was removed. Your other notification settings still apply.'
+            : 'No unsubscribe was removed. Your email delivery settings are unchanged.');
     }
 
     public function updateNotifications(Request $request): Response

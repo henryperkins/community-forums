@@ -44,6 +44,15 @@ final class EmailSuppressionRepository
         $this->db->run('DELETE FROM email_suppressions WHERE email = ?', [strtolower($email)]);
     }
 
+    /** A member cannot remove a suppression that an operator changed before this write. */
+    public function removeUnsubscribe(string $email): bool
+    {
+        return $this->db->run(
+            "DELETE FROM email_suppressions WHERE email = ? AND reason = 'unsubscribe'",
+            [strtolower($email)],
+        )->rowCount() > 0;
+    }
+
     /**
      * Suppression list for the admin dashboard. LIMIT/OFFSET clamped + concatenated.
      *

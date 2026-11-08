@@ -1309,6 +1309,7 @@ final class App
         ));
         $c->bind(\App\Service\NotificationSettingsService::class, fn (Container $c) => new \App\Service\NotificationSettingsService(
             $c->get(Database::class), $c->get(UserRepository::class), $c->get(EmailPreferenceService::class), $c->get(WriteGate::class),
+            $c->get(EmailSuppressionRepository::class),
         ));
         $c->bind(NotificationReadService::class, fn (Container $c) => new NotificationReadService(
             $c->get(NotificationRepository::class), $c->get(NotificationVisibilityService::class), $c->get(ThreadReadService::class),

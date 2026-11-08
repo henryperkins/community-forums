@@ -1,0 +1,14 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+........................[RetroBoards] Two-factor secret (enabled) for user #170 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #170 cannot be opened with the configured APP_KEY.
+..[RetroBoards] Two-factor secret (enabled) for user #179 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Ignoring invalid key configuration: APP_PREVIOUS_KEY_VERIFY_IDS entry 2 is not a 16-character lowercase hex HMAC key id. APP_PREVIOUS_KEY_VERIFY_IDS lists ffffffffffffffff, which is not the HMAC key id of any configured previous key.
+...........                            38 / 38 (100%)
+
+Time: 00:05.866, Memory: 26.00 MB
+
+OK (38 tests, 590 assertions)

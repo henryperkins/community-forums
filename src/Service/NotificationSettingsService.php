@@ -7,12 +7,34 @@ use App\Core\Database;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\EmailSuppressionRepository;
 use App\Repository\UserRepository;
 use App\Security\WriteGate;
 
 final class NotificationSettingsService
 {
-    public function __construct(private Database $db, private UserRepository $users, private EmailPreferenceService $email, private WriteGate $writeGate) {}
+    public function __construct(
+        private Database $db,
+        private UserRepository $users,
+        private EmailPreferenceService $email,
+        private WriteGate $writeGate,
+        private EmailSuppressionRepository $suppressions,
+    ) {}
+
+    /** Remove only this account's own unsubscribe; independent delivery controls still apply. */
+    public function resubscribeEmail(User $viewer): bool
+    {
+        return $this->db->transaction(function () use ($viewer): bool {
+            // As in update(), account state and contact must be current and held
+            // until the delivery increase commits. A session snapshot is not authority.
+            $row = $this->users->findForUpdate($viewer->id());
+            if ($row === null) { throw new NotFoundException('Account not found.'); }
+            $member = User::fromRow($row);
+            $this->writeGate->assertCanWrite($member);
+
+            return $this->suppressions->removeUnsubscribe($member->email());
+        });
+    }
 
     public function update(User $viewer, array $input): void
     {

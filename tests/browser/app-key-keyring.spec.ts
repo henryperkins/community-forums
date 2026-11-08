@@ -89,7 +89,7 @@ for (const javaScriptEnabled of [false, true]) {
 
       await panel.getByRole('button', { name: 'Turn notification emails back on' }).click();
       await expect(page).toHaveURL(/\/settings\/notifications$/);
-      await expect(page.locator('body')).toContainText('Notification emails are back on.');
+      await expect(page.locator('body')).toContainText('Your email unsubscribe was removed. Your other notification settings still apply.');
       await expect(page.getByRole('heading', { name: 'Notification emails are off', exact: true })).toHaveCount(0);
       expect(fixture<{ suppression: string | null }>('state').suppression).toBeNull();
       // A full-page capture of the settings shell clips its sticky rail; capture the pane.

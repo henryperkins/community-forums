@@ -238,6 +238,14 @@ a separate permission:
   undoes only the member's own `unsubscribe` suppression. Bounces and complaints
   stay with the operator.
 
+Signed-in resubscription follows the existing notification delivery-increase
+policy (USER §4.6). The service locks and rereads the account, applies `WriteGate`,
+then conditionally deletes only its current contact's `unsubscribe` row in the
+same transaction. An operator suppression committed before that delete is not
+removed. Independent pauses, digest and subscription preferences stay in force;
+feedback reports the removal rather than promising that every delivery gate is
+open. See [the correction evidence](../evidence/email-resubscription-2026-11-08/README.md).
+
 **Compromise.** Remove K1 from `APP_PREVIOUS_KEY_VERIFY_IDS` immediately. Every
 K1 link, cookie, confirmation and recovery code then stops verifying, while K1
 still decrypts so records can be re-encrypted. Required opt-outs stay available:

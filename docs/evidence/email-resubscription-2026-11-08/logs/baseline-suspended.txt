@@ -1,0 +1,20 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+F                                                                   1 / 1 (100%)
+
+Time: 00:00.038, Memory: 14.00 MB
+
+There was 1 failure:
+
+1) Tests\Integration\Core\AppEmailResubscriptionTest::test_a_member_suspended_after_sign_in_cannot_remove_their_unsubscribe
+Unexpected HTTP status. Body:
+Failed asserting that 303 is identical to 403.
+
+/home/azureuser/community-forums/tests/Support/TestCase.php:423
+/home/azureuser/community-forums/tests/Integration/Core/AppEmailResubscriptionTest.php:58
+
+FAILURES!
+Tests: 1, Assertions: 2, Failures: 1.

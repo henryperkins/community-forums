@@ -2,6 +2,19 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-08] - Signed-in email resubscription authorization
+
+- Apply the existing notification delivery-increase policy to signed-in
+  resubscription. Recheck the current account and contact under an account lock;
+  restricted members receive the established denial while retaining their unsubscribe.
+- Remove only a suppression still marked `unsubscribe` at the write. Concurrent
+  bounce/complaint changes, another member's suppression, independent email pauses,
+  digest settings and subscription preferences remain intact. Feedback states
+  whether the unsubscribe was removed; other delivery controls still apply.
+- This correction depends on the signed-in resubscription route introduced by
+  the APP_KEY key ring in `402e8127`. Regression and browser evidence:
+  [email resubscription evidence](docs/evidence/email-resubscription-2026-11-08/README.md).
+
 ## [2026-11-08] - APP_KEY key ring
 
 - Add a key ring for rotating `APP_KEY` (ADR 0059).
