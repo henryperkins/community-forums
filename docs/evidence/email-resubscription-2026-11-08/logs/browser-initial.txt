@@ -1,0 +1,34 @@
+
+Running 4 tests using 1 worker
+
+[1/4] [desktop] › email-resubscription.spec.ts:39:9 › no-js › account state, operator suppressions and independent delivery controls survive native submits
+  1) [desktop] › email-resubscription.spec.ts:39:9 › no-js › account state, operator suppressions and independent delivery controls survive native submits
+
+    Test was interrupted.
+
+    Error: locator.selectOption: Test ended.
+    Call log:
+      - waiting for locator('form[action="/settings/notifications"]').locator('[name="digest_hour"]')
+        - locator resolved to <select class="input" name="digest_hour" aria-describedby="digest-time-hint">…</select>
+      - attempting select option action
+        2 × waiting for element to be visible and enabled
+          - did not find some options
+        - retrying select option action
+        - waiting 20ms
+
+
+      81 |       fixture('restrict');
+      82 |       const settings = page.locator('form[action="/settings/notifications"]');
+    > 83 |       await settings.locator('[name="digest_hour"]').selectOption({ label: 'Off' });
+         |                                                      ^
+      84 |       expect(await submit(page, settings, '/settings/notifications')).toBe(303);
+      85 |       expect(fixture()).toMatchObject({ status: 'suspended', suppression: 'complaint', digest_hour: null,
+      86 |         prefs: original.prefs });
+        at /home/azureuser/community-forums/tests/browser/email-resubscription.spec.ts:83:54
+
+    Error Context: ../../../../../tmp/rb-resubscription-fix-20261108-6l_whu6w/browser/.artifacts/email-resubscription-no-js-ac337-rols-survive-native-submits-desktop/error-context.md
+
+
+  1 interrupted
+    [desktop] › email-resubscription.spec.ts:39:9 › no-js › account state, operator suppressions and independent delivery controls survive native submits
+  3 did not run

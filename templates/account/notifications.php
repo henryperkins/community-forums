@@ -16,6 +16,16 @@ if ($old !== []) { $pause_all_email = ($old['pause_all_email'] ?? '') === '1'; }
 
         <div class="settings-pane">
     <p class="notification-prose"><a href="/notifications">View notifications</a> or change delivery below.</p>
+    <?php if (!empty($unsubscribed)): ?>
+    <section class="stacked scribe-panel" aria-labelledby="email-unsubscribed-head">
+        <h2 class="scribe-panel-head" id="email-unsubscribed-head">Notification emails are off</h2>
+        <p class="muted">You unsubscribed <strong><?= $e((string) ($row['email'] ?? '')) ?></strong> from notification emails, so none are sent to it.</p>
+        <form method="post" action="/settings/notifications/email/resubscribe">
+            <?= $this->csrfField() ?>
+            <button class="btn" type="submit">Turn notification emails back on</button>
+        </form>
+    </section>
+    <?php endif; ?>
     <form method="post" action="/settings/notifications" class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Daily digest</h2>
         <?= $this->csrfField() ?>

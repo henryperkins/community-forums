@@ -110,15 +110,16 @@ final class EmailDeliveryRepository
         );
     }
 
-    public function markSent(int $id, ?string $messageId = null): void
+    /** @param ?string $unsubscribeKeyId HMAC key id that signed the message's unsubscribe link, if it has one */
+    public function markSent(int $id, ?string $messageId = null, ?string $unsubscribeKeyId = null): void
     {
         $this->db->run(
             "UPDATE email_deliveries
-             SET status = 'sent', sent_at = UTC_TIMESTAMP(), message_id = ?,
+             SET status = 'sent', sent_at = UTC_TIMESTAMP(), message_id = ?, unsubscribe_key_id = ?,
                  attempt_count = attempt_count + 1, last_attempt_at = UTC_TIMESTAMP(),
                  next_attempt_at = NULL, error = NULL
              WHERE id = ?",
-            [$messageId, $id],
+            [$messageId, $unsubscribeKeyId, $id],
         );
     }
 

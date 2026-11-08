@@ -10,6 +10,7 @@ use App\Domain\User;
 use App\Repository\DigestActivityRepository;
 use App\Repository\SettingRepository;
 use App\Controller\UnsubscribeController;
+use App\Security\AppKeyRing;
 use Throwable;
 
 /** Versioned source snapshots contain no rendered or private content. */
@@ -102,9 +103,13 @@ final class DigestService
         $threads = $this->activity->activity($viewer->id(), $payload, $scope);
         if ($threads === []) { return null; }
         $rendered = $this->renderThreads($threads);
-        $unsub = UnsubscribeController::link((string) $this->config->get('app.url', ''), $viewer->email(), (string) $this->config->get('app.key', ''));
+        // Signed with the active key; the sender records its id when the message
+        // is actually handed to the transport (ADR 0059).
+        $key = AppKeyRing::fromConfig($this->config)->active();
+        $unsub = UnsubscribeController::link((string) $this->config->get('app.url', ''), $viewer->email(), $key->hmacKey());
         $rendered['text'] .= "\n\nUnsubscribe from these emails: " . $unsub;
         $rendered['html'] .= '<p><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
+        $rendered['unsubscribe_key_id'] = $key->hmacId;
         return $rendered;
     }
 

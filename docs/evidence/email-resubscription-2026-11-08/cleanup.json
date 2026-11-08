@@ -1,0 +1,17 @@
+{
+  "server_pids_stopped": [
+    399738
+  ],
+  "databases_dropped": [
+    "retroboards_test_resubscription_20261108",
+    "retroboards_e2e_resubscription_20261108"
+  ],
+  "removed": [
+    "/tmp/rb-resubscription-fix-20261108-6l_whu6w/ratelimit",
+    "/tmp/rb-resubscription-fix-20261108-6l_whu6w/packages",
+    "/tmp/rb-test-retroboards_test_resubscription_20261108",
+    "/tmp/rb-test-schema-92e07b1784af9df7fb195dbba5f3d271.fingerprint"
+  ],
+  "shared_mariadb_preserved": true,
+  "retained": "Committed regression tests, patch identity, source/test patch, logs, environment runners and screenshots; temporary log copies remain in /tmp/rb-resubscription-fix-20261108-6l_whu6w"
+}

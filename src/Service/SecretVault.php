@@ -66,7 +66,7 @@ final class SecretVault
         if ($row === null) {
             throw new SecretNotFoundException('No current version for this secret reference.');
         }
-        return $this->box->decrypt((string) $row['ciphertext'], (string) $row['nonce'], (string) $row['tag']);
+        return $this->box->decrypt((string) $row['ciphertext'], (string) $row['nonce'], (string) $row['tag'], self::keyIdOf($row));
     }
 
     public function rotate(string $ref, string $newPlaintext, ?User $actor = null, ?int $graceSeconds = null): int
@@ -107,9 +107,15 @@ final class SecretVault
     {
         $secret = $this->requireActive($ref);
         return array_map(
-            fn (array $r): string => $this->box->decrypt((string) $r['ciphertext'], (string) $r['nonce'], (string) $r['tag']),
+            fn (array $r): string => $this->box->decrypt((string) $r['ciphertext'], (string) $r['nonce'], (string) $r['tag'], self::keyIdOf($r)),
             $this->secrets->usableVersionRows((int) $secret['id']),
         );
+    }
+
+    /** @param array<string,mixed> $row */
+    private static function keyIdOf(array $row): ?string
+    {
+        return isset($row['key_id']) && $row['key_id'] !== '' ? (string) $row['key_id'] : null;
     }
 
     /** @return array<string,mixed> never contains plaintext or ciphertext */

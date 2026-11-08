@@ -28,18 +28,19 @@ final class MfaRepository
         ) !== false;
     }
 
-    /** @param array{ciphertext:string,nonce:string,tag:string} $secret */
+    /** @param array{ciphertext:string,nonce:string,tag:string,key_id?:string} $secret */
     public function savePendingTotp(int $userId, array $secret): void
     {
         $this->db->run(
             'INSERT INTO user_totp_credentials
-                (user_id, secret_ciphertext, secret_nonce, secret_tag, enabled_at, verified_at, disabled_at, last_used_step, created_at, updated_at)
+                (user_id, secret_ciphertext, secret_nonce, secret_tag, secret_key_id, enabled_at, verified_at, disabled_at, last_used_step, created_at, updated_at)
              VALUES
-                (:user_id, :ciphertext, :nonce, :tag, NULL, NULL, NULL, NULL, UTC_TIMESTAMP(), UTC_TIMESTAMP())
+                (:user_id, :ciphertext, :nonce, :tag, :key_id, NULL, NULL, NULL, NULL, UTC_TIMESTAMP(), UTC_TIMESTAMP())
              ON DUPLICATE KEY UPDATE
                 secret_ciphertext = VALUES(secret_ciphertext),
                 secret_nonce = VALUES(secret_nonce),
                 secret_tag = VALUES(secret_tag),
+                secret_key_id = VALUES(secret_key_id),
                 enabled_at = NULL,
                 verified_at = NULL,
                 disabled_at = NULL,
@@ -50,6 +51,7 @@ final class MfaRepository
                 'ciphertext' => $secret['ciphertext'],
                 'nonce' => $secret['nonce'],
                 'tag' => $secret['tag'],
+                'key_id' => $secret['key_id'] ?? null,
             ],
         );
     }
@@ -88,17 +90,20 @@ final class MfaRepository
         $this->db->run('DELETE FROM user_recovery_codes WHERE user_id = ?', [$userId]);
     }
 
-    /** @param list<string> $hashes */
-    public function replaceRecoveryCodes(int $userId, array $hashes): void
+    /**
+     * @param list<string> $hashes
+     * @param ?string $hmacKeyId HMAC key id that keyed every hash in this batch (ADR 0059)
+     */
+    public function replaceRecoveryCodes(int $userId, array $hashes, ?string $hmacKeyId = null): void
     {
         $batch = bin2hex(random_bytes(16));
-        $this->db->transaction(function () use ($userId, $hashes, $batch): void {
+        $this->db->transaction(function () use ($userId, $hashes, $batch, $hmacKeyId): void {
             $this->db->run('DELETE FROM user_recovery_codes WHERE user_id = ?', [$userId]);
             foreach ($hashes as $hash) {
                 $this->db->run(
-                    'INSERT INTO user_recovery_codes (user_id, batch_id, code_hash, created_at)
-                     VALUES (?, ?, ?, UTC_TIMESTAMP())',
-                    [$userId, $batch, $hash],
+                    'INSERT INTO user_recovery_codes (user_id, batch_id, code_hash, hmac_key_id, created_at)
+                     VALUES (?, ?, ?, ?, UTC_TIMESTAMP())',
+                    [$userId, $batch, $hash, $hmacKeyId],
                 );
             }
         });
@@ -112,15 +117,49 @@ final class MfaRepository
         );
     }
 
-    public function consumeRecoveryCodeHash(int $userId, string $hash): bool
+    /**
+     * Atomically spend one unused code. With $hmacKeyId, only a code attributed to
+     * that key, or a legacy code of unknown attribution, can match the hash.
+     */
+    public function consumeRecoveryCodeHash(int $userId, string $hash, ?string $hmacKeyId = null): bool
     {
+        if ($hmacKeyId === null) {
+            return $this->db->run(
+                'UPDATE user_recovery_codes
+                    SET used_at = UTC_TIMESTAMP()
+                  WHERE user_id = ? AND code_hash = ? AND used_at IS NULL
+                  LIMIT 1',
+                [$userId, $hash],
+            )->rowCount() === 1;
+        }
         return $this->db->run(
             'UPDATE user_recovery_codes
                 SET used_at = UTC_TIMESTAMP()
               WHERE user_id = ? AND code_hash = ? AND used_at IS NULL
+                AND (hmac_key_id = ? OR hmac_key_id IS NULL)
               LIMIT 1',
-            [$userId, $hash],
+            [$userId, $hash, $hmacKeyId],
         )->rowCount() === 1;
+    }
+
+    /**
+     * A legacy code just verified under $hmacKeyId proves the key of its whole
+     * batch: one replaceRecoveryCodes() call hashes every code with one key.
+     * Attribution is never assigned without that evidence.
+     */
+    public function attributeRecoveryBatch(int $userId, string $hash, string $hmacKeyId): void
+    {
+        $batch = $this->db->fetchValue(
+            'SELECT batch_id FROM user_recovery_codes WHERE user_id = ? AND code_hash = ? AND hmac_key_id IS NULL LIMIT 1',
+            [$userId, $hash],
+        );
+        if (!is_string($batch) || $batch === '') {
+            return;
+        }
+        $this->db->run(
+            'UPDATE user_recovery_codes SET hmac_key_id = ? WHERE user_id = ? AND batch_id = ? AND hmac_key_id IS NULL',
+            [$hmacKeyId, $userId, $batch],
+        );
     }
 
     public function createLoginChallenge(int $userId, string $nextPath, ?string $ip, ?string $userAgent): string
