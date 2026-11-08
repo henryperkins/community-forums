@@ -1,0 +1,36 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/.codex/worktrees/55a8/community-forums/phpunit.xml
+
+.......D....DDDDD............                                     29 / 29 (100%)
+
+Time: 00:00.625, Memory: 20.00 MB
+
+6 tests triggered 1 PHP deprecation:
+
+1) /home/azureuser/.codex/worktrees/55a8/community-forums/src/Service/Packages/ThemeAssetScanner.php:68
+Function imagedestroy() is deprecated since 8.5, as it has no effect since PHP 8.0
+
+Triggered by:
+
+* Tests\Integration\Core\AppThemePackageTest::test_member_appearance_choices_picture_the_active_package
+  /home/azureuser/.codex/worktrees/55a8/community-forums/tests/Integration/Core/AppThemePackageTest.php:223
+
+* Tests\Integration\Core\AppThemePackageTest::test_preview_assets_are_private_to_the_admin_session_without_an_active_theme
+  /home/azureuser/.codex/worktrees/55a8/community-forums/tests/Integration/Core/AppThemePackageTest.php:396
+
+* Tests\Integration\Core\AppThemePackageTest::test_preview_assets_fail_dark_when_the_preview_becomes_ineligible
+  /home/azureuser/.codex/worktrees/55a8/community-forums/tests/Integration/Core/AppThemePackageTest.php:449
+
+* Tests\Integration\Core\AppThemePackageTest::test_previewing_a_shared_asset_does_not_break_the_active_theme_asset (2 times)
+  /home/azureuser/.codex/worktrees/55a8/community-forums/tests/Integration/Core/AppThemePackageTest.php:423
+
+* Tests\Integration\Core\AppThemePackageTest::test_session_package_preview_uses_private_brand_css_without_changing_public_branding
+  /home/azureuser/.codex/worktrees/55a8/community-forums/tests/Integration/Core/AppThemePackageTest.php:351
+
+* Tests\Integration\Core\AppThemePackageTest::test_theme_asset_route_serves_neutralized_bytes
+  /home/azureuser/.codex/worktrees/55a8/community-forums/tests/Integration/Core/AppThemePackageTest.php:378
+
+OK, but there were issues!
+Tests: 29, Assertions: 283, Deprecations: 1.

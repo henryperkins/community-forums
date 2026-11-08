@@ -10,7 +10,7 @@
 
 **Spec:** `DECISIONS.md` §2; `PRODUCT_DESIGN.md` §13; `ADMIN.md` §3.8 and §9.3; `AGENTS.md` write-path and release rules; `docs/adr/0049-guarded-feature-flag-toggles.md`; `docs/runbooks/operations.md` §2; `docs/runbooks/package_themes.md` §Safe Mode.
 
-**Status:** Implementation in progress; Task 1 verified, Tasks 2–4 pending.
+**Status:** Implementation in progress; Tasks 1–2 verified, Tasks 3–4 pending.
 
 **Analysis revision:** `b1d2a591b3846fda586cd66ffd2346438de8286c`, current HEAD when inspected. References below use this committed revision. Unrelated working-tree edits are outside this plan.
 
@@ -115,12 +115,12 @@ Tasks 1–4 are independently reviewable. Start with Task 1, whose mismatch is r
 - Keep `setSafeMode(User $admin, bool $enabled, ?string $currentPassword = null): void`.
 - Consume `Database::transaction(callable $callback, ?array $writtenTables = null): mixed`, existing settings and audit methods, and the existing test helper `withoutHarnessTransaction(callable $callback): mixed`.
 
-- [ ] Add `test_safe_mode_audit_failure_preserves_the_previous_setting` using a private test database and an actual database write failure. On MySQL/MariaDB with foreign keys enforced, a deliberately non-existent actor id can reject the audit insert through `fk_modlog_actor` (`database/migrations/0010_moderation_log.php:23`). Assert that this exact failure occurred; do not silently replace it with a mocked repository.
-- [ ] Execute that case inside `withoutHarnessTransaction()`, restoring any committed fixture state in `finally`. Assert the stored setting from the real database after the exception. A rollback assertion made only inside the normal test transaction does not prove atomicity here.
-- [ ] Run the new case on the base revision and record the observed outcome. If the expected partial-write case is not reproduced, stop this task's patch and update the finding rather than claiming confirmation.
-- [ ] Once reproduced, wrap the setting and audit writes together in `Database::transaction()`. Keep the existing account-state guard, password requirement for exit, stored string values and post-transaction telemetry.
-- [ ] Verify one audit entry on successful entry and exit, no changed setting on rejected exit or failed audit, and continued forced-safe-mode behavior. Reuse `test_safe_mode_serves_system_theme_while_theme_active` and `test_admin_safe_mode_route_serves_system_theme_while_theme_active`.
-- [ ] Run `vendor/bin/phpunit tests/Integration/Core/AppThemePackageTest.php`, review the explicit diff and commit the task after its checks pass.
+- [x] Add `test_safe_mode_audit_failure_preserves_the_previous_setting` using a private test database and an actual database write failure. On MySQL/MariaDB with foreign keys enforced, a deliberately non-existent actor id can reject the audit insert through `fk_modlog_actor` (`database/migrations/0010_moderation_log.php:23`). Assert that this exact failure occurred; do not silently replace it with a mocked repository.
+- [x] Execute that case inside `withoutHarnessTransaction()`, restoring any committed fixture state in `finally`. Assert the stored setting from the real database after the exception. A rollback assertion made only inside the normal test transaction does not prove atomicity here.
+- [x] Run the new case on the base revision and record the observed outcome. If the expected partial-write case is not reproduced, stop this task's patch and update the finding rather than claiming confirmation.
+- [x] Once reproduced, wrap the setting and audit writes together in `Database::transaction()`. Keep the existing account-state guard, password requirement for exit, stored string values and post-transaction telemetry.
+- [x] Verify one audit entry on successful entry and exit, no changed setting on rejected exit or failed audit, and continued forced-safe-mode behavior. Reuse `test_safe_mode_serves_system_theme_while_theme_active` and `test_admin_safe_mode_route_serves_system_theme_while_theme_active`.
+- [x] Run `vendor/bin/phpunit tests/Integration/Core/AppThemePackageTest.php`, review the explicit diff and commit the task after its checks pass.
 
 ## Task 3 Make the manual override recipes use the existing row lock
 
