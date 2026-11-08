@@ -1,0 +1,10 @@
+Default harness reproduction: DB_DATABASE and ANTIABUSE_MODE unset, E2E_SKIP_WEBSERVER=1.
+PHP Fatal error:  Uncaught RuntimeException: Select a throwaway browser database with DB_DATABASE. in /home/azureuser/.codex/worktrees/55a8/community-forums/tests/browser/runtime-config-fixture.php:12
+PHP Fatal error:  Uncaught RuntimeException: Select a throwaway browser database with DB_DATABASE. in /home/azureuser/.codex/worktrees/55a8/community-forums/tests/browser/runtime-config-fixture.php:12
+PHP Fatal error:  Uncaught RuntimeException: Select a throwaway browser database with DB_DATABASE. in /home/azureuser/.codex/worktrees/55a8/community-forums/tests/browser/runtime-config-fixture.php:12
+PHP Fatal error:  Uncaught RuntimeException: Select a throwaway browser database with DB_DATABASE. in /home/azureuser/.codex/worktrees/55a8/community-forums/tests/browser/runtime-config-fixture.php:12
+    PHP Fatal error:  Uncaught RuntimeException: Select a throwaway browser database with DB_DATABASE. in /home/azureuser/.codex/worktrees/55a8/community-forums/tests/browser/runtime-config-fixture.php:12
+    PHP Fatal error:  Uncaught RuntimeException: Select a throwaway browser database with DB_DATABASE. in /home/azureuser/.codex/worktrees/55a8/community-forums/tests/browser/runtime-config-fixture.php:12
+    PHP Fatal error:  Uncaught RuntimeException: Select a throwaway browser database with DB_DATABASE. in /home/azureuser/.codex/worktrees/55a8/community-forums/tests/browser/runtime-config-fixture.php:12
+    PHP Fatal error:  Uncaught RuntimeException: Select a throwaway browser database with DB_DATABASE. in /home/azureuser/.codex/worktrees/55a8/community-forums/tests/browser/runtime-config-fixture.php:12
+  4 failed

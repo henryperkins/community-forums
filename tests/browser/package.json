@@ -3,6 +3,7 @@
   "private": true,
   "description": "Playwright browser-evidence run for RetroBoards Gate A (desktop + mobile capture).",
   "scripts": {
+    "evidence:runtime-config": "node run-runtime-config.cjs",
     "evidence:notifications-settings": "node run-notifications-settings.cjs",
     "prepare-db": "bash prepare.sh",
     "evidence:thread-view": "bash prepare.sh && playwright test thread-view-study.spec.ts rich-content.spec.ts thread-content-presentation.spec.ts --project=desktop && bash prepare.sh && playwright test thread-view-study.spec.ts rich-content.spec.ts thread-content-presentation.spec.ts --project=mobile",

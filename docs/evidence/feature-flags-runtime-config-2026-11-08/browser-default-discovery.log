@@ -1,0 +1,9 @@
+
+Running 4 tests using 1 worker
+
+  -  1 [desktop] › tests/browser/runtime-configuration.spec.ts:18:9 › with JavaScript › the inherited moderation mode survives saving and the Block review stays native
+  -  2 [desktop] › tests/browser/runtime-configuration.spec.ts:18:9 › without JavaScript › the inherited moderation mode survives saving and the Block review stays native
+  -  3 [mobile] › tests/browser/runtime-configuration.spec.ts:18:9 › with JavaScript › the inherited moderation mode survives saving and the Block review stays native
+  -  4 [mobile] › tests/browser/runtime-configuration.spec.ts:18:9 › without JavaScript › the inherited moderation mode survives saving and the Block review stays native
+
+  4 skipped

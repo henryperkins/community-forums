@@ -169,14 +169,17 @@ try {
     check($exit === 0 && $raw === '{}', 'The last override did not become an empty JSON object.');
     $observations['last_override'] = ['exit' => $exit, 'stored_json' => $raw];
 
-    foreach (['null', '"not-an-object"', '[false,true]', '{"community":false,"legacy_counter":1e999}'] as $index => $raw) {
+    foreach (['null', '"not-an-object"', '[false,true]', '{"community":false,"legacy_counter":1e999}', '{"community":1e999,"search":false}'] as $index => $raw) {
+      foreach (['disable', 'restore'] as $action) {
         $db->run('UPDATE settings SET `value` = ? WHERE `key` = ?', [$raw, 'features']);
         $before = $db->fetchValue('SELECT `value` FROM settings WHERE `key` = ?', ['features']);
-        $exit = proc_close(child($current['disable'], 'refuse-' . $index));
+        $name = 'refuse-' . $action . '-' . $index;
+        $exit = proc_close(child($current[$action], $name));
         $after = $db->fetchValue('SELECT `value` FROM settings WHERE `key` = ?', ['features']);
-        $controlled = str_contains(file_get_contents($scratch . '/refuse-' . $index . '.err'), 'RuntimeException: settings.features');
-        check($exit !== 0 && $after === $before && $controlled, 'Malformed/unwritable map was not refused unchanged by its guard: ' . $index);
-        $observations['refusal_' . $index] = ['exit' => $exit, 'unchanged' => $after === $before, 'controlled_refusal' => $controlled];
+        $controlled = str_contains(file_get_contents($scratch . '/' . $name . '.err'), 'RuntimeException: settings.features');
+        check($exit !== 0 && $after === $before && $controlled, 'Malformed/unwritable map was not refused unchanged by its guard: ' . $action . '-' . $index);
+        $observations[$name] = ['exit' => $exit, 'unchanged' => $after === $before, 'controlled_refusal' => $controlled];
+      }
     }
     $settings->set('features', new stdClass());
     $deliberateEnable = str_replace('$f["community"]=false;', '$f["custom_css"]=true;', $current['disable'], $count);

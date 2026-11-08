@@ -26,3 +26,11 @@ The rehearsal extracts the three PHP command bodies from the published runbook a
 - The original recipe erased the console's `search=false` override. The baseline/current old-recipe run also exposed last-key `[]` storage and replacement of corrupt maps ([baseline receipt](runbook-lock-baseline.json)).
 - The revised recipes retain both changes for absent and existing rows, preserve existing unknown/nested keys, restore one key alongside a concurrent console write, store `{}` after the last removal, refuse JSON null/list/scalar/out-of-range-number maps unchanged through their explicit guard, and retain deliberate manual enablement ([passing receipt](runbook-lock-rehearsal.json)).
 - The receipt contains the exact runbook and command hashes. Reproduce with `DB_DATABASE=retroboards_flags_rehearsal php docs/evidence/feature-flags-runtime-config-2026-11-08/runbook-lock-rehearsal.php` against a dedicated local database with that name. It does not inspect production.
+
+## Independent review and final corrections
+
+The read-only branch review accepted the runtime resolver, atomic safe-mode write and independent-connection test. It identified a browser harness integration problem and a target-key encoding edge ([review disposition](independent-review.json)).
+
+The special browser cases initially failed normal discovery when their environment was absent ([red summary](review-browser-red.txt)). Run them with `cd tests/browser && npm run evidence:runtime-config`: the runner prepares `retroboards_runtime_config_browser` in Observe mode and starts the test server with inherited Hold, then executes the four viewport/JavaScript cases. `RB_RUNTIME_CONFIG_DATABASE` may select another guarded browser database and `RB_RUNTIME_CONFIG_PORT` defaults to 8037. Normal harness discovery skips these special-environment cases ([default-discovery log](browser-default-discovery.log)); the dedicated runner passes all four ([runner log](task-1-browser.log)).
+
+Both runbook commands now validate the original map before changing the selected key. The added `community:1e999` case failed for both commands before that correction ([red receipt](review-encoding-red.json)); all ten refusal cases now pass alongside the concurrency checks ([final receipt](runbook-lock-rehearsal.json)).

@@ -13,6 +13,7 @@ function fixture(action = 'state') {
 
 for (const javaScriptEnabled of [true, false]) {
   test.describe(javaScriptEnabled ? 'with JavaScript' : 'without JavaScript', () => {
+    test.skip(process.env.RB_RUNTIME_CONFIG_EVIDENCE !== '1', 'Run npm run evidence:runtime-config to prepare inherited hold in a private database.');
     test.use({ javaScriptEnabled });
     test('the inherited moderation mode survives saving and the Block review stays native', async ({ page }, info) => {
       const errors: string[] = [];

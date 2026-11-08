@@ -89,12 +89,11 @@ $db->transaction(function () use ($s): void {
     if (!FeatureFlags::isOverrideMap($f)) {
         throw new RuntimeException("settings.features is not an override map; inspect and repair it separately.");
     }
-    $f["community"]=false;
-    $next=(object) $f;
-    if (json_encode($next, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) === false) {
+    if (json_encode((object) $f, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) === false) {
         throw new RuntimeException("settings.features cannot be encoded; inspect and repair it separately.");
     }
-    $s->set("features", $next);
+    $f["community"]=false;
+    $s->set("features", (object) $f);
 });'
 
 # Re-enable: remove the key (restores the code default) — or set it true.
@@ -106,12 +105,11 @@ $db->transaction(function () use ($s): void {
     if (!FeatureFlags::isOverrideMap($f)) {
         throw new RuntimeException("settings.features is not an override map; inspect and repair it separately.");
     }
-    unset($f["community"]);
-    $next=(object) $f;
-    if (json_encode($next, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) === false) {
+    if (json_encode((object) $f, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) === false) {
         throw new RuntimeException("settings.features cannot be encoded; inspect and repair it separately.");
     }
-    $s->set("features", $next);
+    unset($f["community"]);
+    $s->set("features", (object) $f);
 });'
 ```
 
