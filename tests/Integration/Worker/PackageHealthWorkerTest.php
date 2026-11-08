@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Worker;
 
+use App\Core\FeatureFlags;
 use App\Domain\User;
+use App\Repository\ApiTokenRepository;
+use App\Repository\InstalledPackageCredentialRepository;
 use App\Repository\InstalledPackagePermissionRepository;
 use App\Repository\InstalledPackageRepository;
+use App\Repository\InstalledPackageSettingsRepository;
 use App\Repository\LocalPackageBlockRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\PackageAdvisoryRepository;
@@ -18,18 +22,25 @@ use App\Repository\PackageReviewDecisionRepository;
 use App\Repository\PackageThemeRepository;
 use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\RegistryTrustKeyRepository;
+use App\Repository\ServiceSecretRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
+use App\Repository\WebhookDeliveryRepository;
+use App\Repository\WebhookRepository;
+use App\Security\EgressGuard;
 use App\Security\Packages\ManifestValidator;
 use App\Security\Packages\PackagePolicyException;
 use App\Security\Packages\PackageSecurityGate;
 use App\Security\PasswordHasher;
 use App\Security\Registry\TrustChainVerifier;
 use App\Security\ReauthGate;
+use App\Security\SecretBox;
 use App\Security\WriteGate;
+use App\Service\ApiTokenService;
 use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
+use App\Service\Packages\PackageIntegrationService;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Packages\ThemeAssetScanner;
 use App\Service\Packages\ThemeBuildService;
@@ -37,6 +48,8 @@ use App\Service\Packages\ThemeStateService;
 use App\Service\Registry\ArrayRegistryTransport;
 use App\Service\Registry\LocalBlocklistService;
 use App\Service\Registry\RegistryAdvisoryService;
+use App\Service\SecretVault;
+use App\Service\WebhookService;
 use App\Worker\PackageHealthWorker;
 use Tests\Support\Phase5\RegistryFixtures;
 use Tests\Support\Phase5\SigningHarness;
@@ -138,6 +151,7 @@ final class PackageHealthWorkerTest extends TestCase
             new ModerationLogRepository($this->db),
             null,
             $this->themeState(),
+            $this->integrations(),
         );
     }
 
@@ -158,6 +172,127 @@ final class PackageHealthWorkerTest extends TestCase
             new ModerationLogRepository($this->db),
             new PackageHistoryRepository($this->db),
         );
+    }
+
+    private function integrations(): PackageIntegrationService
+    {
+        (new SettingRepository($this->db))->set('features', [
+            'api_tokens' => true,
+            'service_secrets' => true,
+            'webhooks' => true,
+        ]);
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        $reauth = new ReauthGate(new PasswordHasher());
+        $writeGate = new WriteGate();
+        $audit = new ModerationLogRepository($this->db);
+        $vault = new SecretVault(
+            $this->db,
+            new ServiceSecretRepository($this->db),
+            new SecretBox(str_repeat('a', 64)),
+            $audit,
+            $flags,
+            $this->config,
+        );
+
+        return new PackageIntegrationService(
+            $this->db,
+            new PackageRepository($this->db),
+            new PackageReleaseRepository($this->db),
+            new InstalledPackageRepository($this->db),
+            new InstalledPackagePermissionRepository($this->db),
+            new InstalledPackageSettingsRepository($this->db),
+            new InstalledPackageCredentialRepository($this->db),
+            new ApiTokenService($this->db, new ApiTokenRepository($this->db), $audit, $flags, $this->config, $reauth, $writeGate),
+            new WebhookService(
+                $this->db,
+                new WebhookRepository($this->db),
+                new WebhookDeliveryRepository($this->db),
+                $vault,
+                $audit,
+                $flags,
+                $this->config,
+                $reauth,
+                $writeGate,
+                new EgressGuard(false, []),
+            ),
+            new ApiTokenRepository($this->db),
+            new WebhookRepository($this->db),
+            $vault,
+            new ManifestValidator(),
+            new PackageHistoryRepository($this->db),
+            new PackageTransparencyLogRepository($this->db),
+            $audit,
+            $reauth,
+            $writeGate,
+            $flags,
+            new SettingRepository($this->db),
+            $this->config,
+        );
+    }
+
+    /**
+     * @return array{installed_id:int,release_digest:string,api_token_id:int,webhook_id:int}
+     */
+    private function seedRemoteAppWithCredentials(string $suffix): array
+    {
+        $seeded = RegistryFixtures::seed($this->db, $this->root, $this->artifactDir, [
+            'source_id' => 'rb-test-' . $suffix,
+            'publisher_uid' => 'acme-' . $suffix,
+            'package_uid' => 'acme-' . $suffix . '/inbox-sync',
+            'name' => 'Acme Inbox Sync ' . $suffix,
+            'type' => 'remote_app',
+        ]);
+        $installs = new InstalledPackageRepository($this->db);
+        $installedId = $installs->create([
+            'package_id' => $seeded['package_id'],
+            'release_id' => $seeded['release_id'],
+            'digest' => $seeded['release_digest'],
+            'source_registry_id' => $seeded['registry_id'],
+            'publisher_id' => $seeded['publisher_id'],
+            'trust_class' => 'reviewed_declarative',
+            'review_status' => 'approved',
+            'compat_min' => null,
+            'compat_max' => null,
+            'installed_by' => $this->admin->id(),
+        ]);
+        $installs->setState($installedId, 'enabled');
+
+        (new InstalledPackagePermissionRepository($this->db))->replaceWithGrants($installedId, [
+            ['kind' => 'api_scope', 'key' => 'read:boards', 'risk' => 'low', 'granted' => true],
+            ['kind' => 'event', 'key' => 'topic.created', 'risk' => 'low', 'granted' => true],
+            ['kind' => 'outbound_host', 'key' => 'hooks.acme.test', 'risk' => 'medium', 'granted' => true],
+        ], $this->admin->id());
+
+        (new InstalledPackageSettingsRepository($this->db))->upsert(
+            $installedId,
+            PackageIntegrationService::WEBHOOK_URL_SETTING,
+            json_encode('https://hooks.acme.test/' . $suffix),
+            null,
+            false,
+            $this->admin->id(),
+        );
+
+        $this->integrations()->provisionCredentials($this->admin, 'password123', $installedId);
+
+        $apiTokenId = 0;
+        $webhookId = 0;
+        foreach ((new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId) as $row) {
+            if ((string) $row['kind'] === 'api_token') {
+                $apiTokenId = (int) $row['api_token_id'];
+            }
+            if ((string) $row['kind'] === 'webhook') {
+                $webhookId = (int) $row['webhook_id'];
+            }
+        }
+        self::assertGreaterThan(0, $apiTokenId);
+        self::assertGreaterThan(0, $webhookId);
+
+        return [
+            'installed_id' => $installedId,
+            'release_digest' => $seeded['release_digest'],
+            'api_token_id' => $apiTokenId,
+            'webhook_id' => $webhookId,
+        ];
     }
 
     private function advisoryServiceWithEnforcement(): RegistryAdvisoryService
@@ -428,6 +563,62 @@ final class PackageHealthWorkerTest extends TestCase
             'disabled',
             (new InstalledPackageRepository($this->db))->find($this->installedId)['state'],
             'one batched reconcile enforces the whole refresh',
+        );
+    }
+
+    public function test_health_worker_quarantine_and_force_disable_tear_down_package_credentials(): void
+    {
+        $quarantinedApp = $this->seedRemoteAppWithCredentials('quarantine');
+        $disabledApp = $this->seedRemoteAppWithCredentials('disable');
+
+        file_put_contents($this->store->pathFor($quarantinedApp['release_digest']), 'tampered');
+        (new LocalPackageBlockRepository($this->db))->add($disabledApp['release_digest'], null, 'incident', null);
+
+        $stats = (new PackageHealthWorker($this->health(), true))->run();
+
+        self::assertSame(1, $stats['quarantined']);
+        self::assertSame(1, $stats['disabled']);
+
+        $installs = new InstalledPackageRepository($this->db);
+        $credentials = new InstalledPackageCredentialRepository($this->db);
+
+        self::assertSame('quarantined', $installs->find($quarantinedApp['installed_id'])['state']);
+        self::assertSame(
+            [],
+            $credentials->activeForInstall($quarantinedApp['installed_id']),
+            'quarantine must revoke all active installed_package_credentials rows',
+        );
+        self::assertSame(
+            0,
+            (int) $this->db->fetchValue('SELECT is_active FROM webhooks WHERE id = ?', [$quarantinedApp['webhook_id']]),
+            'quarantine must pause package-owned webhook delivery (is_active = 0)',
+        );
+        self::assertNotNull(
+            $this->db->fetchValue('SELECT revoked_at FROM api_tokens WHERE id = ?', [$quarantinedApp['api_token_id']]),
+            'quarantine must revoke the underlying api_tokens row',
+        );
+
+        self::assertSame('disabled', $installs->find($disabledApp['installed_id'])['state']);
+        self::assertSame(
+            [],
+            $credentials->activeForInstall($disabledApp['installed_id']),
+            'force-disable must revoke all active installed_package_credentials rows',
+        );
+        self::assertSame(
+            0,
+            (int) $this->db->fetchValue('SELECT is_active FROM webhooks WHERE id = ?', [$disabledApp['webhook_id']]),
+            'force-disable must pause package-owned webhook delivery (is_active = 0)',
+        );
+        self::assertNotNull(
+            $this->db->fetchValue('SELECT revoked_at FROM api_tokens WHERE id = ?', [$disabledApp['api_token_id']]),
+            'force-disable must revoke the underlying api_tokens row',
+        );
+
+        $console = (string) file_get_contents(dirname(__DIR__, 3) . '/bin/console');
+        self::assertMatchesRegularExpression(
+            '/\$packageHealth\s*=\s*static\s+function\s*\([^)]*\)\s*use\s*\([^)]*\$packageIntegrations[^)]*\)\s*:\s*PackageHealthService\s*\{[\s\S]*?\$packageIntegrations\(\$db\)/',
+            $console,
+            'bin/console $packageHealth factory must wire $packageIntegrations($db) into PackageHealthService',
         );
     }
 }

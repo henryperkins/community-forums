@@ -12,6 +12,7 @@ use App\Core\Telemetry;
 use App\Mail\Mailer;
 use App\Mail\MailerFactory;
 use App\Repository\AccountDeletionRepository;
+use App\Repository\ApiTokenRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
@@ -19,8 +20,10 @@ use App\Repository\EmailDomainStatusRepository;
 use App\Repository\BadgeRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
+use App\Repository\InstalledPackageCredentialRepository;
 use App\Repository\InstalledPackagePermissionRepository;
 use App\Repository\InstalledPackageRepository;
+use App\Repository\InstalledPackageSettingsRepository;
 use App\Repository\LocalPackageBlockRepository;
 use App\Repository\PackageAdvisoryRepository;
 use App\Repository\PackageHistoryRepository;
@@ -62,10 +65,12 @@ use App\Security\Registry\TrustChainVerifier;
 use App\Security\SecretBox;
 use App\Security\WriteGate;
 use App\Service\AccountLifecycleService;
+use App\Service\ApiTokenService;
 use App\Service\LinkPreviewService;
 use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
+use App\Service\Packages\PackageIntegrationService;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Packages\PackageUpdateService;
 use App\Service\Packages\ThemeAssetScanner;
@@ -76,6 +81,7 @@ use App\Service\Registry\CurlRegistryTransport;
 use App\Service\Registry\RegistryAdvisoryService;
 use App\Service\Registry\RegistrySnapshotService;
 use App\Service\Webhook\CurlWebhookTransport;
+use App\Service\WebhookService;
 use App\Service\AccountRecoveryService;
 use App\Service\BadgeService;
 use App\Service\RepairService;
@@ -166,7 +172,59 @@ $themeState = static function (Database $db, ?Telemetry $telemetry = null) use (
     );
 };
 
-$packageHealth = static function (Database $db, ?Telemetry $telemetry = null) use ($config, $themeState): PackageHealthService {
+$packageIntegrations = static function (Database $db) use ($config): PackageIntegrationService {
+    $flags = new FeatureFlags(new SettingRepository($db));
+    $reauth = new ReauthGate(new PasswordHasher());
+    $writeGate = new WriteGate();
+    $audit = new ModerationLogRepository($db);
+    $vault = new SecretVault(
+        $db,
+        new ServiceSecretRepository($db),
+        new SecretBox((string) $config->get('app.key', '')),
+        $audit,
+        $flags,
+        $config,
+    );
+    return new PackageIntegrationService(
+        $db,
+        new PackageRepository($db),
+        new PackageReleaseRepository($db),
+        new InstalledPackageRepository($db),
+        new InstalledPackagePermissionRepository($db),
+        new InstalledPackageSettingsRepository($db),
+        new InstalledPackageCredentialRepository($db),
+        new ApiTokenService($db, new ApiTokenRepository($db), $audit, $flags, $config, $reauth, $writeGate),
+        new WebhookService(
+            $db,
+            new WebhookRepository($db),
+            new WebhookDeliveryRepository($db),
+            $vault,
+            $audit,
+            $flags,
+            $config,
+            $reauth,
+            $writeGate,
+            new EgressGuard(
+                (bool) $config->get('webhooks.allow_http', false),
+                (array) $config->get('webhooks.allowed_private_cidrs', []),
+            ),
+        ),
+        new ApiTokenRepository($db),
+        new WebhookRepository($db),
+        $vault,
+        new ManifestValidator(),
+        new PackageHistoryRepository($db),
+        new PackageTransparencyLogRepository($db),
+        $audit,
+        $reauth,
+        $writeGate,
+        $flags,
+        new SettingRepository($db),
+        $config,
+    );
+};
+
+$packageHealth = static function (Database $db, ?Telemetry $telemetry = null) use ($config, $themeState, $packageIntegrations): PackageHealthService {
     return new PackageHealthService(
         $db,
         new InstalledPackageRepository($db),
@@ -181,6 +239,7 @@ $packageHealth = static function (Database $db, ?Telemetry $telemetry = null) us
         new ModerationLogRepository($db),
         $telemetry,
         $themeState($db, $telemetry),
+        $packageIntegrations($db),
     );
 };
 
@@ -740,7 +799,12 @@ try {
         case 'repair':
         case 'repair:all':
             $db = $database();
-            $result = (new RepairService($db, (int) $config->get('community.solved_bonus', 5), $themeState($db)))->repairAll();
+            $result = (new RepairService(
+                $db,
+                (int) $config->get('community.solved_bonus', 5),
+                $themeState($db),
+                $packageHealth($db),
+            ))->repairAll();
             foreach ($result as $name => $rows) {
                 $log(sprintf('  repaired %-18s (%d rows)', $name, $rows));
             }

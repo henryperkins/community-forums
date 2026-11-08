@@ -1,0 +1,172 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+.............................................................   61 / 3574 (  1%)
+.............................................................  122 / 3574 (  3%)
+.........................................................DDDD  183 / 3574 (  5%)
+.............................................................  244 / 3574 (  6%)
+..............................................D..............  305 / 3574 (  8%)
+.............................................................  366 / 3574 ( 10%)
+.............................................................  427 / 3574 ( 11%)
+.............................................................  488 / 3574 ( 13%)
+......................................................DD.....  549 / 3574 ( 15%)
+.............................................................  610 / 3574 ( 17%)
+.............................................................  671 / 3574 ( 18%)
+.............................................................  732 / 3574 ( 20%)
+.............................................................  793 / 3574 ( 22%)
+.............................................................  854 / 3574 ( 23%)
+.............................................................  915 / 3574 ( 25%)
+...............................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.........  976 / 3574 ( 27%)
+............................................................. 1037 / 3574 ( 29%)
+............................................................. 1098 / 3574 ( 30%)
+............................................................. 1159 / 3574 ( 32%)
+............................................................. 1220 / 3574 ( 34%)
+............................................................. 1281 / 3574 ( 35%)
+............................................................. 1342 / 3574 ( 37%)
+............................................................. 1403 / 3574 ( 39%)
+............................................................. 1464 / 3574 ( 40%)
+............................................................. 1525 / 3574 ( 42%)
+............................................................. 1586 / 3574 ( 44%)
+..........................................................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+... 1647 / 3574 ( 46%)
+............................................................. 1708 / 3574 ( 47%)
+............................................................. 1769 / 3574 ( 49%)
+............................................................. 1830 / 3574 ( 51%)
+............................................................. 1891 / 3574 ( 52%)
+............................................................. 1952 / 3574 ( 54%)
+............................................................. 2013 / 3574 ( 56%)
+............................................................. 2074 / 3574 ( 58%)
+............................................................. 2135 / 3574 ( 59%)
+............................................................. 2196 / 3574 ( 61%)
+............................................................. 2257 / 3574 ( 63%)
+............................................................. 2318 / 3574 ( 64%)
+............................................................. 2379 / 3574 ( 66%)
+............................................................. 2440 / 3574 ( 68%)
+............................................................. 2501 / 3574 ( 69%)
+............................................................. 2562 / 3574 ( 71%)
+..............................D....DDDDD..................... 2623 / 3574 ( 73%)
+.S........................................................... 2684 / 3574 ( 75%)
+........[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+..[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":2097152,"php_post_bytes":8388608}
+................................................... 2745 / 3574 ( 76%)
+............................................................. 2806 / 3574 ( 78%)
+............................................................. 2867 / 3574 ( 80%)
+............................................................. 2928 / 3574 ( 81%)
+............................................................. 2989 / 3574 ( 83%)
+............................................................. 3050 / 3574 ( 85%)
+............................................................. 3111 / 3574 ( 87%)
+............................................................. 3172 / 3574 ( 88%)
+............................................................. 3233 / 3574 ( 90%)
+..................D.......................................... 3294 / 3574 ( 92%)
+............................................................. 3355 / 3574 ( 93%)
+............................................................. 3416 / 3574 ( 95%)
+............................................................. 3477 / 3574 ( 97%)
+............................................................. 3538 / 3574 ( 98%)
+....................................                          3574 / 3574 (100%)
+
+Time: 06:03.747, Memory: 104.50 MB
+
+14 tests triggered 8 PHP deprecations:
+
+1) /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:80
+Method ReflectionMethod::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_are_empty_when_managed_database_tls_is_disabled
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:14
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_use_the_configured_ca_and_verify_the_server_certificate
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:22
+
+2) /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:38
+Constant PDO::MYSQL_ATTR_SSL_CA is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_CA instead
+
+3) /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:39
+Constant PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT instead
+
+4) /home/azureuser/community-forums/src/Core/Database.php:145
+Constant PDO::MYSQL_ATTR_SSL_CA is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_CA instead
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_use_the_configured_ca_and_verify_the_server_certificate
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:22
+
+5) /home/azureuser/community-forums/src/Core/Database.php:151
+Constant PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT instead
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_use_the_configured_ca_and_verify_the_server_certificate
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:22
+
+6) /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:71
+Method ReflectionMethod::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_dsn_prefers_a_configured_unix_socket_over_host_and_port
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:53
+
+* Tests\Unit\Core\DatabaseTlsTest::test_dsn_uses_host_and_port_without_a_socket
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:45
+
+7) /home/azureuser/community-forums/src/Mail/CloudflareSmtpMailer.php:110
+Function curl_close() is deprecated since 8.5, as it has no effect since PHP 8.0
+
+Triggered by:
+
+* Tests\Unit\Mail\CloudflareSmtpMailerTest::test_real_curl_connection_failure_throws_mail_exception_without_exposing_the_token
+  /home/azureuser/community-forums/tests/Unit/Mail/CloudflareSmtpMailerTest.php:62
+
+8) /home/azureuser/community-forums/src/Service/Packages/ThemeAssetScanner.php:68
+Function imagedestroy() is deprecated since 8.5, as it has no effect since PHP 8.0
+
+Triggered by:
+
+* Tests\Integration\Core\AppThemePackageTest::test_member_appearance_choices_picture_the_active_package
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:155
+
+* Tests\Integration\Core\AppThemePackageTest::test_preview_assets_are_private_to_the_admin_session_without_an_active_theme
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:328
+
+* Tests\Integration\Core\AppThemePackageTest::test_preview_assets_fail_dark_when_the_preview_becomes_ineligible
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:381
+
+* Tests\Integration\Core\AppThemePackageTest::test_previewing_a_shared_asset_does_not_break_the_active_theme_asset (2 times)
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:355
+
+* Tests\Integration\Core\AppThemePackageTest::test_session_package_preview_uses_private_brand_css_without_changing_public_branding
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:283
+
+* Tests\Integration\Core\AppThemePackageTest::test_theme_asset_route_serves_neutralized_bytes
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:310
+
+* Tests\Integration\Service\ThemeBuildServiceTest::test_built_css_has_no_external_urls_and_assets_are_stored
+  /home/azureuser/community-forums/tests/Integration/Service/ThemeBuildServiceTest.php:41
+
+* Tests\Unit\Service\Packages\ThemeAssetScannerTest::test_polyglot_payload_is_destroyed_by_reencode
+  /home/azureuser/community-forums/tests/Unit/Service/Packages/ThemeAssetScannerTest.php:34
+
+* Tests\Unit\Service\Packages\ThemeAssetScannerTest::test_valid_png_is_reencoded_and_digest_pinned
+  /home/azureuser/community-forums/tests/Unit/Service/Packages/ThemeAssetScannerTest.php:23
+
+OK, but there were issues!
+Tests: 3574, Assertions: 34017, Deprecations: 8, Skipped: 1.

@@ -82,14 +82,20 @@ final class PackageHealthService
         return $stats;
     }
 
-    public function enforcePolicy(): int
+    /**
+     * Force-disable enabled installs that policy no longer allows (suspended or
+     * revoked publisher, local blocklist, force_disable/revoke advisory) and cancel
+     * blocked staged updates. $reasonPrefix only labels the written records; repair
+     * passes "repair reconcile: " so its disables stay distinguishable in the audit.
+     */
+    public function enforcePolicy(string $reasonPrefix = ''): int
     {
         $changed = 0;
         foreach ($this->installs->activeWithContext() as $install) {
             $version = $install['release_version'] !== null ? (string) $install['release_version'] : '';
             if ((string) $install['state'] === 'enabled'
                 && in_array((string) ($install['publisher_status'] ?? 'active'), ['suspended', 'revoked'], true)) {
-                if ($this->securityDisable($install, 'publisher ' . (string) $install['publisher_status'])) {
+                if ($this->securityDisable($install, $reasonPrefix . 'publisher ' . (string) $install['publisher_status'])) {
                     $changed++;
                 }
                 continue;
@@ -103,7 +109,7 @@ final class PackageHealthService
                     ['force_disable', 'revoke'],
                 );
                 if ($reason !== null) {
-                    if ($this->securityDisable($install, $reason)) {
+                    if ($this->securityDisable($install, $reasonPrefix . $reason)) {
                         $changed++;
                     }
                 }
@@ -118,7 +124,7 @@ final class PackageHealthService
                     ['block_new', 'force_disable', 'revoke'],
                 );
                 if ($reason !== null) {
-                    $this->cancelStage($install, $reason);
+                    $this->cancelStage($install, $reasonPrefix . $reason);
                     $changed++;
                 }
             }

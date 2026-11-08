@@ -1,0 +1,16 @@
+{
+  "command": "node --test tests/worker/assets-runtime.test.mjs",
+  "exit_code": 0,
+  "tests": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "checks": [
+    "GET",
+    "conditional 304",
+    "HEAD",
+    "retained asset SHA-256",
+    "safe 404"
+  ],
+  "environment": "local Miniflare after sandbox restrictions were removed"
+}

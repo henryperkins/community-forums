@@ -89,6 +89,32 @@ final class AppReactionTest extends TestCase
         self::assertSame(1, $counts['❤️']);
     }
 
+    public function testSupplementaryEmojiToggleIndependentlyAndKeepReputationInSync(): void
+    {
+        $s = $this->scenario();
+        $this->actingAs($this->makeUser());
+        $url = '/posts/' . $s['op_id'] . '/react';
+
+        foreach (['👍', '🎉'] as $emoji) {
+            $response = $this->post($url, ['emoji' => $emoji, 'format' => 'json']);
+            $this->assertStatus(200, $response);
+            $data = json_decode($response->body(), true, 512, JSON_THROW_ON_ERROR);
+            self::assertSame('added', $data['state']);
+        }
+        self::assertEquals(['👍' => 1, '🎉' => 1], $data['counts']);
+        self::assertSame(2, $this->reputation((int) $s['author']['id']));
+
+        $response = $this->post($url, ['emoji' => '🎉', 'format' => 'json']);
+        $this->assertStatus(200, $response);
+        $data = json_decode($response->body(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('removed', $data['state']);
+        self::assertSame(['👍' => 1], $data['counts']);
+        self::assertSame(1, $this->reputation((int) $s['author']['id']));
+
+        (new RepairService($this->db))->repairReputation();
+        self::assertSame(1, $this->reputation((int) $s['author']['id']));
+    }
+
     public function testDisallowedEmojiIsRejected(): void
     {
         $s = $this->scenario();

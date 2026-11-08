@@ -47,6 +47,25 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   context to the accessibility baseline. Qualification:
   `docs/evidence/forum-refinement/README.md`; ADR 0057.
 
+## [2026-11-07] - Database portability and reaction identity
+
+- Select the shared `SKIP LOCKED` spelling supported by MySQL or MariaDB for
+  Thread Intelligence enqueues, preserving concurrent work on the same board.
+- Add migration `0086` to give `reactions.emoji` binary Unicode identity while
+  preserving existing values, indexes and custom-shortcode capacity. Distinct
+  emoji now toggle independently on MariaDB 10.11.
+- Make audit and budget JSON assertions portable across storage formats while
+  retaining corrupt-spend protection. Add HTTP and desktop/mobile browser
+  regressions for independent reaction toggles and reputation accounting.
+- Delegate `RepairService::repairInstalledPackageStates()` to
+  `PackageHealthService::enforcePolicy('repair reconcile: ')` and wire
+  `PackageIntegrationService` into `bin/console` health and repair commands so
+  suspended/revoked publisher disables and package credential teardown stay in
+  sync.
+- Record the previously verified Forum asset release `5dc1b40f3b23d46d`, retaining
+  `c66e3b55dba6da68` and `3630440af0d45598` and retiring `67ba8434286ff7e6`.
+  Validation: [database portability evidence](docs/evidence/database-portability-2026-11-07/README.md).
+
 ## [2026-11-07] - Conventional Forum theme
 
 - Replace the active Imladris presentation with neutral light/dark surfaces,

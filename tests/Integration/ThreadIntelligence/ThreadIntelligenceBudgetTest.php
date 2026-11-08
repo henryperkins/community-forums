@@ -60,7 +60,8 @@ final class ThreadIntelligenceBudgetTest extends TestCase
              ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
             [self::KEY, $raw],
         );
-        return $raw;
+        // Compare before/after storage bytes; MySQL normalizes JSON on insert.
+        return (string) $this->db->fetchValue('SELECT `value` FROM settings WHERE `key` = ?', [self::KEY]);
     }
 
     /** @return array<string,array{string}> */
@@ -244,12 +245,13 @@ final class ThreadIntelligenceBudgetTest extends TestCase
              ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
             [self::KEY, $corrupt],
         );
+        $stored = (string) $this->db->fetchValue('SELECT `value` FROM settings WHERE `key` = ?', [self::KEY]);
 
         $denied = $this->budget()->reserve($this->now());
         self::assertFalse($denied['reserved']);
         self::assertTrue($denied['corrupt'], 'corruption is an operator warning');
         self::assertSame(
-            $corrupt,
+            $stored,
             (string) $this->db->fetchValue('SELECT `value` FROM settings WHERE `key` = ?', [self::KEY]),
             'corrupt spend data is never silently reset',
         );

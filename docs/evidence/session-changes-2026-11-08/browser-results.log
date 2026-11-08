@@ -1,0 +1,541 @@
+[WebServer] [Sun Nov  8 01:28:43 2026] PHP 8.5.4 Development Server (http://localhost:8043) started
+[WebServer] [Sun Nov  8 01:28:43 2026] 127.0.0.1:50094 Accepted
+[WebServer] [Sun Nov  8 01:28:43 2026] 127.0.0.1:50094 Closing
+
+Running 4 tests using 1 worker
+
+(node:309830) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50104 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50104 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50106 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50108 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50114 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50118 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50106 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50108 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50114 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50118 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50106 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50114 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50118 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50108 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50132 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50138 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50132 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50132 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50138 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50138 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50154 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50154 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50164 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50164 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50168 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50176 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50180 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50188 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50168 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50176 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50180 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50188 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50168 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50180 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50188 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50176 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50200 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50206 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50210 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50200 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50200 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50206 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50210 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50206 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50210 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50218 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50226 Accepted
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50218 Closing
+[WebServer] [Sun Nov  8 01:28:44 2026] 127.0.0.1:50226 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50232 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50232 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50242 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50242 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50244 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50246 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50250 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50260 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50244 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50246 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50250 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50260 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50244 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50250 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50260 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50246 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50274 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50284 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50296 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50274 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50284 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50296 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50274 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50284 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50296 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50306 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50312 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50306 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50312 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50322 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50322 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50338 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50338 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50342 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50342 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50346 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50346 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50348 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50348 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50360 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50372 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50380 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50392 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50360 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50372 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50380 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50360 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50380 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50372 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50392 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50396 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50392 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50412 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50420 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50396 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50396 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50412 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50420 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50412 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50420 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50422 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50434 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50422 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50434 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50436 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50436 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50444 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50444 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50456 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50456 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50470 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50480 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50482 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50488 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50470 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50480 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50482 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50488 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50470 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50482 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50488 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50480 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50502 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50514 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50518 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50502 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50514 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50518 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50502 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50514 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50518 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50530 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50542 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50530 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50542 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50558 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50558 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50564 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50564 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50580 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50580 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50588 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50588 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50590 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50598 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50614 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50616 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50590 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50598 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50614 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50616 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50590 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50614 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50616 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50598 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50624 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50636 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50648 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50624 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50636 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50648 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50624 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50636 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50648 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50662 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50678 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50662 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50678 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50690 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50690 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50702 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50702 Closing
+
+  ✓  1 [desktop] › conversation-reactions.spec.ts:112:9 › enhanced emoji identity › distinct supplementary emoji toggle independently and survive reload (1.2s)
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50710 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50710 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50726 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50738 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50748 Accepted
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50726 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50738 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50748 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50726 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50748 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50738 Closing
+[WebServer] [Sun Nov  8 01:28:45 2026] 127.0.0.1:50752 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50752 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50762 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50762 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50778 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50794 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50778 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50810 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50794 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50810 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50778 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50810 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50794 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50816 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50816 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50832 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50838 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50832 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50848 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50838 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50848 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50832 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50848 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50838 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50862 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50862 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50878 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50878 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50884 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50900 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50914 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50884 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50900 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50914 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50884 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50914 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50900 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50930 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50930 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50938 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50938 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50950 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50954 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50960 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50950 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50954 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50960 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50950 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50960 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50954 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50976 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50976 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50980 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50994 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51006 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50980 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50994 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51006 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50980 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51006 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:50994 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51014 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51014 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51020 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51020 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51028 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51032 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51028 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51040 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51028 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51032 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51032 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51042 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51040 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51042 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51040 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51054 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51064 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51070 Accepted
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51054 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51064 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51070 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51054 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51070 Closing
+[WebServer] [Sun Nov  8 01:28:46 2026] 127.0.0.1:51064 Closing
+
+  ✓  2 [desktop] › conversation-reactions.spec.ts:112:9 › native emoji identity › distinct supplementary emoji toggle independently and survive reload (1.0s)
+(node:310261) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51074 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51074 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51088 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51088 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51088 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51104 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51106 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51110 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51104 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51106 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51110 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51106 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51110 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51104 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51112 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51116 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51112 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51116 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51112 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51116 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51132 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51132 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51144 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51144 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51154 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51168 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51180 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51192 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51154 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51168 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51180 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51192 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51154 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51180 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51192 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51168 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51196 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51206 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51214 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51196 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51196 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51206 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51206 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51214 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51214 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51218 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51232 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51218 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51232 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51248 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51248 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51264 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51264 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51280 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51286 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51264 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51280 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51296 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51286 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51296 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51286 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51296 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51280 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51302 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51306 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51302 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51308 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51306 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51308 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51302 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51306 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51308 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51320 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51332 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51320 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51332 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51342 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51342 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51350 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51350 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51356 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51356 Closing
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51362 Accepted
+[WebServer] [Sun Nov  8 01:28:47 2026] 127.0.0.1:51362 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51370 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51370 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51380 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51390 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51406 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51414 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51380 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51390 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51406 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51414 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51380 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51406 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51414 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51390 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51422 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51438 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51442 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51422 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51438 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51422 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51438 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51442 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51442 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51450 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51462 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51450 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51462 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51464 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51464 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51472 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51472 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51474 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51474 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51478 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51478 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51490 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51496 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51500 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51508 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51490 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51496 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51500 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51508 [200]: GET /assets/dist/app-107ef98522c229d0.js
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51490 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51500 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51508 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51496 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51510 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51522 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51528 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51510 [200]: GET /assets/dist/composer-004f699d19dc5157.js
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51522 [200]: GET /assets/dist/passkeys-abc14d1e680e3beb.js
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51528 [200]: GET /assets/dist/tour-4573ee743ebaf07c.js
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51510 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51522 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51528 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51534 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51546 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51534 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51546 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51548 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51548 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51558 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51558 Closing
+
+  ✓  3 [mobile] › conversation-reactions.spec.ts:112:9 › enhanced emoji identity › distinct supplementary emoji toggle independently and survive reload (1.1s)
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51562 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51562 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51578 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51578 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51578 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51588 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51602 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51588 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51588 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51602 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51602 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51612 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51612 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51626 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51626 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51634 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51648 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51650 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51634 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51648 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51650 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51634 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51650 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51648 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51658 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51658 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51670 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51676 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51682 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51670 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51676 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51682 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51670 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51682 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51676 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51688 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51688 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51704 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51704 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51706 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51722 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51726 Accepted
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51706 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51722 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51726 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51706 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51726 Closing
+[WebServer] [Sun Nov  8 01:28:48 2026] 127.0.0.1:51722 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51736 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51736 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51748 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51748 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51756 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51770 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51772 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51756 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51770 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51772 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51756 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51772 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51770 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51776 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51776 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51792 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51806 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51808 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51792 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51806 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51808 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51792 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51808 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51806 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51824 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51824 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51828 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51828 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51834 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51840 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51854 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51834 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51840 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51854 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51834 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51854 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51840 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51868 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51868 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51880 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51890 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51894 Accepted
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51880 [200]: GET /assets/dist/forum-base-style-CKKxU1F6.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51890 [200]: GET /assets/dist/app-style-QOPBXP9w.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51894 [200]: GET /assets/dist/forum-theme-style-C35sAGgP.css
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51880 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51894 Closing
+[WebServer] [Sun Nov  8 01:28:49 2026] 127.0.0.1:51890 Closing
+
+  ✓  4 [mobile] › conversation-reactions.spec.ts:112:9 › native emoji identity › distinct supplementary emoji toggle independently and survive reload (999ms)
+
+  4 passed (6.3s)

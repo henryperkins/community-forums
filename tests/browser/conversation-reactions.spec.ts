@@ -105,6 +105,46 @@ test('surviving reaction counts tick locally, describe current reactors and reta
   await capture(page, info, 'conversation-reaction-tip');
 });
 
+for (const javaScriptEnabled of [true, false]) {
+  const mode = javaScriptEnabled ? 'enhanced' : 'native';
+  test.describe(`${mode} emoji identity`, () => {
+    test.use({ javaScriptEnabled });
+    test('distinct supplementary emoji toggle independently and survive reload', async ({ page }, info) => {
+      const post = await open(page);
+      const submit = async (button: Locator, enhanced = javaScriptEnabled) => {
+        const submitted = page.waitForResponse(r => r.url().endsWith(`/posts/${fixture.post}/react`) && r.request().method() === 'POST');
+        await button.click();
+        const response = await submitted;
+        expect(response.status()).toBe(enhanced ? 200 : 303);
+        if (enhanced) expect((await response.json()).ok).toBe(true);
+      };
+
+      await submit(chip(post));
+      const picker = post.locator(info.project.name === 'mobile' ? '.post-menu' : '.reaction-add');
+      await picker.locator(':scope > summary').click();
+      // The desktop Add picker intentionally uses a native form in both modes.
+      await submit(picker.locator('button[data-label="Celebrate"]'), javaScriptEnabled && info.project.name === 'mobile');
+      if (await picker.getAttribute('open') !== null) await picker.locator(':scope > summary').click();
+
+      await expect(chip(post)).toHaveAttribute('aria-pressed', 'true');
+      await expect(chip(post).locator('.reaction-n-val')).toHaveText('2');
+      await expect(chip(post, 'Celebrate')).toHaveAttribute('aria-pressed', 'true');
+      await expect(chip(post, 'Celebrate').locator('.reaction-n-val')).toHaveText('1');
+      await page.reload();
+      await expect(chip(post)).toHaveAttribute('aria-pressed', 'true');
+      await expect(chip(post, 'Celebrate')).toHaveAttribute('aria-pressed', 'true');
+      await post.scrollIntoViewIfNeeded();
+      await capture(page, info, `emoji-identity-${mode}`);
+
+      await submit(chip(post, 'Celebrate'));
+      await page.reload();
+      await expect(chip(post, 'Celebrate')).toHaveCount(0);
+      await expect(chip(post)).toHaveAttribute('aria-pressed', 'true');
+      await expect(chip(post).locator('.reaction-n-val')).toHaveText('2');
+    });
+  });
+}
+
 test('same post and emoji cannot submit twice while the toggle is outstanding', async ({ page }) => {
   const post = await open(page);
   let requests = 0;

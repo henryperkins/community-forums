@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Database;
-use App\Repository\LocalPackageBlockRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\UserRepository;
+use App\Service\Packages\PackageHealthService;
 use App\Service\Packages\ThemeStateService;
 use App\Service\Registry\RegistryAdvisoryService;
 
@@ -25,6 +25,7 @@ final class RepairService
         private Database $db,
         private int $solvedBonus = 5,
         private ?ThemeStateService $themes = null,
+        private ?PackageHealthService $packageHealth = null,
     ) {
     }
 
@@ -273,102 +274,17 @@ final class RepairService
         return $changed;
     }
 
+    /**
+     * Re-apply install policy after a manual DB repair or a restored snapshot by
+     * delegating to the health worker's enforcePolicy(), so repair cannot drift
+     * from it: suspended/revoked publishers, blocklist and advisory disables, the
+     * package credential and theme teardown that goes with them, and blocked
+     * staged-update cancellation. A no-op without a PackageHealthService, like
+     * repairThemeState() without a ThemeStateService.
+     */
     public function repairInstalledPackageStates(): int
     {
-        $fixed = 0;
-        $installs = $this->db->fetchAll(
-            "SELECT ip.id, ip.package_id, ip.state, ip.digest, ip.staged_release_id, ip.staged_digest,
-                    p.package_uid, r.version AS release_version, sr.version AS staged_version
-             FROM installed_packages ip
-             JOIN packages p ON p.id = ip.package_id
-             LEFT JOIN package_releases r ON r.id = ip.release_id
-             LEFT JOIN package_releases sr ON sr.id = ip.staged_release_id
-             WHERE ip.state <> 'uninstalled'",
-        );
-
-        // Reuse the runtime enforcement helpers so repair never drifts from the
-        // health worker's block/advisory matching (LocalBlocklistService/
-        // PackageHealthService share the same repository and reason logic).
-        $blocks = new LocalPackageBlockRepository($this->db);
-        $advisoriesFor = function (int $packageId): array {
-            return $this->db->fetchAll(
-                'SELECT advisory_uid, action, affected_digest, affected_version_range
-                 FROM package_advisories WHERE package_id = ?',
-                [$packageId],
-            );
-        };
-        $matchReason = function (array $advisories, array $actions, string $digest, string $version, string $uid) use ($blocks): ?string {
-            if ($blocks->isBlocked($digest, $uid)) {
-                return 'local blocklist';
-            }
-
-            return RegistryAdvisoryService::blockingAdvisoryReason($advisories, $actions, $digest, $version);
-        };
-
-        foreach ($installs as $install) {
-            $advisories = $advisoriesFor((int) $install['package_id']);
-            if ((string) $install['state'] === 'enabled') {
-                $reason = $matchReason(
-                    $advisories,
-                    ['force_disable', 'revoke'],
-                    (string) $install['digest'],
-                    (string) ($install['release_version'] ?? ''),
-                    (string) $install['package_uid'],
-                );
-                if ($reason !== null) {
-                    $version = $install['release_version'] !== null ? (string) $install['release_version'] : null;
-                    $this->db->run("UPDATE installed_packages SET state = 'disabled' WHERE id = ?", [(int) $install['id']]);
-                    // Mirror PackageHealthService::securityDisable exactly: disable
-                    // history carries new_version; transparency leaves registry_id NULL.
-                    $this->db->run(
-                        "INSERT INTO package_history (package_id, installed_package_id, event, new_version, new_digest, detail)
-                         VALUES (?, ?, 'disable', ?, ?, ?)",
-                        [(int) $install['package_id'], (int) $install['id'], $version, (string) $install['digest'], 'repair reconcile: ' . $reason],
-                    );
-                    $this->db->run(
-                        "INSERT INTO package_transparency_log
-                            (package_uid, version, digest, event, source, detail)
-                         VALUES (?, ?, ?, 'force_disable', 'local', ?)",
-                        [
-                            (string) $install['package_uid'],
-                            $version,
-                            (string) $install['digest'],
-                            'repair reconcile: ' . $reason,
-                        ],
-                    );
-                    $this->db->run(
-                        "INSERT INTO moderation_log (actor_id, action, target_type, target_id, reason)
-                         VALUES (NULL, 'package_force_disable', 'package', ?, ?)",
-                        [(int) $install['package_id'], 'repair reconcile: ' . $reason],
-                    );
-                    $fixed++;
-                }
-            }
-
-            if ($install['staged_digest'] !== null) {
-                $reason = $matchReason(
-                    $advisories,
-                    ['block_new', 'force_disable', 'revoke'],
-                    (string) $install['staged_digest'],
-                    (string) ($install['staged_version'] ?? ''),
-                    (string) $install['package_uid'],
-                );
-                if ($reason !== null) {
-                    $this->db->run(
-                        'UPDATE installed_packages SET staged_release_id = NULL, staged_digest = NULL WHERE id = ?',
-                        [(int) $install['id']],
-                    );
-                    $this->db->run(
-                        "INSERT INTO package_history (package_id, installed_package_id, event, detail)
-                         VALUES (?, ?, 'update_staged', ?)",
-                        [(int) $install['package_id'], (int) $install['id'], 'cancelled: repair reconcile: ' . $reason],
-                    );
-                    $fixed++;
-                }
-            }
-        }
-
-        return $fixed;
+        return $this->packageHealth?->enforcePolicy('repair reconcile: ') ?? 0;
     }
 
     public function repairThemeState(): int
