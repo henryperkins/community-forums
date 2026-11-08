@@ -1,3 +1,18 @@
 {
-  "buildPath": "comp"
+  "buildPath": "comp",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "resources/forum/theme.css"
+        ],
+        "createdAt": "2026-11-08T01:28:50.377Z",
+        "reason": "Claude triage, 2026-11-08: the flagged rule is the neutral --border-strong quote bar on blockquotes in member-written post prose (from PR #93), the conventional quotation style rather than a card accent. Not user confirmed."
+      }
+    ]
+  }
 }
