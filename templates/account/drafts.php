@@ -30,7 +30,7 @@ $count = count($serverDrafts);
                 <h2 class="scribe-panel-head">Drafts</h2>
                 <?php if ($serverOn): ?>
                     <span class="account-draft-sync">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <?= $this->partial('partials/icon', ['name' => 'check']) ?>
                         Saved to your account · syncs across devices
                     </span>
                 <?php endif; ?>

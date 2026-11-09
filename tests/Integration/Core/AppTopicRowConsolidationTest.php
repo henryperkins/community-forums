@@ -159,7 +159,9 @@ final class AppTopicRowConsolidationTest extends TestCase
         // title into a column of single clipped words.
         self::assertStringContainsString('.board-view .thread-row-board .thread-row-main { min-width: 0; display: block; }', $application);
         self::assertMatchesRegularExpression('~\.board-view \.thread-row-board \.thread-title \{[^}]*text-overflow: clip;[^}]*white-space: normal;~', $application);
-        self::assertStringContainsString('.icon-commend-star.is-outline {', $application);
+        // The unset star's outline is Fluent's Star Regular artwork, which the
+        // icon partial draws for `is-outline` (ADR 0060); no rule repaints it.
+        self::assertStringNotContainsString('.icon-commend-star.is-outline {', $application);
     }
 
     /** @return array{0: array<string,mixed>, 1: array<string,mixed>, 2: array<string,mixed>} */

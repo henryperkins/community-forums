@@ -38,14 +38,14 @@
                             <?= $this->csrfField() ?>
                             <input type="hidden" name="dir" value="up">
                             <button class="content-icon-button content-icon-button-category" type="submit" aria-label="Move category <?= $e($category['name']) ?> up">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                                <?= $this->partial('partials/icon', ['name' => 'move-up']) ?>
                             </button>
                         </form>
                         <form method="post" action="/admin/categories/<?= (int) $category['id'] ?>/move" class="inline">
                             <?= $this->csrfField() ?>
                             <input type="hidden" name="dir" value="down">
                             <button class="content-icon-button content-icon-button-category" type="submit" aria-label="Move category <?= $e($category['name']) ?> down">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                                <?= $this->partial('partials/icon', ['name' => 'move-down']) ?>
                             </button>
                         </form>
                         <a class="content-category-delete" href="/admin/categories/<?= (int) $category['id'] ?>/delete">Delete category</a>
@@ -74,14 +74,14 @@
                                     <?= $this->csrfField() ?>
                                     <input type="hidden" name="dir" value="up">
                                     <button class="content-icon-button content-icon-button-board" type="submit" aria-label="Move <?= $e($board['name']) ?> up">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                                        <?= $this->partial('partials/icon', ['name' => 'move-up']) ?>
                                     </button>
                                 </form>
                                 <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>/move" class="inline">
                                     <?= $this->csrfField() ?>
                                     <input type="hidden" name="dir" value="down">
                                     <button class="content-icon-button content-icon-button-board" type="submit" aria-label="Move <?= $e($board['name']) ?> down">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                                        <?= $this->partial('partials/icon', ['name' => 'move-down']) ?>
                                     </button>
                                 </form>
                                 <a class="content-board-action" href="/admin/boards/<?= (int) $board['id'] ?>/edit">Edit</a>

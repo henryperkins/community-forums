@@ -856,9 +856,23 @@ final class AppImladrisFidelityTest extends TestCase
         $reversed = str_replace('var(--font-meta)', 'var(--font-mono)', $bridge);
         $reversed = (string) preg_replace('/max\(var\(--text-floor\), ((?:[^()]|\([^()]*\))*)\)/', '$1', $reversed);
         $deliberate = [
-            // ADR 0057: the eight-point star icon was removed.
-            ".chip .icon-commend-star,\n.badge .icon-eight-point-star,\n.chip .icon-eight-point-star { fill: currentColor; stroke: none; }"
-                => '.chip .icon-commend-star { fill: currentColor; stroke: none; }',
+            // ADR 0060: every icon is filled Fluent artwork and nothing strokes
+            // one, so the overrides that undid `.chip svg`'s stroke for the
+            // stars (ADR 0057 had already removed the eight-point star) and
+            // the outline star's stroke are gone, as is the stroked
+            // notification glyph rule.
+            "/* `.chip svg` paints every mark as a stroked Lucide glyph, and CSS outranks the\n"
+                . "   presentation attributes the filled brand stars carry — so the commend star\n"
+                . "   inside a chip was drawn hollow, at a stroke width of 2 in a 0-100 viewBox. */\n"
+                . ".badge .icon-commend-star,\n.chip .icon-commend-star,\n.badge .icon-eight-point-star,\n"
+                . ".chip .icon-eight-point-star { fill: currentColor; stroke: none; }\n"
+                . "/* The commend star is the one esteem glyph. In outline it is the unset state of\n"
+                . "   a control that sets it, so a toggle's two states differ in shape as well as\n"
+                . "   in ink: the two inks it moves between are close in lightness. */\n"
+                . ".icon-commend-star.is-outline { fill: none; stroke: currentColor; stroke-width: 7; stroke-linejoin: round; }\n"
+                => '',
+            ".notification-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }\n"
+                => '',
             // ADR 0057: the empty-state mark is a muted inline Inbox icon.
             "   rendered in the SVG's own stroke. The design uses the quiet four-point star,\n"
                 . "   filled, at 30px (ForumInbox.dc.html:236, 302) - already in the icon map as\n"
@@ -868,10 +882,6 @@ final class AppImladrisFidelityTest extends TestCase
                 . "   so the colour lands; the Forum theme draws it as a muted Inbox outline\n"
                 . "   (ADR 0057). A 56px rule left over from an earlier inbox had also been\n"
                 . '   sizing it. */',
-            // ADR 0060: the unset star is Fluent's Star Regular artwork, so the
-            // rule paints it rather than stroking the filled glyph.
-            '.icon-commend-star.is-outline { fill: none; stroke: currentColor; stroke-width: 7; stroke-linejoin: round; }'
-                => '.icon-commend-star.is-outline { fill: currentColor; stroke: none; }',
         ];
         foreach (array_keys($deliberate) as $archived) {
             self::assertSame(1, substr_count($memberCss, $archived), 'The archived text for a deliberate edit moved.');

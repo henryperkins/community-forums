@@ -6,16 +6,30 @@ namespace Tests\Unit\Support;
 
 use App\Support\Icons;
 use App\Support\IconSet;
+use App\Support\NotificationPresenter;
 use PHPUnit\Framework\TestCase;
 
 /**
  * ADR 0060: the Fluent icon set is generated from pinned, licensed sources;
  * the artwork follows the member's icon size; selected states draw Filled;
- * and the set holds exactly the icons the templates draw.
+ * every icon comes from the set and nothing strokes one; and the set holds
+ * exactly the icons templates, notification rows, the composer and the
+ * stylesheets draw.
  */
 final class IconsTest extends TestCase
 {
     private const ROOT = __DIR__ . '/../../..';
+
+    /** Icons stylesheets draw as data URIs, with the artwork size each uses. */
+    private const STYLESHEET_ICONS = ['flash-success' => 16, 'flash-error' => 16];
+
+    /** The only inline SVG a template draws itself: artwork that is not an icon. */
+    private const NON_ICON_ARTWORK = [
+        'templates/admin/branding_revision.php' => 1, // a branding colour swatch
+        'templates/partials/brand_mark.php' => 1, // the community's default mark (DESIGN.md)
+        'templates/partials/poll.php' => 1, // a poll result's bar
+        'templates/profile/show.php' => 1, // the retired cover ornament, hidden by the Forum theme (ADR 0057)
+    ];
 
     public function test_generated_icon_set_matches_the_reviewed_sources(): void
     {
@@ -89,11 +103,10 @@ final class IconsTest extends TestCase
         self::assertSame(IconSet::GLYPHS['commend-star']['regular'][20], Icons::glyph('commend-star', 'standard', 'regular')['paths'] ?? null);
     }
 
-    public function test_the_forum_theme_paints_icons_as_filled_artwork(): void
+    public function test_icons_are_filled_and_no_rule_strokes_one(): void
     {
-        // Rules such as `.fab svg` and `.chip svg` stroke any svg for the
-        // retired stroked glyphs; the unlayered theme keeps them off the
-        // partial's filled artwork.
+        // Every icon is filled artwork. The unlayered theme's guard keeps a
+        // later rule that strokes an svg from outlining one.
         foreach (['/resources/forum/theme.css', '/public/assets/forum-theme.css'] as $css) {
             self::assertStringContainsString(
                 'svg.icon { fill: currentColor; stroke: none; }',
@@ -101,29 +114,132 @@ final class IconsTest extends TestCase
                 $css,
             );
         }
+        // No rule strokes an svg: the only stroke left outlines a branding
+        // colour swatch, which is not an icon.
+        $stroking = [];
+        foreach (['/resources/forum/components.css', '/resources/forum/theme.css', '/public/assets/forum-base.css', '/public/assets/forum-theme.css', '/public/assets/app.css'] as $css) {
+            $source = (string) preg_replace('~/\*.*?\*/~s', '', (string) file_get_contents(self::ROOT . $css));
+            preg_match_all('~([^{}]+)\{([^{}]*)\}~', $source, $rules, PREG_SET_ORDER);
+            foreach ($rules as [, $selector, $body]) {
+                if (preg_match('~(?:^|;)\s*stroke[a-z-]*\s*:(?!\s*none\s*(?:;|$))~', $body) === 1) {
+                    $stroking[] = $css . ' ' . trim($selector);
+                }
+            }
+        }
+        self::assertSame(['/public/assets/app.css .branding-revision-swatch rect'], $stroking);
+    }
+
+    public function test_stylesheets_draw_their_icons_from_the_set(): void
+    {
+        // The admin console's flash marks are masks on a shared partial, so
+        // they carry the set's artwork as data URIs.
+        $known = [];
+        foreach (self::STYLESHEET_ICONS as $name => $size) {
+            $known[$name] = [$size, array_column(IconSet::GLYPHS[$name]['regular'][$size], 'd')];
+        }
+        $drawn = [];
+        foreach (['/public/assets/forum-base.css', '/public/assets/forum-theme.css', '/public/assets/app.css'] as $css) {
+            preg_match_all('~url\("data:image/svg\+xml,([^"]*)"\)~', (string) file_get_contents(self::ROOT . $css), $uris);
+            foreach ($uris[1] as $uri) {
+                self::assertStringNotContainsString('stroke', $uri, 'A stylesheet icon is filled artwork.');
+                self::assertSame(1, preg_match("~viewBox='0 0 (\d+) (\d+)'~", $uri, $box), $uri);
+                self::assertSame($box[1], $box[2]);
+                preg_match_all("~ d='([^']+)'~", $uri, $paths);
+                $icon = [(int) $box[1], $paths[1]];
+                self::assertContains($icon, $known, 'A stylesheet draws an icon the set does not carry: ' . $uri);
+                $drawn[] = $icon;
+            }
+        }
+        foreach ($known as $name => $icon) {
+            self::assertContains($icon, $drawn, $name . ' is drawn by a stylesheet');
+        }
+    }
+
+    public function test_the_composer_draws_its_icons_from_its_generated_block(): void
+    {
+        $manifest = json_decode((string) file_get_contents(self::ROOT . '/resources/icons/icons.json'), true, 512, JSON_THROW_ON_ERROR);
+        $listed = $manifest['scripts']['public/assets/composer.js'];
+        $script = (string) file_get_contents(self::ROOT . '/public/assets/composer.js');
+        // Each toolbar action names its icon; the trigger, More and Close draw theirs.
+        preg_match_all("~\bicon: '([a-z0-9-]+)'~", $script, $actions);
+        preg_match_all("~actionIcon\('([a-z0-9-]+)'\)~", $script, $direct);
+        $used = array_values(array_unique([...$actions[1], ...$direct[1]]));
+        sort($used);
+        $expected = $listed;
+        sort($expected);
+        self::assertSame($expected, $used, 'icons.json lists exactly the icons composer.js draws.');
+        // The block carries each listed icon's default artwork at every size
+        // it is drawn from (`composer check:icons` holds it current).
+        self::assertSame(1, preg_match('~// BEGIN GENERATED ICONS[^\n]*\n(?<block>.*?)\n\s*// END GENERATED ICONS~s', $script, $match));
+        foreach ($listed as $name) {
+            $styles = IconSet::GLYPHS[$name];
+            $sizes = reset($styles);
+            foreach ($sizes as $size => $paths) {
+                self::assertStringContainsString($size . ": [['" . $paths[0]['d'] . "'", $match['block'], $name . ' ' . $size);
+            }
+        }
+    }
+
+    public function test_only_the_set_draws_icons(): void
+    {
+        // Templates draw icons through partials/icon.php. The other inline SVG
+        // is artwork that is not an icon.
+        $svg = [];
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(self::ROOT . '/templates', \FilesystemIterator::SKIP_DOTS));
+        foreach ($files as $file) {
+            if (!$file instanceof \SplFileInfo || $file->getExtension() !== 'php') {
+                continue;
+            }
+            $relative = substr($file->getPathname(), strlen(self::ROOT) + 1);
+            $count = substr_count((string) file_get_contents($file->getPathname()), '<svg');
+            if ($count > 0 && $relative !== 'templates/partials/icon.php') {
+                $svg[$relative] = $count;
+            }
+        }
+        ksort($svg);
+        $expected = self::NON_ICON_ARTWORK;
+        ksort($expected);
+        self::assertSame($expected, $svg);
+
+        // Scripts draw icons only through the composer's actionIcon().
+        $scripts = [...glob(self::ROOT . '/public/assets/*.js') ?: [], ...glob(self::ROOT . '/src/client/*/*.ts') ?: []];
+        self::assertNotSame([], $scripts);
+        foreach ($scripts as $script) {
+            $source = (string) file_get_contents($script);
+            self::assertStringNotContainsString('<svg', $source, basename($script));
+            $expected = basename($script) === 'composer.js' ? 2 : 0; // the svg and its paths in actionIcon()
+            self::assertSame($expected, substr_count($source, 'createElementNS('), basename($script));
+        }
+        // PHP builds no SVG markup outside templates.
+        $php = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(self::ROOT . '/src', \FilesystemIterator::SKIP_DOTS));
+        foreach ($php as $file) {
+            if ($file instanceof \SplFileInfo && $file->getExtension() === 'php') {
+                self::assertStringNotContainsString('<svg', (string) file_get_contents($file->getPathname()), $file->getFilename());
+            }
+        }
     }
 
     public function test_unknown_and_retired_names_draw_nothing(): void
     {
         self::assertNull(Icons::glyph('no-such-icon'));
-        foreach (['star', 'star-filled', 'eight-point-star', 'panel-left', 'user-plus'] as $retired) {
+        foreach (['star', 'star-filled', 'eight-point-star', 'user-plus'] as $retired) {
             self::assertFalse(Icons::has($retired), $retired);
         }
     }
 
-    public function test_the_set_holds_exactly_the_icons_the_templates_draw(): void
+    public function test_the_set_holds_exactly_the_icons_drawn(): void
     {
-        $drawn = self::namesDrawnByTemplates();
+        $drawn = self::namesDrawn();
         sort($drawn);
         $set = Icons::names();
         sort($set);
 
-        self::assertSame([], array_values(array_diff($drawn, $set)), 'A template draws an icon the set does not have.');
-        self::assertSame([], array_values(array_diff($set, $drawn)), 'The set carries an icon no template draws.');
+        self::assertSame([], array_values(array_diff($drawn, $set)), 'Something draws an icon the set does not have.');
+        self::assertSame([], array_values(array_diff($set, $drawn)), 'The set carries an icon nothing draws.');
     }
 
-    /** @return list<string> */
-    private static function namesDrawnByTemplates(): array
+    /** @return list<string> names drawn by templates, the notification rows, scripts and stylesheets */
+    private static function namesDrawn(): array
     {
         $names = [];
         $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(self::ROOT . '/templates', \FilesystemIterator::SKIP_DOTS));
@@ -150,6 +266,13 @@ final class IconsTest extends TestCase
         self::assertSame(1, preg_match('~foreach \(\[([^\]]+)\] as \$previewIcon\)~', $appearance, $preview));
         preg_match_all("~'([a-z0-9-]+)'~", $preview[1], $previewNames);
         array_push($names, ...$previewNames[1]);
+        // Notification rows, the composer and the stylesheets.
+        array_push($names, ...array_values(NotificationPresenter::ICONS));
+        $manifest = json_decode((string) file_get_contents(self::ROOT . '/resources/icons/icons.json'), true, 512, JSON_THROW_ON_ERROR);
+        foreach ($manifest['scripts'] as $scriptNames) {
+            array_push($names, ...$scriptNames);
+        }
+        array_push($names, ...array_keys(self::STYLESHEET_ICONS));
 
         return array_values(array_unique($names));
     }

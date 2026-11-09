@@ -131,7 +131,7 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
     <?php if (!empty($features['search']) && $path !== '/search'): ?>
         <span class="forum-bar-searchwrap">
             <a class="forum-bar-search" href="/search" aria-label="Search forums" data-shortcut="k">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                <?= $this->partial('partials/icon', ['name' => 'search']) ?>
                 <span class="forum-bar-search-label">Search forums…</span>
                 <span class="forum-bar-kbd" data-shortcut-hint aria-hidden="true" hidden></span>
             </a>
@@ -156,7 +156,7 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
                 <input type="hidden" name="rail_open" value="<?= $railOpen ? '0' : '1' ?>">
                 <input type="hidden" name="return" value="<?= $e($path) ?>">
                 <button class="forum-bar-railtoggle<?= $railOpen ? ' is-on' : '' ?>" type="submit" aria-controls="sidebar-nav" aria-pressed="<?= $railOpen ? 'true' : 'false' ?>" aria-label="Board rail" title="Board rail" data-shortcut="b">
-                    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><rect class="forum-bar-toggle-band" x="2.2" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"/></svg>
+                    <?= $this->partial('partials/icon', ['name' => 'panel-left', 'class' => 'forum-bar-toggle-off']) ?><?= $this->partial('partials/icon', ['name' => 'panel-left', 'class' => 'forum-bar-toggle-on', 'filled' => true]) ?>
                 </button>
             </form>
             <?php endif; ?>
@@ -167,7 +167,7 @@ $notificationLabel = $notificationCount > 0 ? 'Notifications, ' . $notificationC
                     <input type="hidden" name="inbox_reading_open" value="<?= $readingOpen ? '0' : '1' ?>">
                     <input type="hidden" name="return" value="<?= $e($path) ?>">
                     <button class="forum-bar-railtoggle<?= $readingOpen ? ' is-on' : '' ?>" type="submit" aria-controls="inbox-reading-pane" aria-pressed="<?= $readingOpen ? 'true' : 'false' ?>" aria-label="Reading pane" title="Reading pane" data-shortcut="j">
-                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><rect class="forum-bar-toggle-band" x="9.8" y="3.2" width="4" height="9.6" rx="1" fill="currentColor" opacity=".5"/></svg>
+                        <?= $this->partial('partials/icon', ['name' => 'panel-right', 'class' => 'forum-bar-toggle-off']) ?><?= $this->partial('partials/icon', ['name' => 'panel-right', 'class' => 'forum-bar-toggle-on', 'filled' => true]) ?>
                     </button>
                 </form>
             <?php endif; ?>

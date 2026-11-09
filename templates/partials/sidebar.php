@@ -100,7 +100,7 @@ $unreadPill = static function (int $unread) use ($e): string {
                         <span class="board-rail-item is-locked" data-board-slug="<?= $e($board['slug']) ?>" data-compose-board-disabled="<?= $e($board['slug']) ?>" title="<?= $e($composeBoard['post_block_reason'] ?? 'You cannot open a topic here.') ?>">
                             <span class="board-rail-name"><?= $e($board['name']) ?></span>
                             <?= $unreadPill($unread) ?>
-                            <svg class="board-rail-lock" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+                            <?= $this->partial('partials/icon', ['name' => 'lock', 'class' => 'board-rail-lock']) ?>
                         </span>
                     <?php endif; ?>
                 <?php else: ?>

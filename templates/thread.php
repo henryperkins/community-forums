@@ -54,7 +54,7 @@ $watchLabel = ($notifications_on ?? false) && $current_user !== null
 $relatedTopics = !empty($living_brief_related) ? $living_brief_related : ($related_fallback ?? []);
 $this->start('subheader_leading');
 ?>
-<nav class="breadcrumb" aria-label="Breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Forum index</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></nav>
+<nav class="breadcrumb" aria-label="Breadcrumb"><a class="breadcrumb-back" href="/"><?= $this->partial('partials/icon', ['name' => 'chevron-left', 'class' => 'breadcrumb-back-ic']) ?>Forum index</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></nav>
 <?php $this->stop(); ?>
 <article class="thread thread-conversation thread-study" data-thread-study>
     <div class="thread-scroll">

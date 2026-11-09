@@ -6,7 +6,7 @@ $this->section('variant', 'admin');
 ?>
 <?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles', 'pane_class' => 'admin-roles admin-roles-list']) ?>
     <div class="role-callout">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+        <?= $this->partial('partials/icon', ['name' => 'info']) ?>
         <div>
             <?= $this->partial('admin/_role_live_effect', ['mode' => $mode]) ?>
             <p>System roles are protected compatibility anchors and cannot be edited. Clone one to adapt it.

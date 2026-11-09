@@ -6,7 +6,7 @@
           // state production can render this page in: AdminExtensionController 404s while
           // server_extensions is off, so reaching here means the flag is ON. ?>
     <div class="callout extension-flag-note">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+        <?= $this->partial('partials/icon', ['name' => 'info']) ?>
         <p><strong>Global emergency disable.</strong> Server extension execution is controlled by the server-side <code>server_extensions</code> flag; this page is only reachable while that flag is on. Turning it off closes this console and leaves core forum routes independent of extension code.</p>
     </div>
 

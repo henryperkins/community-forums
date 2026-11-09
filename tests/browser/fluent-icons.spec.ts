@@ -171,10 +171,10 @@ test('larger icons grow menus, toolbars and buttons but not row marks', async ({
   await page.locator('[data-post-toolbar]').first().screenshot({ path: shot(info.project.name, 'post-toolbar-standard') });
 });
 
-test('icons stay filled inside containers whose older rules stroke an svg', async ({ page }) => {
+test('icons stay filled inside containers that once stroked an svg', async ({ page }) => {
   // `.fab svg`, `.chip svg`, `.accepted-flag svg` and `.nav-toggle-ic` were
-  // written for the retired stroked glyphs; the Forum theme keeps them off
-  // the partial's filled artwork.
+  // written for the retired stroked glyphs. They no longer stroke, and the
+  // Forum theme's guard keeps any rule from outlining the filled artwork.
   await signIn(page);
   const outlined = () => page.locator('svg.icon').evaluateAll((icons) => icons
     .filter((svg) => [svg, ...svg.querySelectorAll('path')]
@@ -193,7 +193,8 @@ test('icons stay filled inside containers whose older rules stroke an svg', asyn
   const solved = await page.getByRole('link', { name: 'Interpretability findings from the Bruinen run' }).first().getAttribute('href');
   expect(solved).toMatch(/^\/t\//);
   await page.goto(solved!);
-  await expect(page.locator('.accepted-flag .icon')).toHaveCount(1);
+  // The flag's check and its star.
+  await expect(page.locator('.accepted-flag .icon')).toHaveCount(2);
   expect(await outlined(), solved!).toEqual([]);
 
   for (const route of ['/inbox', '/leaderboard', '/u/galadriel', '/settings/appearance']) {

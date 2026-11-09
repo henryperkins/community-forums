@@ -236,7 +236,7 @@ $profileExcerpt = static function (string $html): string {
                 <input type="hidden" name="tab" value="<?= $e($activeTab) ?>">
                 <?php if ($activeSort !== 'newest'): ?><input type="hidden" name="sort" value="<?= $e($activeSort) ?>"><?php endif; ?>
                 <label class="profile-search input-affix">
-                    <span class="input-affix-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></span>
+                    <span class="input-affix-icon" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'search']) ?></span>
                     <input class="input input-pill" type="search" enterkeyhint="search" name="q" value="<?= $e($q) ?>" placeholder="Search this member's activity" aria-label="Search this member's activity">
                 </label>
                 <button class="btn btn-small" type="submit">Search</button>
@@ -328,7 +328,7 @@ $profileExcerpt = static function (string $html): string {
                     <input type="hidden" name="tab" value="connections">
                     <input type="hidden" name="c" value="<?= $e($connMode) ?>">
                     <label class="profile-search input-affix">
-                        <span class="input-affix-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg></span>
+                        <span class="input-affix-icon" aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'search']) ?></span>
                         <input class="input input-pill" type="search" enterkeyhint="search" name="cq" value="<?= $e($connQ) ?>" placeholder="Find a member" aria-label="Find a member">
                     </label>
                     <button class="btn btn-small" type="submit">Search</button>

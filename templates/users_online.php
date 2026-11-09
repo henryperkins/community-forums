@@ -71,7 +71,7 @@ $queryFor = static function (array $over) use ($filter, $search): string {
             <form class="users-online-search" method="get" action="/users-online" role="search">
                 <?php if ($filter !== ''): ?><input type="hidden" name="filter" value="<?= $e($filter) ?>"><?php endif; ?>
                 <label class="users-online-field">
-                    <svg class="users-online-field-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+                    <?= $this->partial('partials/icon', ['name' => 'search', 'class' => 'users-online-field-icon']) ?>
                     <input id="presence-q" name="q" type="search" value="<?= $e($search) ?>" placeholder="Find a member" aria-label="Find a member" autocomplete="off">
                 </label>
                 <?php if ($search !== ''): ?>

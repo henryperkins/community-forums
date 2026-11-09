@@ -128,7 +128,9 @@ generated Living Brief content; the Comment family for discussion and Chat for
 conversations; and muted, task-relevant empty-state marks. Icons draw at 16px,
 or 20px for members who choose larger icons, with artwork made for that size;
 row marks, reactions and empty-state marks keep their own sizes. Icons are
-filled artwork in the text colour; do not stroke them. Decorative fantasy
+filled artwork in the text colour; do not stroke them, and do not draw one by
+hand: templates use the icon partial, the composer its generated copy of the
+set. Decorative fantasy
 stars, textures and photograph backgrounds do not belong behind reading or
 authentication content. Authored images retain their existing content and
 alternative-text behavior.

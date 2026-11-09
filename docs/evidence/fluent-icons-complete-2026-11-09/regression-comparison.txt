@@ -1,0 +1,182 @@
+== 20 specs
+branch (this change): passed 263, failed 79, skipped 108, flaky 0
+main (11b07629):      passed 263, failed 79, skipped 108, flaky 0
+failing tests: branch 77, main 77, shared 77, branch only 0, main only 0
+shared failures by spec: branding-styles.spec.ts 14, profile-surface.spec.ts 12, header-polish.spec.ts 9, header-phone-rows.spec.ts 6, header-unread-marks.spec.ts 5, board-index-remediation.spec.ts 4, composer-shell.spec.ts 4, unified-chrome.spec.ts 4, composer-expansion.spec.ts 4, content-console.spec.ts 3, thread-view-study.spec.ts 3, header-regressions.spec.ts 3, community-inbox-theme.spec.ts 3, auth-polish.spec.ts 2, composer-toolbar-hardening.spec.ts 1
+
+shared failures (first error line, branch run):
+  auth-polish.spec.ts [desktop] the stage keeps its twilight, and focus on it is the stage gold
+      Error: page.evaluate: TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.
+  auth-polish.spec.ts [mobile] the stage keeps its twilight, and focus on it is the stage gold
+      Error: page.evaluate: TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.
+  board-index-remediation.spec.ts [desktop] a board description sits beside its name, not a column away
+      Error: expect(received).toBeGreaterThanOrEqual(expected)
+  board-index-remediation.spec.ts [desktop] the reading column is centred in its pane
+      Error: expect(received).toBeGreaterThan(expected)
+  board-index-remediation.spec.ts [mobile] a board description sits beside its name, not a column away
+      Error: expect(received).toBeGreaterThanOrEqual(expected)
+  board-index-remediation.spec.ts [mobile] the reading column is centred in its pane
+      Error: expect(received).toBeGreaterThan(expected)
+  branding-styles.spec.ts [desktop] an override replaces one part of a preset, over a package too
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [desktop] at large text the style controls stay inside the page
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [desktop] ledger reaches navigation, reading, forms and messaging in both modes
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [desktop] the density default applies to visitors and undecided members only
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [desktop] the style controls are keyboard operable and the sample follows them
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [desktop] vellum reaches navigation, reading, forms and messaging in both modes
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [desktop] without JavaScript the style controls publish and the sample shows the saved style
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [mobile] an override replaces one part of a preset, over a package too
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [mobile] at large text the style controls stay inside the page
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [mobile] ledger reaches navigation, reading, forms and messaging in both modes
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [mobile] the density default applies to visitors and undecided members only
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [mobile] the style controls are keyboard operable and the sample follows them
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [mobile] vellum reaches navigation, reading, forms and messaging in both modes
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  branding-styles.spec.ts [mobile] without JavaScript the style controls publish and the sample shows the saved style
+      Error: Command failed: php /home/azureuser/rb-wt-fluent-icons/tests/browser/theming-remediation-fixture.php reset
+  community-inbox-theme.spec.ts [mobile] canonical mobile composer keeps formatting and anonymous controls contained
+      Error: expect(received).toEqual(expected) // deep equality
+  community-inbox-theme.spec.ts [mobile] failed Inbox fetches fall back to the canonical topic route
+      Error: expect(page).toHaveURL(expected) failed
+  community-inbox-theme.spec.ts [mobile] mobile top bar stays one row and Search remains reachable
+      Error: expect(received).toBeLessThanOrEqual(expected)
+  composer-expansion.spec.ts [desktop] new topic renders as one composer surface with the title as its header field
+      Error: expect(received).toBe(expected) // Object.is equality
+  composer-expansion.spec.ts [desktop] the reply composer is one framed surface with no nested editor card
+      Error: the box paints the focus ring
+  composer-expansion.spec.ts [mobile] new topic renders as one composer surface with the title as its header field
+      Error: expect(received).toBe(expected) // Object.is equality
+  composer-expansion.spec.ts [mobile] the reply composer is one framed surface with no nested editor card
+      Error: the box paints the focus ring
+  composer-shell.spec.ts [desktop] draft counter preview and textarea auto-growth stay inside the shell
+      Error: {"maxContentWidth":624.698,"proseMeasure":660.703125,"contained":true}
+  composer-shell.spec.ts [desktop] textarea colon autocomplete respects boundaries and inserts unicode and custom emoji
+      Error: [data-composer-instance="new-thread-board-2"] serious/critical axe violations
+  composer-shell.spec.ts [mobile] draft counter preview and textarea auto-growth stay inside the shell
+      Error: {"maxContentWidth":624.698,"proseMeasure":660.703125,"contained":true}
+  composer-shell.spec.ts [mobile] mobile compact dock expands to a contained formatting overflow and anonymous disclosure
+      Error: {"clientWidth":167,"scrollWidth":232,"left":14,"right":181,"viewportWidth":195}
+  composer-toolbar-hardening.spec.ts [desktop] toolbar reflects active marks across rich and source modes
+      Error: expect(locator).toHaveAttribute(expected) failed
+  content-console.spec.ts [desktop] structure copies the category, board, and add-form anatomy in every register
+      Error: expect(received).toEqual(expected) // deep equality
+  content-console.spec.ts [desktop] true no-JS tabs and forms navigate, mutate, confirm, and preserve the server contract
+      Error: expect(locator).not.toHaveClass(expected) failed
+  content-console.spec.ts [mobile] structure copies the category, board, and add-form anatomy in every register
+      Error: expect(locator).toHaveCount(expected) failed
+  header-phone-rows.spec.ts [desktop] a guest's phone bar keeps one row, the community's name and 44px sign-in targets
+      Error: expect(received).toBe(expected) // Object.is equality
+  header-phone-rows.spec.ts [desktop] touch screens above the drawer breakpoint keep the 44px floor
+      Error: expect(received).toBe(expected) // Object.is equality
+  header-phone-rows.spec.ts [mobile] a guest's phone bar keeps one row, the community's name and 44px sign-in targets
+      Error: one row: Boards alone does not take a second
+  header-phone-rows.spec.ts [mobile] the community's name shortens, and drops whole rather than to a stub
+      Error: 320px: no blank link
+  header-phone-rows.spec.ts [mobile] the phone rows give every control a 44px target, 8px apart, and the routes 13px labels
+      Error: 390px: ADR 0042's two rows
+  header-phone-rows.spec.ts [mobile] the reading and focus order follow the rows
+      Error: expect(received).toEqual(expected) // deep equality
+  header-polish.spec.ts [desktop] a focused control keeps its own corner and wears the gold halo
+      Error: the walk reached the whole bar
+  header-polish.spec.ts [desktop] counts carry their words on their links, as the bell's do
+      Error: expect(locator).toHaveAccessibleName(expected) failed
+  header-polish.spec.ts [desktop] no shortcut is claimed, because nothing answers it
+      Error: expect(locator).toHaveAccessibleName(expected) failed
+  header-polish.spec.ts [desktop] shortcut hints appear only where the shortcut works, in the platform's own modifier
+      Error: expect(locator).toHaveAccessibleName(expected) failed
+  header-polish.spec.ts [desktop] the bell is current on the notifications page, as a route is on its own
+      Error: the current wash
+  header-polish.spec.ts [mobile] a focused control keeps its own corner and wears the gold halo
+      Error: the walk reached the whole bar
+  header-polish.spec.ts [mobile] counts carry their words on their links, as the bell's do
+      Error: expect(locator).toHaveAccessibleName(expected) failed
+  header-polish.spec.ts [mobile] on a phone the lockup holds only what it shows
+      Error: the link is the mark
+  header-polish.spec.ts [mobile] the bell is current on the notifications page, as a route is on its own
+      Error: the current wash
+  header-regressions.spec.ts [desktop] Large text and capped unread counts keep every phone route inside the viewport
+      Error: desktop, Large text at 320px: two header rows
+  header-regressions.spec.ts [desktop] classic desktop scrollbars do not create a third header row at narrow widths
+      Error: desktop at 320px: two header rows
+  header-regressions.spec.ts [mobile] Large text and capped unread counts keep every phone route inside the viewport
+      Error: mobile, Large text at 320px: two header rows
+  header-unread-marks.spec.ts [desktop] the Inbox count leads and the other counts share one quiet chip (day)
+      Error: expect(locator).toHaveText(expected) failed
+  header-unread-marks.spec.ts [desktop] the Inbox count leads and the other counts share one quiet chip (twilight)
+      Error: expect(locator).toHaveText(expected) failed
+  header-unread-marks.spec.ts [desktop] the bell keeps its square target when it has nothing to count
+      Error: expect(received).toBe(expected) // Object.is equality
+  header-unread-marks.spec.ts [mobile] the Inbox count leads and the other counts share one quiet chip (day)
+      Error: expect(locator).toHaveText(expected) failed
+  header-unread-marks.spec.ts [mobile] the Inbox count leads and the other counts share one quiet chip (twilight)
+      Error: expect(locator).toHaveText(expected) failed
+  profile-surface.spec.ts [desktop] Commends meets contrast in both themes and every empty state keeps the shared frame
+      Error: expect(locator).toHaveCount(expected) failed
+  profile-surface.spec.ts [desktop] profile controls use system sizing, focus, current states and stable disabled fills
+      Error: expect(locator).toHaveCSS(expected) failed
+  profile-surface.spec.ts [desktop] profile review: phone activity titles remain fully readable
+      Error: expect(locator).toHaveCSS(expected) failed
+  profile-surface.spec.ts [desktop] profile review: search controls align and activity timestamps retain exact instants
+      Error: expect(locator).toHaveCSS(expected) failed
+  profile-surface.spec.ts [desktop] profile states match the approved anatomy in light and dark themes
+      Error: expect(received).toEqual(expected) // deep equality
+  profile-surface.spec.ts [desktop] tabs, search, sorting, paging, menu, copy link, and keyboard focus work
+      Error: expect(locator).toBeVisible() failed
+  profile-surface.spec.ts [mobile] Commends meets contrast in both themes and every empty state keeps the shared frame
+      Error: expect(locator).toHaveCount(expected) failed
+  profile-surface.spec.ts [mobile] profile controls use system sizing, focus, current states and stable disabled fills
+      Error: expect(locator).toHaveCSS(expected) failed
+  profile-surface.spec.ts [mobile] profile review: phone activity titles remain fully readable
+      Error: expect(locator).toHaveCSS(expected) failed
+  profile-surface.spec.ts [mobile] profile review: search controls align and activity timestamps retain exact instants
+      Error: expect(locator).toHaveCSS(expected) failed
+  profile-surface.spec.ts [mobile] profile states match the approved anatomy in light and dark themes
+      Error: expect(received).toEqual(expected) // deep equality
+  profile-surface.spec.ts [mobile] tabs, search, sorting, paging, menu, copy link, and keyboard focus work
+      Error: expect(locator).toBeVisible() failed
+  thread-view-study.spec.ts [desktop] post menu rows stack full-width with no user-agent chrome
+      Error: Copy link uses the label face
+  thread-view-study.spec.ts [mobile] Study layout matches desktop and mobile geometry
+      Error: expect(received).toBe(expected) // Object.is equality
+  thread-view-study.spec.ts [mobile] post menu rows stack full-width with no user-agent chrome
+      Error: Quote in your reply uses the label face
+  unified-chrome.spec.ts [desktop] all three full primary labels remain native destinations at 320px
+      Error: expect(received).toBeGreaterThanOrEqual(expected)
+  unified-chrome.spec.ts [desktop] persistent bell keeps complete primary routes and mobile controls reachable at 320px
+      Error: expect(received).toBeGreaterThanOrEqual(expected)
+  unified-chrome.spec.ts [desktop] the bar and the rail are the design system's, at its geometry, in both registers
+      Error: expect(locator).toHaveCSS(expected) failed
+  unified-chrome.spec.ts [mobile] the bar and the rail are the design system's, at its geometry, in both registers
+      Error: expect(locator).toHaveCSS(expected) failed
+
+== branding-styles.spec.ts (browser-named databases)
+branch (this change): passed 7, failed 6, skipped 1, flaky 0
+main (11b07629):      passed 7, failed 6, skipped 1, flaky 0
+failing tests: branch 6, main 6, shared 6, branch only 0, main only 0
+shared failures by spec: branding-styles.spec.ts 6
+
+shared failures (first error line, branch run):
+  branding-styles.spec.ts [desktop] an override replaces one part of a preset, over a package too
+      Error: expect(received).toMatch(expected)
+  branding-styles.spec.ts [desktop] ledger reaches navigation, reading, forms and messaging in both modes
+      Error: ledger light navigation text
+  branding-styles.spec.ts [desktop] vellum reaches navigation, reading, forms and messaging in both modes
+      Error: vellum light navigation text
+  branding-styles.spec.ts [mobile] an override replaces one part of a preset, over a package too
+      Error: expect(received).toMatch(expected)
+  branding-styles.spec.ts [mobile] ledger reaches navigation, reading, forms and messaging in both modes
+      Error: ledger light navigation text
+  branding-styles.spec.ts [mobile] vellum reaches navigation, reading, forms and messaging in both modes
+      Error: vellum light navigation text
+

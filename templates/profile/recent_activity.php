@@ -22,7 +22,7 @@
                         <a class="profile-activity-title" href="<?= $e($row['url']) ?>" title="<?= $e($row['title']) ?>"><?= $e($row['title']) ?></a>
                         <time datetime="<?= $e(iso_datetime($row['created_at'])) ?>" title="<?= $e(human_datetime($row['created_at'])) ?>"><?= $e(relative_datetime($row['created_at'])) ?></time>
                         <button class="profile-activity-toggle" type="button" data-activity-toggle data-activity-title="<?= $e($row['title']) ?>" aria-expanded="false" aria-controls="<?= $e($detailId) ?>" aria-label="Show details: <?= $e($row['title']) ?>" hidden>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>
+                            <?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?>
                         </button>
                     </div>
                     <div class="profile-activity-detail" id="<?= $e($detailId) ?>" hidden>

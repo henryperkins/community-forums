@@ -175,7 +175,7 @@ foreach ($tierAreas as $key => $meta) {
             ]) ?>
         </a>
         <a class="admin-bar-exit" href="/">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            <?= $this->partial('partials/icon', ['name' => 'chevron-left']) ?>
             Back to the forum
         </a>
         <div class="admin-bar-right">
@@ -188,7 +188,7 @@ foreach ($tierAreas as $key => $meta) {
                 <?php if (!empty($features['notifications'])): ?>
                     <?php $notificationCount = $notification_unread(); ?>
                     <a class="topbar-link bell" href="/notifications" data-bell data-notification-link aria-label="<?= $notificationCount > 0 ? 'Notifications, ' . $notificationCount . ' unread' : 'Notifications' ?>" title="Notifications">
-                        <svg class="bell-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                        <?= $this->partial('partials/icon', ['name' => 'bell', 'class' => 'bell-ic']) ?>
                         <span class="bell-count" data-notification-count aria-hidden="true"<?= $notificationCount === 0 ? ' hidden' : '' ?>><?= $notificationCount > 99 ? '99+' : $notificationCount ?></span>
                         <span class="sr-only">Notifications</span>
                     </a>

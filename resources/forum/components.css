@@ -58,7 +58,6 @@
 .btn-ghost:disabled:hover { background: transparent; }
 .btn-accent:disabled:hover { background: var(--accent-2); }
 .btn-danger:disabled:hover { background: var(--danger); }
-.btn-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
 
 .linkbtn { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font: inherit; }
 .linkbtn.danger { color: var(--danger); }
@@ -89,7 +88,7 @@
     background: var(--brand-subtle); color: var(--on-brand-subtle);
     border: 1px solid var(--green-200); vertical-align: middle;
 }
-.badge svg, .chip svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.badge svg, .chip svg { width: 11px; height: 11px; }
 /* Role badges */
 .badge-staff  { color: var(--on-staff); background: var(--surface-staff); border-color: var(--gold-200); }
 .badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
@@ -243,6 +242,7 @@
 /* Leading icon (Input `icon`): a decorative glyph in the field's left padding. */
 .input-affix { position: relative; display: block; }
 .input-affix-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); display: inline-flex; color: var(--text-faint); pointer-events: none; }
+.input-affix-icon .icon { width: 14px; height: 14px; }
 .input-affix > .input { padding-left: 35px; }
 
 /* ── Engraved frames ──────────────────────────────────────────────────────
@@ -464,6 +464,7 @@
 .admin-bar-wordmark { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em; }
 .admin-bar-exit { display: inline-flex; align-items: center; gap: 5px; flex: none; white-space: nowrap; font-family: var(--font-label); font-size: max(var(--text-floor), .78rem); letter-spacing: .03em; color: var(--text-muted); text-decoration: none; }
 .admin-bar-exit:hover { color: var(--accent); }
+.admin-bar-exit .icon { flex: none; width: 13px; height: 13px; }
 .admin-bar-mode { margin-left: auto; flex: none; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: max(var(--text-floor), .72rem); letter-spacing: .08em; text-transform: uppercase; }
 /* Overflow stays visible on purpose: below ~900px the tier scrolls, and a thin
    scrollbar is the only honest signal that Settings is off-edge. */
@@ -516,6 +517,7 @@
 .forum-bar-searchwrap { position: relative; flex: 0 1 300px; min-width: 180px; display: inline-flex; }
 .forum-bar-search { flex: 1; min-width: 0; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; box-sizing: border-box; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-pill); color: var(--text-faint); text-align: left; text-decoration: none; cursor: pointer; font: inherit; }
 .forum-bar-search:hover { border-color: var(--border-soft); }
+.forum-bar-search > .icon { flex: none; width: 13px; height: 13px; }
 .forum-bar-search-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-label); font-size: max(var(--text-floor), .76rem); color: var(--text-faint); }
 .forum-bar-kbd { margin-left: auto; font-family: var(--font-meta); font-size: max(var(--text-floor), .64rem); color: var(--text-faint); }
 .forum-bar-right { margin-left: auto; min-width: 0; display: inline-flex; align-items: center; gap: 14px; }
@@ -581,7 +583,7 @@
 .board-rail-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .board-rail-unread { flex: none; padding: 0 6px; text-align: center; border-radius: var(--radius-pill); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-meta); font-size: max(var(--text-floor), .66rem); }
 .board-rail-item.is-locked { color: var(--text-faint); cursor: default; }
-.board-rail-lock { flex: none; }
+.board-rail-lock { flex: none; width: 11px; height: 11px; }
 .board-rail-note { flex: none; font-family: var(--font-meta); font-size: max(var(--text-floor), .62rem); }
 .board-rail-tag { flex: none; padding: 1px 7px; border: 1px solid var(--border-hair); border-radius: var(--radius-pill); font-family: var(--font-label); font-size: max(var(--text-floor), .58rem); letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
 .board-rail-foot { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-hair); }
@@ -751,7 +753,7 @@
     font-family: var(--font-label); text-transform: uppercase; letter-spacing: .09em;
     font-size: max(var(--text-floor), .64rem); color: var(--on-done);
 }
-.accepted-flag svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.accepted-flag svg { width: 13px; height: 13px; }
 .post-grouped { box-shadow: none; border-color: transparent; background: transparent; }
 .post-avatar-spacer { flex: 0 0 56px; width: 56px; }
 .reactions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; align-items: center; }
@@ -833,15 +835,6 @@
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-}
-.composer-toolbar-action svg {
-    width: 17px;
-    height: 17px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 .composer-toolbar-action:hover,
 .composer-more-toggle:hover,
@@ -1122,7 +1115,6 @@
     border-radius: var(--radius-sm);
     background: transparent;
     color: var(--text-muted);
-    font-size: 1.3rem;
     cursor: pointer;
 }
 .composer-emoji-close:hover { border-color: var(--border-hair); background: var(--surface-sunken); color: var(--text-strong); }
@@ -1864,7 +1856,6 @@ body[data-route="inbox"] .main > .read-main { margin: 0 auto; }
 .notification-open:hover { background: var(--surface-sunken); }
 .notification-open:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .notification-icon { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-hair); border-radius: 50%; color: var(--text-muted); background: var(--surface-sunken); }
-.notification-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .notification-body { position: relative; min-width: 0; padding-left: 14px; overflow-wrap: anywhere; }
 .notification-message { color: var(--text-muted); line-height: 1.5; }
 .notification-context { font-style: italic; }
@@ -2236,15 +2227,6 @@ html:not(.has-js) .inbox-view-bar > .inbox-menu { position: static; }
     text-transform: none;
 }
 .thread-row-inbox .thread-row-chips .icon { width: 9px; height: 9px; }
-/* `.chip svg` paints every mark as a stroked Lucide glyph, and CSS outranks the
-   presentation attributes the filled brand stars carry — so the commend star
-   inside a chip was drawn hollow, at a stroke width of 2 in a 0-100 viewBox. */
-.badge .icon-commend-star,
-.chip .icon-commend-star { fill: currentColor; stroke: none; }
-/* The commend star is the one esteem glyph. In outline it is the unset state of
-   a control that sets it, so a toggle's two states differ in shape as well as
-   in ink: the two inks it moves between are close in lightness. */
-.icon-commend-star.is-outline { fill: currentColor; stroke: none; }
 .thread-row-inbox .thread-snippet {
     display: -webkit-box;
     margin: 3px 0 0;

@@ -3,7 +3,7 @@
     <form method="post" action="/notifications/<?= (int) $item['id'] ?>/read">
         <?= $this->csrfField() ?><input type="hidden" name="return" value="<?= $e($return_path) ?>">
         <button class="notification-open" type="submit">
-            <span class="notification-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><?php foreach ($item['icon'] as $d): ?><path d="<?= $e($d) ?>"></path><?php endforeach; ?></svg></span>
+            <span class="notification-icon"><?= $this->partial('partials/icon', ['name' => $item['icon']]) ?></span>
             <span class="notification-body">
                 <?php if (!$item['is_read']): ?><span class="notification-unread-dot" aria-hidden="true"></span><span class="sr-only">Unread. </span><?php endif; ?>
                 <span class="notification-message"><?= $e($item['message']) ?></span>

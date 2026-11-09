@@ -5,9 +5,9 @@ html[data-font-size="small"] { font-size: 87.5%; }
 html[data-font-size="medium"] { font-size: 100%; }
 html[data-font-size="large"] { font-size: 112.5%; }
 html[data-icon-size="large"] { --icon-size: 20px; }
-/* The icon partial draws filled Fluent artwork (ADR 0060). Older rules that
-   stroke an svg inside .fab, .chip, .badge, .accepted-flag or .nav-toggle-ic
-   were written for the retired stroked glyphs and would outline it. */
+/* Every icon is filled Fluent artwork (ADR 0060), from the icon partial or the
+   composer's generated copy. Nothing strokes an icon; this guard keeps a later
+   rule that strokes an svg from outlining one. */
 svg.icon { fill: currentColor; stroke: none; }
 body { font-family: var(--font-body); font-size: 1rem; line-height: 1.6; background-color: var(--surface-page); }
 button, input, select, textarea { font-family: var(--font-label); font-size: 1rem; }

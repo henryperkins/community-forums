@@ -213,20 +213,21 @@ test('the pane toggles read filled when shown and outlined when hidden', async (
       await page.waitForTimeout(400);
       for (const kind of ['rail', 'reading']) {
         const button = `[data-panel-form="${kind}"] .forum-bar-railtoggle`;
-        const band = await page.locator(`${button} .forum-bar-toggle-band`).evaluate((el) => {
+        // Fluent's Panel artwork (ADR 0060): Filled, its band solid, while the
+        // pane is shown; Regular, the band an outlined divider, while hidden.
+        const drawn = `${button} .forum-bar-toggle-${shown ? 'on' : 'off'}`;
+        await expect(page.locator(drawn), `${kind} ${theme}: the glyph for the state is drawn`).toBeVisible();
+        await expect(page.locator(`${button} .forum-bar-toggle-${shown ? 'off' : 'on'}`)).toBeHidden();
+        const glyph = await page.locator(drawn).evaluate((el) => {
           const c = getComputedStyle(el);
-          return { display: c.display, opacity: c.opacity, fill: c.fill, stroke: c.stroke, strokeWidth: c.strokeWidth };
+          return { cls: el.getAttribute('class') ?? '', opacity: c.opacity, stroke: c.stroke, d: el.querySelector('path')?.getAttribute('d') ?? '' };
         });
-        expect(band.display, `${kind} ${theme}: the band is always drawn`).not.toBe('none');
-        expect(band.opacity).toBe('1');
-        if (shown) {
-          expect(band.fill).not.toBe('none');
-          expect(await contrast(page, `${button} .forum-bar-toggle-band`, 'fill', null, button), `${kind} ${theme}: filled band`).toBeGreaterThanOrEqual(3);
-        } else {
-          expect(band.fill).toBe('none');
-          expect(band.strokeWidth).toBe('1.1px');
-          expect(await contrast(page, `${button} .forum-bar-toggle-band`, 'stroke', null, button), `${kind} ${theme}: outlined band`).toBeGreaterThanOrEqual(3);
-        }
+        expect(glyph.cls).toContain(kind === 'rail' ? 'icon-panel-left' : 'icon-panel-right');
+        expect(glyph.opacity).toBe('1');
+        expect(glyph.stroke).toBe('none');
+        const otherD = await page.locator(`${button} .forum-bar-toggle-${shown ? 'off' : 'on'} path`).first().getAttribute('d');
+        expect(glyph.d, `${kind}: shown and hidden differ in shape`).not.toBe(otherD);
+        expect(await contrast(page, drawn, 'fill', null, button), `${kind} ${theme}: ${shown ? 'filled' : 'outlined'} band`).toBeGreaterThanOrEqual(3);
       }
       const box = (await page.locator('.forum-bar-right').boundingBox())!;
       await page.screenshot({ path: shot(`toggles-${shown ? 'shown' : 'hidden'}-${theme}.png`, info.project.name), clip: { x: box.x - 6, y: 8, width: 120, height: 46 } });

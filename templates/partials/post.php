@@ -51,7 +51,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
     <?php endif; ?>
     <div class="post-main">
         <?php if ($accepted): ?>
-            <p class="accepted-flag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Marked as the answer<?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?></p>
+            <p class="accepted-flag"><?= $this->partial('partials/icon', ['name' => 'check']) ?>Marked as the answer<?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?></p>
         <?php endif; ?>
         <div class="post-head">
             <?php if (!$grouped): ?>

@@ -261,36 +261,42 @@
         'list', 'orderedList', 'codeblock', 'spoiler', 'link'
     ];
     var ACTIONS = {
-        bold: { label: 'Bold', before: '**', after: '**', shortcut: 'b', active: 'inline' },
-        italic: { label: 'Italic', before: '*', after: '*', shortcut: 'i', active: 'inline' },
-        strike: { label: 'Strike', before: '~~', after: '~~', active: 'inline' },
-        code: { label: 'Inline code', before: '`', after: '`', shortcut: 'e', active: 'inline' },
-        quote: { label: 'Quote', before: '\n> ', after: '', prefix: '> ', active: 'line' },
-        h2: { label: 'Heading', before: '\n## ', after: '', prefix: '## ', active: 'line' },
-        list: { label: 'Bullet list', before: '\n- ', after: '', prefix: '- ', active: 'line' },
-        orderedList: { label: 'Numbered list', before: '\n1. ', after: '', prefix: '1. ', active: 'ordered-line' },
-        codeblock: { label: 'Code block', before: '\n```\n', after: '\n```\n', active: 'fence' },
-        spoiler: { label: 'Spoiler', before: '||', after: '||', active: 'inline' },
-        link: { label: 'Link', before: '[', after: '](https://)', shortcut: 'k', active: 'inline' }
+        bold: { label: 'Bold', icon: 'text-bold', before: '**', after: '**', shortcut: 'b', active: 'inline' },
+        italic: { label: 'Italic', icon: 'text-italic', before: '*', after: '*', shortcut: 'i', active: 'inline' },
+        strike: { label: 'Strike', icon: 'text-strikethrough', before: '~~', after: '~~', active: 'inline' },
+        code: { label: 'Inline code', icon: 'code', before: '`', after: '`', shortcut: 'e', active: 'inline' },
+        quote: { label: 'Quote', icon: 'quote', before: '\n> ', after: '', prefix: '> ', active: 'line' },
+        h2: { label: 'Heading', icon: 'heading', before: '\n## ', after: '', prefix: '## ', active: 'line' },
+        list: { label: 'Bullet list', icon: 'list-bullet', before: '\n- ', after: '', prefix: '- ', active: 'line' },
+        orderedList: { label: 'Numbered list', icon: 'list-numbered', before: '\n1. ', after: '', prefix: '1. ', active: 'ordered-line' },
+        codeblock: { label: 'Code block', icon: 'code-block', before: '\n```\n', after: '\n```\n', active: 'fence' },
+        spoiler: { label: 'Spoiler', icon: 'spoiler', before: '||', after: '||', active: 'inline' },
+        link: { label: 'Link', icon: 'link', before: '[', after: '](https://)', shortcut: 'k', active: 'inline' }
     };
     var GROUP_BREAKS = { code: true, spoiler: true };
     var ESSENTIAL_ACTIONS = { bold: true, italic: true, list: true, link: true };
-    var ICON_PATHS = {
-        bold: ['M8 5h5a3 3 0 0 1 0 6H8z', 'M8 11h6a4 4 0 0 1 0 8H8z'],
-        italic: ['M10 5h7', 'M7 19h7', 'M14 5 10 19'],
-        strike: ['M6 7h10', 'M5 12h14', 'M8 17h8'],
-        code: ['m9 8-4 4 4 4', 'm15 8 4 4-4 4'],
-        quote: ['M6 7h5v5H7v5', 'M14 7h5v5h-4v5'],
-        h2: ['M5 6v12', 'M13 6v12', 'M5 12h8', 'M16 10c0-2 4-2 4 0 0 2-4 3-4 6h5'],
-        list: ['M9 7h10', 'M9 12h10', 'M9 17h10', 'M5 7h.01', 'M5 12h.01', 'M5 17h.01'],
-        orderedList: ['M5 6h1v3', 'M5 13c2-1 2 2 0 3h2', 'M10 7h9', 'M10 12h9', 'M10 17h9'],
-        codeblock: ['M5 6h14v12H5z', 'm9 10-2 2 2 2', 'm6-4 2 2-2 2'],
-        spoiler: ['M3 12s3-5 9-5 9 5 9 5-3 5-9 5-9-5-9-5', 'M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4'],
-        link: ['M10 14 8.5 15.5a3 3 0 0 1-4-4L7 9a3 3 0 0 1 4 0', 'm14 10 1.5-1.5a3 3 0 0 1 4 4L17 15a3 3 0 0 1-4 0', 'm9 15 6-6'],
-        // The emoji picker's trigger is chrome, and chrome carries no emoji
-        // (PRODUCT.md): a stroked face in the toolbar's own line, not a glyph.
-        emoji: ['M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0z', 'M8.75 14.25s1.25 1.75 3.25 1.75 3.25-1.75 3.25-1.75', 'M9.5 10h.01', 'M14.5 10h.01']
+    // The toolbar is built here, so it carries its own copy of the Fluent
+    // artwork (ADR 0060): resources/icons/icons.json lists the names under
+    // "scripts", and `composer build:icons` writes them between these lines.
+    // BEGIN GENERATED ICONS (bin/build-icons.php; edit resources/icons/, not this block)
+    var ICONS = {
+        'text-bold': {16: [['M4 3.1C4 2.5 4.5 2 5.1 2h3c2.1 0 3.4 1.4 3.4 3.4 0 .9-.3 2-.7 2.6.8.6 1.4 1.2 1.4 2.5 0 2.7-2.1 3.5-3.6 3.5H5.1c-.6 0-1.1-.5-1.1-1.1zM6 9v3h2.4c.7 0 1.5-.5 1.5-1.5S9.1 9 8.4 9zm0-2h2.2c.9 0 1.5-.7 1.5-1.5S9.1 4 8.3 4H6z']], 20: [['M5.5 4.25C5.5 3.56 6.06 3 6.75 3h3.5a4 4 0 0 1 3.17 6.44c.9.7 1.58 1.8 1.58 3.31A4.23 4.23 0 0 1 10.75 17h-4c-.69 0-1.25-.56-1.25-1.25zM8 11v3.5h2.75c.81 0 1.75-.62 1.75-1.75S11.56 11 10.75 11zm0-2.5h2.25a1.5 1.5 0 1 0 0-3H8z']]},
+        'text-italic': {16: [['M13 2H7a.5.5 0 0 0 0 1h2.47L5.66 13H3a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1H6.73l3.81-10H13a.5.5 0 0 0 0-1']], 20: [['M16 3a.5.5 0 0 1 0 1h-3.16L8.23 16h3.27a.5.5 0 0 1 0 1H4a.5.5 0 0 1 0-1h3.16l4.61-12H8.5a.5.5 0 0 1 0-1z']]},
+        'text-strikethrough': {16: [['M5 5.1q.01-.84.84-1.46C6.39 3.25 7.19 3 8.1 3c1.3 0 2.38.56 2.76 1.24a.5.5 0 0 0 .88-.48C11.12 2.64 9.6 2 8.1 2c-1.09 0-2.1.3-2.84.83A2.8 2.8 0 0 0 4 5.1c0 .72.3 1.37.79 1.9H6.5C5.55 6.6 5 5.83 5 5.1M13.5 8a.5.5 0 0 1 0 1h-2.34c.52.5.84 1.15.84 1.9 0 .9-.51 1.69-1.26 2.23C10 13.67 9 14 7.9 14c-1.62 0-3-.65-3.72-1.72a.5.5 0 0 1 .84-.56C5.5 12.45 6.52 13 7.9 13c.9 0 1.7-.27 2.25-.68.56-.4.85-.92.85-1.42 0-.78-.63-1.53-1.78-1.9H2.5a.5.5 0 0 1 0-1z']], 20: [['M6.53 4.03A6 6 0 0 1 10 3a6.2 6.2 0 0 1 4.9 2.2.5.5 0 0 1-.8.6A5.2 5.2 0 0 0 10 4c-1.15 0-2.18.35-2.9.85C6.36 5.35 6 5.98 6 6.5c0 .9.43 1.48 1.17 1.93q.54.32 1.25.57H6.23A3 3 0 0 1 5 6.5c0-.98.64-1.86 1.53-2.47M16.5 10a.5.5 0 0 1 0 1h-2.73A3 3 0 0 1 15 13.5c0 1.23-.72 2.12-1.68 2.68-.94.56-2.16.82-3.32.82a7 7 0 0 1-2.9-.48 4.6 4.6 0 0 1-2.02-1.74.5.5 0 0 1 .84-.56c.45.68.96 1.11 1.58 1.38.64.28 1.44.4 2.5.4 1.03 0 2.06-.24 2.82-.68.74-.44 1.18-1.05 1.18-1.82 0-.9-.43-1.48-1.17-1.93q-.54-.32-1.25-.57H3.5a.5.5 0 0 1 0-1z']]},
+        'code': {16: [['M9.8 3.04c.26.12.37.41.26.66l-4 9a.5.5 0 0 1-.92-.4l4-9a.5.5 0 0 1 .66-.26M4.33 5.38c.2.18.23.5.04.7L2.67 8l1.7 1.92a.5.5 0 1 1-.74.66l-2-2.25a.5.5 0 0 1 0-.66l2-2.25a.5.5 0 0 1 .7-.04m7.34 0a.5.5 0 0 1 .7.04l2 2.25a.5.5 0 0 1 0 .66l-2 2.25a.5.5 0 1 1-.74-.66L13.33 8l-1.7-1.92a.5.5 0 0 1 .04-.7']], 20: [['M12.97 3.68a.5.5 0 0 0-.94-.36l-5 13a.5.5 0 1 0 .94.36zM5.83 6.12c.2.18.23.5.05.7L3.16 10l2.72 3.17a.5.5 0 0 1-.76.66l-3-3.5a.5.5 0 0 1 0-.66l3-3.5a.5.5 0 0 1 .7-.05m8.34 8.26a.5.5 0 0 1-.05-.7l2.72-3.18-2.72-3.17a.5.5 0 1 1 .76-.66l3 3.5a.5.5 0 0 1 0 .66l-3 3.5a.5.5 0 0 1-.7.05']]},
+        'quote': {16: [['M11 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2m.89 2.8a7.3 7.3 0 0 1-2.24 4.35.5.5 0 0 0 .7.7C12.47 9.73 13 7.6 13 5a2 2 0 1 0-1.11 1.8M5 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2m.89 2.8a7.3 7.3 0 0 1-2.24 4.35.5.5 0 0 0 .7.7C6.47 9.73 7 7.6 7 5a2 2 0 1 0-1.11 1.8']], 20: [['M7.83 8.62a9 9 0 0 1-.96 2.76 12 12 0 0 1-2.22 2.77.5.5 0 0 0 .7.7h.02c.74-.75 1.66-1.67 2.38-2.98A11 11 0 0 0 9 6.5a2.5 2.5 0 1 0-1.17 2.12M8 6.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m6.83 2.12a9 9 0 0 1-.96 2.76 12 12 0 0 1-2.22 2.77.5.5 0 0 0 .7.7h.02c.74-.75 1.66-1.67 2.38-2.98A11 11 0 0 0 16 6.5a2.5 2.5 0 1 0-1.17 2.12M13.5 8a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3']]},
+        'heading': {20: [['M9.5 4c.28 0 .5.22.5.5v11a.5.5 0 0 1-1 0V10H3v5.5a.5.5 0 0 1-1 0v-11a.5.5 0 0 1 1 0V9h6V4.5c0-.28.22-.5.5-.5m5-.5A3.5 3.5 0 0 1 18 7c0 1.04-.45 1.84-1.07 2.51-.6.65-1.4 1.22-2.13 1.77-1.38 1.03-2.57 2.05-2.77 3.72h5.47a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5c0-2.52 1.7-3.9 3.2-5.03.77-.57 1.47-1.07 2-1.64.5-.55.8-1.12.8-1.83a2.5 2.5 0 0 0-4.97-.42l-.02.1a.5.5 0 0 1-.96-.26l.06-.3A3.5 3.5 0 0 1 14.5 3.5']]},
+        'list-bullet': {16: [['M2 4.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2M2 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2m1 3.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0M5.5 3a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1zM5 8c0-.28.22-.5.5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 5 8m.5 4a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1z']], 20: [['M3 5.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3-1c0-.28.22-.5.5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5m0 5c0-.28.22-.5.5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5m.5 4.5a.5.5 0 0 0 0 1h11a.5.5 0 0 0 0-1zm-2.5.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0m-1-4a1 1 0 1 0 0-2 1 1 0 0 0 0 2']]},
+        'list-numbered': {16: [['M3.68 1.01c.2.04.33.21.33.4v3.3c0 .22-.19.4-.42.4a.4.4 0 0 1-.43-.4V2.58q-.27.24-.67.44a.44.44 0 0 1-.57-.19.4.4 0 0 1 .2-.55A2.5 2.5 0 0 0 3.2 1.23c.1-.17.29-.26.48-.22M2.15 7.06a.4.4 0 0 1 0-.59h.01l.11-.1.28-.17c.24-.13.6-.26 1.03-.26h.01c.32 0 .67.09.95.29q.46.31.48.95c0 .45-.2.76-.48.99-.22.17-.5.3-.72.4l-.1.06q-.4.17-.61.39a1 1 0 0 0-.15.22H4.6c.23 0 .42.18.42.4s-.19.42-.42.42H2.46a.4.4 0 0 1-.43-.41q.02-.76.44-1.19c.26-.27.6-.44.87-.57l.12-.06q.34-.15.53-.3.18-.13.18-.35-.01-.21-.14-.3a1 1 0 0 0-.45-.12 1.3 1.3 0 0 0-.82.3.44.44 0 0 1-.6 0m.94 5.88c0-.23.2-.41.43-.41.3 0 .46-.08.54-.15a.3.3 0 0 0 .1-.25c0-.16-.15-.42-.64-.42-.35 0-.53.08-.62.13l-.07.07v-.02.02a.44.44 0 0 1-.57.16.4.4 0 0 1-.19-.55l.01-.02.09-.12q.09-.11.26-.22.35-.26 1.1-.28c.87 0 1.47.56 1.5 1.22q.01.46-.35.84c.24.23.36.54.34.84C5 14.44 4.4 15 3.52 15q-.74-.02-1.1-.28a1 1 0 0 1-.34-.34v-.01h-.01a.4.4 0 0 1 .2-.56c.2-.1.44-.03.55.16l.08.07c.09.05.27.14.62.14.49 0 .64-.27.65-.43a.3.3 0 0 0-.11-.25c-.08-.07-.25-.15-.54-.15a.4.4 0 0 1-.43-.4M7.5 3a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1zm0 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1zm0 4a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1z']], 20: [['M5 1.5a.5.5 0 0 0-.39-.49.5.5 0 0 0-.56.27l-.07.12-.25.35c-.22.28-.54.6-.95.8a.5.5 0 1 0 .44.9q.45-.23.78-.53V5.5a.5.5 0 0 0 1 0zM2.65 7.65a.5.5 0 0 0 .7.7l.05-.04.2-.12C3.76 8.09 4 8 4.3 8q.35 0 .53.15.15.1.16.35a.5.5 0 0 1-.21.44q-.22.17-.62.35l-.14.08c-.32.15-.7.36-1 .7q-.51.51-.53 1.43c0 .28.22.5.5.5h2.5a.5.5 0 0 0 0-1H3.59q.06-.16.17-.27a2.4 2.4 0 0 1 .83-.53c.27-.13.59-.29.84-.5.33-.27.57-.65.57-1.2 0-.5-.22-.9-.57-1.15A2 2 0 0 0 4.33 7h-.01a2.5 2.5 0 0 0-1.66.63zm.01-.02-.01.02s.1-.1.01-.02M4.25 15a.5.5 0 1 0 0 1c.34 0 .53.1.63.18q.14.14.13.3c-.01.2-.19.52-.76.52-.41 0-.63-.1-.72-.17l-.1-.07a.5.5 0 0 0-.88.46v.01l.02.02.1.15q.1.12.3.27c.28.18.7.33 1.28.33 1.03 0 1.73-.67 1.76-1.48.01-.37-.12-.74-.4-1.02.28-.28.41-.65.4-1.02-.03-.8-.73-1.48-1.76-1.48-.59 0-1 .15-1.28.33a1.4 1.4 0 0 0-.4.42l-.01.01v.01a.5.5 0 0 0 .87.48l.1-.08c.1-.07.3-.17.72-.17.57 0 .75.33.76.52q0 .16-.13.3c-.1.08-.29.18-.63.18m-.82-.75.01-.02zM8.5 4a.5.5 0 1 0 0 1h8a.5.5 0 0 0 0-1zm0 5a.5.5 0 1 0 0 1h8a.5.5 0 0 0 0-1zM8 14.5c0-.28.22-.5.5-.5h8a.5.5 0 1 1 0 1h-8a.5.5 0 0 1-.5-.5']]},
+        'code-block': {16: [['M4.5 2A2.5 2.5 0 0 0 2 4.5v7A2.5 2.5 0 0 0 4.5 14h7a2.5 2.5 0 0 0 2.5-2.5v-7A2.5 2.5 0 0 0 11.5 2zM3 4.5C3 3.67 3.67 3 4.5 3h7c.83 0 1.5.67 1.5 1.5v7c0 .83-.67 1.5-1.5 1.5h-7A1.5 1.5 0 0 1 3 11.5zm6.85 1.15a.5.5 0 1 0-.7.7L10.79 8 9.15 9.65a.5.5 0 0 0 .7.7l2-2a.5.5 0 0 0 0-.7zm-3 .7a.5.5 0 0 0-.7-.7l-2 2a.5.5 0 0 0 0 .7l2 2a.5.5 0 0 0 .7-.7L5.21 8z']], 20: [['M6 3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3zM4 6c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm4.85 1.85a.5.5 0 1 0-.7-.7l-2.5 2.5a.5.5 0 0 0 0 .7l2.5 2.5a.5.5 0 0 0 .7-.7L6.71 10zm3-.7a.5.5 0 0 0-.7.7L13.29 10l-2.14 2.15a.5.5 0 0 0 .7.7l2.5-2.5a.5.5 0 0 0 0-.7z']]},
+        'spoiler': {16: [['m10.12 10.83 4.03 4.02a.5.5 0 0 0 .7-.7l-13-13a.5.5 0 1 0-.7.7l3.23 3.23q-.72.52-1.18 1.1a7 7 0 0 0-1.12 1.99l-.05.14-.01.06s-.08.5.35.61a.5.5 0 0 0 .61-.35L3 8.6a3 3 0 0 1 .2-.52c.16-.34.4-.8.78-1.26q.44-.55 1.13-1.02l1.57 1.58a2.5 2.5 0 1 0 3.45 3.45m-.74-.74a1.5 1.5 0 1 1-1.97-1.97zm-3.06-5.9.85.86Q7.57 5 8 5c2.04 0 3.29.91 4.03 1.82A6 6 0 0 1 13 8.6v.02a.5.5 0 0 0 .97-.25v-.02l-.06-.18-.2-.5a7 7 0 0 0-.92-1.49A6 6 0 0 0 8 4a7 7 0 0 0-1.68.2']], 20: [['M2.85 2.15a.5.5 0 1 0-.7.7l3.5 3.5a8 8 0 0 0-3.37 5.05.5.5 0 1 0 .98.2 7 7 0 0 1 3.1-4.53l1.6 1.59a3.5 3.5 0 1 0 4.88 4.89l4.3 4.3a.5.5 0 0 0 .71-.7zm9.27 10.68a2.5 2.5 0 1 1-3.45-3.45zm-2-4.83 3.38 3.38A3.5 3.5 0 0 0 10.12 8M10 6q-.86 0-1.67.21l-.8-.8A8 8 0 0 1 10 5c3.7 0 6.94 2.67 7.72 6.4a.5.5 0 0 1-.98.2A7 7 0 0 0 10 6']]},
+        'link': {16: [['M9.5 4h1a3.5 3.5 0 0 1 .2 7H9.5a.5.5 0 0 1-.1-.99h.1l1-.01a2.5 2.5 0 0 0 .16-5H9.5a.5.5 0 0 1-.09-1zh1zm-4 0h1a.5.5 0 0 1 .09 1H5.5a2.5 2.5 0 0 0-.16 5H6.5a.5.5 0 0 1 .09 1H5.5a3.5 3.5 0 0 1-.2-7zh1zm0 3h5a.5.5 0 0 1 .09 1H5.5a.5.5 0 0 1-.09-1z']], 20: [['M8 6a.5.5 0 0 1 .09 1H6a3 3 0 0 0-.2 6H8a.5.5 0 0 1 .09 1H6a4 4 0 0 1-.22-8H8m6 0a4 4 0 0 1 .22 8H12a.5.5 0 0 1-.09-1H14a3 3 0 0 0 .2-6H12a.5.5 0 0 1-.09-1H14M6 9.5h8a.5.5 0 0 1 .09 1H6a.5.5 0 0 1-.09-1zh8z']]},
+        'emoji': {16: [['M6.25 7.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5m-.11 1.92a.5.5 0 1 0-.75.66 3.5 3.5 0 0 0 5.22 0 .5.5 0 0 0-.75-.66 2.5 2.5 0 0 1-3.72 0M10.5 7A.75.75 0 1 1 9 7a.75.75 0 0 1 1.5 0M14 8A6 6 0 1 0 2 8a6 6 0 0 0 12 0M3 8a5 5 0 1 1 10 0A5 5 0 0 1 3 8']], 20: [['M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0m10.5-1.5a1 1 0 1 0-2 0 1 1 0 0 0 2 0m-5 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0m-1.61 4.01a.5.5 0 1 0-.78.63 5 5 0 0 0 7.78 0 .5.5 0 1 0-.78-.63 4 4 0 0 1-6.22 0']]},
+        'attach': {16: [['M2.28 7.98a.5.5 0 0 0 .86.35l4.6-4.6A2.5 2.5 0 0 1 12 5.5a2.5 2.5 0 0 1-.73 1.77l-5.3 5.3a1 1 0 0 1-1.71-.7 1 1 0 0 1 .3-.71l5.3-5.3a.5.5 0 0 0-.7-.7l-5.32 5.29a2 2 0 1 0 2.83 2.83l5.3-5.3A3.49 3.49 0 0 0 9.5 2c-.9 0-1.8.34-2.48 1.02l-4.6 4.6a.5.5 0 0 0-.14.35']], 20: [['m4.83 10.48 5.65-5.65a3 3 0 0 1 4.25 4.24L8 15.8a1.5 1.5 0 0 1-2.12-2.12l6-6.01a.5.5 0 1 0-.7-.71l-6 6.01a2.5 2.5 0 0 0 3.53 3.54l6.71-6.72a4 4 0 1 0-5.65-5.66L4.12 9.78a.5.5 0 0 0 .7.7']]},
+        'plus': {16: [['M8 2c.28 0 .5.22.5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5c0-.28.22-.5.5-.5']], 20: [['M10 2.5c.28 0 .5.22.5.5v6.5H17a.5.5 0 0 1 0 1h-6.5V17a.5.5 0 0 1-1 0v-6.5H3a.5.5 0 0 1 0-1h6.5V3c0-.28.22-.5.5-.5']]},
+        'x': {16: [['m2.59 2.72.06-.07a.5.5 0 0 1 .63-.06l.07.06L8 7.29l4.65-4.64a.5.5 0 0 1 .7.7L8.71 8l4.64 4.65c.18.17.2.44.06.63l-.06.07a.5.5 0 0 1-.63.06l-.07-.06L8 8.71l-4.65 4.64a.5.5 0 0 1-.7-.7L7.29 8 2.65 3.35a.5.5 0 0 1-.06-.63l.06-.07z']], 20: [['m4.09 4.22.06-.07a.5.5 0 0 1 .63-.06l.07.06L10 9.29l5.15-5.14a.5.5 0 0 1 .63-.06l.07.06c.18.17.2.44.06.63l-.06.07L10.71 10l5.14 5.15c.18.17.2.44.06.63l-.06.07a.5.5 0 0 1-.63.06l-.07-.06L10 10.71l-5.15 5.14a.5.5 0 0 1-.63.06l-.07-.06a.5.5 0 0 1-.06-.63l.06-.07L9.29 10 4.15 4.85a.5.5 0 0 1-.06-.63l.06-.07z']]}
     };
+    // END GENERATED ICONS
 
     function applyAction(ta, key) {
         var action = ACTIONS[key];
@@ -371,15 +377,33 @@
         return false;
     }
 
-    function actionIcon(key) {
+    // Draws an icon as templates/partials/icon.php does: filled artwork in
+    // currentColor, from the 16px artwork for standard icons and the 20px
+    // artwork for larger ones (data-icon-size, USER §4.1), or the nearest size
+    // an icon is drawn from. An unknown name draws an empty icon.
+    function actionIcon(name) {
         var ns = 'http://www.w3.org/2000/svg';
         var svg = document.createElementNS(ns, 'svg');
-        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('class', 'icon icon-' + name);
+        svg.setAttribute('width', '16');
+        svg.setAttribute('height', '16');
+        svg.setAttribute('fill', 'currentColor');
         svg.setAttribute('aria-hidden', 'true');
         svg.setAttribute('focusable', 'false');
-        (ICON_PATHS[key] || []).forEach(function (pathData) {
+        var artwork = ICONS[name] || {};
+        var want = document.documentElement.getAttribute('data-icon-size') === 'large' ? 20 : 16;
+        var size = 0;
+        Object.keys(artwork).forEach(function (key) {
+            var candidate = Number(key);
+            var gap = Math.abs(candidate - want), best = Math.abs(size - want);
+            if (!size || gap < best || (gap === best && candidate > size)) { size = candidate; }
+        });
+        if (!size) { return svg; }
+        svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
+        artwork[size].forEach(function (shape) {
             var path = document.createElementNS(ns, 'path');
-            path.setAttribute('d', pathData);
+            path.setAttribute('d', shape[0]);
+            if (shape[1]) { path.setAttribute('fill-rule', shape[1]); }
             svg.appendChild(path);
         });
         return svg;
@@ -418,7 +442,7 @@
                 b.textContent = action.label;
                 b.setAttribute('data-composer-overflow-action', key);
             } else {
-                b.appendChild(actionIcon(key));
+                b.appendChild(actionIcon(action.icon));
                 b.setAttribute('data-composer-action', key);
                 b.setAttribute('data-tip', action.label + (shortcut ? ' · ' + shortcut : ''));
             }
@@ -450,7 +474,7 @@
         var more = document.createElement('button');
         more.type = 'button';
         more.className = 'composer-more-toggle';
-        more.textContent = '＋';
+        more.appendChild(actionIcon('plus'));
         more.setAttribute('aria-label', 'More formatting');
         more.setAttribute('aria-expanded', 'false');
         var overflow = document.createElement('div');
@@ -1901,7 +1925,8 @@
         var actionSlot = shellPart(form, '[data-composer-actions-start-slot]');
         var input = document.createElement('input'); input.type = 'file'; input.hidden = true; input.multiple = true;
         input.accept = '.png,.jpg,.jpeg,.webp,.gif'; input.setAttribute('data-composer-upload-input', '');
-        var attach = node('button', 'composer-attach-toggle', '＋'); attach.type = 'button';
+        var attach = node('button', 'composer-attach-toggle'); attach.type = 'button';
+        attach.appendChild(actionIcon('attach'));
         attach.setAttribute('aria-label', 'Attach images'); attach.setAttribute('data-tip', 'Attach images');
         attach.addEventListener('click', function () { pendingChoice = null; input.multiple = true; input.click(); });
         input.addEventListener('change', function () {
@@ -2902,6 +2927,8 @@
         var trigger = document.createElement('button');
         trigger.type = 'button';
         trigger.className = 'composer-emoji-toggle';
+        // The trigger is chrome, and chrome carries no emoji (PRODUCT.md):
+        // Fluent's Emoji face in the toolbar's ink, not a colour glyph.
         trigger.appendChild(actionIcon('emoji'));
         trigger.setAttribute('aria-label', 'Emoji');
         trigger.setAttribute('aria-haspopup', 'dialog');
@@ -2926,7 +2953,7 @@
         close.type = 'button';
         close.className = 'composer-emoji-close';
         close.setAttribute('aria-label', 'Close emoji');
-        close.textContent = '×';
+        close.appendChild(actionIcon('x'));
         header.appendChild(title);
         header.appendChild(close);
 

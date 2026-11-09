@@ -3,7 +3,9 @@
 **Date:** 2026-11-08
 **Status:** Accepted. Implementation and local browser evidence are in
 [`docs/evidence/fluent-icons-2026-11-08/`](../evidence/fluent-icons-2026-11-08/README.md).
-Production deployment and verification are separate outcomes.
+Completed 2026-11-09: every icon is now drawn from the set (see
+[Completion](#completion-2026-11-09)). Production deployment and verification
+are separate outcomes.
 
 ## Context
 
@@ -98,9 +100,9 @@ density of every list.
   lines are slightly lighter than with standard icons. With standard icons,
   the few icons drawn at 18–20px scale the 16px artwork up.
 - Notification type icons (`NotificationPresenter` and `notification_row.php`),
-  the composer's formatting buttons and the sign-in emblems draw their own
-  Lucide-style SVGs outside the partial and are not converted here. They are
-  an open carryover for a follow-up.
+  the composer's formatting buttons and the sign-in emblems drew their own
+  Lucide-style SVGs outside the partial and were not converted here. That
+  carryover is closed by the [Completion](#completion-2026-11-09) below.
 - Adding an icon means mapping it in `icons.json`, adding its pinned sources
   and running `composer build:icons`. `IconsTest` fails if a template draws an
   unmapped name or the set carries an icon no template draws.
@@ -123,8 +125,84 @@ density of every list.
   button), the Solved chip and the board's New topic button; after it, none.
   The accepted-answer flag, which the crawl did not reach, was checked
   separately. Results and screenshots are in the evidence folder.
-- Not verified here: production deployment, forced-colours and Windows High
-  Contrast rendering of every icon, and the carryover surfaces above.
+- Not verified here: production deployment and forced-colours and Windows
+  High Contrast rendering of every icon. The carryover surfaces are verified
+  by the [Completion](#completion-2026-11-09) evidence.
+
+## Completion (2026-11-09)
+
+The carryover named three surfaces. An inventory of every inline SVG,
+script-built SVG and stylesheet icon found more hand-drawn marks, some of
+which still relied on the stroke rules. All of them now draw the set's
+artwork:
+
+1. **Notification rows.** `NotificationPresenter::ICONS` maps each type to an
+   icon name and the row draws it through the partial: `reply` (Arrow Reply),
+   `comment` (Comment) for a new post, `new-topic` for a new thread, `mention`
+   (Mention), `reaction` (Emoji), `follow` (Person Add), `badge` (Ribbon),
+   `solved` (Checkmark Circle), `direct-message` (Chat), `shield` for
+   moderation and `announcement` (Megaphone).
+2. **The composer.** The toolbar is built in the browser, so `icons.json`
+   lists the names `public/assets/composer.js` draws under `scripts`, and
+   `composer build:icons` writes their artwork into a marked block in that
+   file (`composer check:icons` fails when it is stale). `actionIcon()` draws
+   the partial's markup and picks the 16px or 20px artwork from
+   `data-icon-size`. The buttons draw Text Bold, Text Italic, Text
+   Strikethrough, Code, Text Quote, Text Header 2, Text Bullet List, Text
+   Number List, Code Block, Eye Off (Spoiler) and Link. Attach images, More
+   formatting and the emoji dialog's Close, which printed `＋`, `＋` and `×`,
+   draw Attach, Add and Dismiss, and the emoji trigger draws Emoji. Fluent
+   draws its H2 at 20px only, so Heading uses that artwork at either size,
+   as the star and reactions do.
+3. **The verification emblems** draw Checkmark Circle and Error Circle from
+   the 48px artwork (`verified`, `verify-failed`), at 48px instead of 46px.
+4. **Other hand-drawn marks:** Search in the top bar, the online-members,
+   tag and profile search fields; Chevron Left in the topic breadcrumb and
+   the admin bar's way back; Chevron Down on a profile activity row; Checkmark
+   on the accepted-answer flag and the drafts sync line; Lock on a board the
+   member cannot post in; Info (`info`) in the roles and extensions callouts;
+   Arrow Up and Arrow Down (`move-up`, `move-down`) for reordering structure;
+   and Alert for the admin console's bell. Marks keep their sizes: 11px to
+   14px in fields, rows and the reorder buttons, and 13px for the back
+   chevrons and the flag's check. The admin bell takes
+   `max(18px, var(--icon-size))`, as the member bell does.
+5. **The pane toggles** draw Panel Left and Panel Right, Regular while the pane
+   is hidden and Filled while it is shown, at `--icon-size`. The button
+   carries both, and `.is-on`, which `app.js` keeps in step with
+   `aria-pressed`, picks one, so no script draws icons. `panel-left`, retired
+   in Decision 3 as unused, returns with this job; `panel-right` gains a
+   Filled style.
+6. **The admin console's flash marks** stay masks on the shared flash
+   partial. Their data URIs carry Checkmark Circle and Warning at 16px
+   (`flash-success`, `flash-error`), and `IconsTest` holds them to the set's
+   artwork. The console's select chevron was never drawn under the Forum
+   theme, whose field rule resets `background-image`, so with
+   `appearance: none` most console selects had no arrow at all. They now
+   show the browser's arrow, like the settings pane, and the chevron is gone.
+
+The notification type icons, the composer's buttons, the pane toggles, the
+callouts' Info and the top bar's search button when it shows no label now
+follow the member's icon size (16px or 20px; they were 16px or 17px).
+
+No rule strokes an icon any more. The stroke and paint declarations are gone
+from `.badge svg`, `.chip svg`, `.accepted-flag svg`, `.nav-toggle-ic`,
+`.fab svg`, `.breadcrumb-back-ic`, `.bell-ic`, `.auth-emblem` and
+`.profile-gated-ic`. The rules that existed only to stroke an icon or undo a
+stroke are deleted: the unused `.btn-icon`, the composer's toolbar and emoji
+trigger rules, `.notification-icon svg`, the chip and outline star overrides
+and the pane toggles' band rules. The Forum theme's
+`svg.icon { fill: currentColor; stroke: none; }` stays as a guard.
+
+Four inline SVGs remain, and none is an icon: the community's default mark
+(`partials/brand_mark.php`, which DESIGN.md calls the default mark and an
+uploaded logo replaces), a poll result's bar, a branding revision's colour
+swatch and the profile cover's eight-point ornament. ADR 0057 retired that
+ornament, and the Forum theme hides it; removing its markup belongs to that
+retirement. `IconsTest` lists these four and fails on any other inline SVG,
+on a script that builds SVG outside `actionIcon()`, and on any rule that
+strokes, apart from the swatch's border.
+
+Evidence: [`docs/evidence/fluent-icons-complete-2026-11-09/`](../evidence/fluent-icons-complete-2026-11-09/README.md).
 
 ## References
 

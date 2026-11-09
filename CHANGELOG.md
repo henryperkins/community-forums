@@ -2,6 +2,28 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-09] - Every icon from the Fluent set
+
+- Draw the remaining hand-made icons with Fluent System Icons (ADR 0060's
+  carryover): notification type icons, the composer's formatting, attach,
+  emoji and More buttons, the email-verification emblems, the search fields,
+  breadcrumb and admin chevrons, the reorder arrows, the private-board lock,
+  the admin callouts, bell and flash marks, and the rail and reading-pane
+  toggles (Panel Regular while hidden, Filled while shown).
+- Notification type icons and composer buttons follow Appearance → Icon size.
+  The composer carries a generated copy of its icons, written and checked by
+  `composer build:icons` and `composer check:icons`.
+- Remove every rule that stroked an icon. `IconsTest` now fails on a
+  hand-drawn icon, a script-built one outside the composer's `actionIcon()`,
+  or a stroke rule.
+- Admin console selects show an arrow again. Their drawn chevron never
+  rendered under the Forum theme, so most had none; they now use the
+  browser's own, as the settings pane does.
+- Record live release `23ca787930a7a0a7` as deployed before this asset
+  change, retiring `5dc1b40f3b23d46d` and its 4 exclusive files; receipts are
+  in `docs/evidence/asset-record-23ca787930a7a0a7/`.
+- Verification: [local evidence](docs/evidence/fluent-icons-complete-2026-11-09/README.md).
+
 ## [2026-11-08] - Fluent System Icons and an icon size choice
 
 - Draw every icon in the forum's icon partial with Microsoft's Fluent UI

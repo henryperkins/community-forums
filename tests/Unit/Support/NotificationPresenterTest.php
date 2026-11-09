@@ -5,6 +5,7 @@ namespace Tests\Unit\Support;
 
 use App\Core\View;
 use App\Domain\User;
+use App\Support\Icons;
 use App\Support\NotificationPresenter;
 use PHPUnit\Framework\TestCase;
 
@@ -21,9 +22,21 @@ final class NotificationPresenterTest extends TestCase
         foreach (['reply' => 'replied to', 'new_thread' => 'started a thread', 'new_post' => 'posted in', 'mention' => 'mentioned you in', 'reaction' => 'reacted to your post', 'follow' => 'followed you', 'badge' => 'You earned a badge', 'solved' => 'Your answer was accepted', 'dm' => 'sent you a message', 'mod' => 'A moderator action affects you', 'announcement' => 'Announcement'] as $type => $copy) {
             $item = $this->item(['type' => $type, 'thread_id' => 1]);
             self::assertStringContainsString($copy, $item['message']);
-            self::assertNotEmpty($item['icon']);
+            self::assertTrue(Icons::has($item['icon']), $type . ' draws a Fluent icon');
             self::assertSame(['id','type','icon','message','context','is_read','created_at','relative_time','full_time','action_label'], array_keys($item));
         }
+    }
+
+    public function test_each_type_draws_the_icon_for_its_job(): void
+    {
+        // ADR 0060: the Comment family for discussion, Chat for direct
+        // messages, the moderation shield; an unknown type draws the reply.
+        $expected = ['reply' => 'reply', 'new_thread' => 'new-topic', 'new_post' => 'comment', 'mention' => 'mention', 'reaction' => 'reaction', 'follow' => 'follow', 'badge' => 'badge', 'solved' => 'solved', 'dm' => 'direct-message', 'mod' => 'shield', 'announcement' => 'announcement'];
+        self::assertSame($expected, NotificationPresenter::ICONS);
+        foreach ($expected as $type => $icon) {
+            self::assertSame($icon, $this->item(['type' => $type])['icon']);
+        }
+        self::assertSame('reply', $this->item(['type' => 'something_new'])['icon']);
     }
 
     public function test_anonymous_missing_actors_and_targetless_appeals(): void
@@ -47,5 +60,8 @@ final class NotificationPresenterTest extends TestCase
         self::assertStringContainsString('&lt;script&gt;', $html);
         self::assertStringContainsString('datetime="2026-01-01T12:30:00+00:00"', $html);
         self::assertStringContainsString('Unread.', $html);
+        // The row draws the type's Fluent icon through the shared partial.
+        self::assertStringContainsString('<span class="notification-icon"><svg class="icon icon-reply" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="', $html);
+        self::assertStringNotContainsString('stroke', $html);
     }
 }
