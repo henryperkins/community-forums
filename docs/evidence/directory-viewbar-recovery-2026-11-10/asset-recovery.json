@@ -1,0 +1,19 @@
+{
+  "prior_live_release": "276fd01648589411",
+  "prior_live_proof": "../asset-evidence-recovery-2026-11-10/live-before.json",
+  "candidate": "857e839d00bf1bf2",
+  "deployed_releases": [
+    "276fd01648589411",
+    "23ca787930a7a0a7",
+    "11b63fb564c36ce9"
+  ],
+  "retired_files": [
+    "/assets/dist/forum-theme-style-CNIV-nj8.css"
+  ],
+  "sources": {
+    "resources/forum/theme.css": "c0bd951c8ec764d6f9705366dbd3d193ad8c621bb6101b24505550b828ffa4af",
+    ".impeccable/config.json": "afc80a0169eb71ba32239c115c9ff53413a6dd56f93f20a4de41b6e29990dd60",
+    "public/assets/forum-theme.css": "fa9845b77d9b2170a17618e8d196ef75240d0097c79d35ea00511ec53f746e36",
+    "config/assets.json": "6c0b521063549ac63a3e115c74f0a4a5b4aeb0137076d7dd65d6d53b15f00c21"
+  }
+}

@@ -1,0 +1,207 @@
+PHPUnit 11.5.56 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.4
+Configuration: /home/azureuser/community-forums/phpunit.xml
+
+.............................................................   61 / 3675 (  1%)
+.............................................................  122 / 3675 (  3%)
+.........................................................DDDD  183 / 3675 (  4%)
+.............................................................  244 / 3675 (  6%)
+................................D............................  305 / 3675 (  8%)
+.............................................................  366 / 3675 (  9%)
+.............................................................  427 / 3675 ( 11%)
+.............................................................  488 / 3675 ( 13%)
+........................................................DD...  549 / 3675 ( 14%)
+.............................................................  610 / 3675 ( 16%)
+.............................................................  671 / 3675 ( 18%)
+.............................................................  732 / 3675 ( 19%)
+.............................................................  793 / 3675 ( 21%)
+.............................................................  854 / 3675 ( 23%)
+.............................................................  915 / 3675 ( 24%)
+..................................................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+...........  976 / 3675 ( 26%)
+.....[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+....[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+.[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+................................................... 1037 / 3675 ( 28%)
+............................................................. 1098 / 3675 ( 29%)
+............................................................. 1159 / 3675 ( 31%)
+............................................................. 1220 / 3675 ( 33%)
+............................................................. 1281 / 3675 ( 34%)
+............................................................. 1342 / 3675 ( 36%)
+............................................................. 1403 / 3675 ( 38%)
+............................................................. 1464 / 3675 ( 39%)
+............................................................. 1525 / 3675 ( 41%)
+............................................................. 1586 / 3675 ( 43%)
+............................................................. 1647 / 3675 ( 44%)
+....................................[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)
+......................... 1708 / 3675 ( 46%)
+............................................................. 1769 / 3675 ( 48%)
+............................................................. 1830 / 3675 ( 49%)
+......................................[RetroBoards] Two-factor secret (enabled) for user #823 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #823 cannot be opened with the configured APP_KEY.
+..[RetroBoards] Two-factor secret (enabled) for user #832 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Ignoring invalid key configuration: APP_PREVIOUS_KEY_VERIFY_IDS entry 2 is not a 16-character lowercase hex HMAC key id. APP_PREVIOUS_KEY_VERIFY_IDS lists ffffffffffffffff, which is not the HMAC key id of any configured previous key.
+.................... 1891 / 3675 ( 51%)
+............................................................. 1952 / 3675 ( 53%)
+..........................................................[RetroBoards] Two-factor secret (enabled) for user #1208 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1210 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1210 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1212 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1212 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1212 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1212 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1212 cannot be opened with the configured APP_KEY.
+. 2013 / 3675 ( 54%)
+.[RetroBoards] Two-factor secret (enabled) for user #1217 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1217 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1217 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1217 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1217 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1217 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1217 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1217 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1219 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1219 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (pending enrollment) for user #1221 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1223 cannot be opened with the configured APP_KEY.
+[RetroBoards] Two-factor secret (enabled) for user #1223 cannot be opened with the configured APP_KEY.
+.[RetroBoards] Two-factor secret (enabled) for user #1225 cannot be opened with the configured APP_KEY.
+........................................................ 2074 / 3675 ( 56%)
+............................................................. 2135 / 3675 ( 58%)
+............................................................. 2196 / 3675 ( 59%)
+............................................................. 2257 / 3675 ( 61%)
+............................................................. 2318 / 3675 ( 63%)
+............................................................. 2379 / 3675 ( 64%)
+............................................................. 2440 / 3675 ( 66%)
+............................................................. 2501 / 3675 ( 68%)
+............................................................. 2562 / 3675 ( 69%)
+............................................................. 2623 / 3675 ( 71%)
+...........................................................D. 2684 / 3675 ( 73%)
+...DDDDD......................S.............................. 2745 / 3675 ( 74%)
+.....................................[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":8388608,"php_post_bytes":10485760}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":8388608,"php_post_bytes":10485760}
+[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":8388608,"php_post_bytes":10485760}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":8388608,"php_post_bytes":10485760}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":8388608,"php_post_bytes":10485760}
+[RetroBoards] {"route":"\/upload\/file","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":8388608,"php_post_bytes":10485760}
+..[RetroBoards] {"route":"\/upload","code":"upload_unavailable","status":503,"max_bytes":5242880,"php_file_bytes":8388608,"php_post_bytes":10485760}
+...................... 2806 / 3675 ( 76%)
+............................................................. 2867 / 3675 ( 78%)
+............................................................. 2928 / 3675 ( 79%)
+............................................................. 2989 / 3675 ( 81%)
+............................................................. 3050 / 3675 ( 82%)
+............................................................. 3111 / 3675 ( 84%)
+............................................................. 3172 / 3675 ( 86%)
+............................................................. 3233 / 3675 ( 87%)
+............................................................. 3294 / 3675 ( 89%)
+...................................................D......... 3355 / 3675 ( 91%)
+............................................................. 3416 / 3675 ( 92%)
+............................................................. 3477 / 3675 ( 94%)
+............................................................. 3538 / 3675 ( 96%)
+............................................................. 3599 / 3675 ( 97%)
+............................................................. 3660 / 3675 ( 99%)
+...............                                               3675 / 3675 (100%)
+
+Time: 06:22.294, Memory: 110.50 MB
+
+There was 1 skipped test:
+
+1) Tests\Integration\Core\AppThreadIntelligenceMigrationTest::test_0077_down_and_up_rehearsal_on_fixture_free_schema
+direct down/up rehearsal runs only on its dedicated throwaway database; run: DB_TEST_DATABASE=retroboards_thread_intelligence_clean vendor/bin/phpunit tests/Integration/Core/AppThreadIntelligenceMigrationTest.php --filter test_0077_down_and_up_rehearsal_on_fixture_free_schema
+
+--
+
+14 tests triggered 8 PHP deprecations:
+
+1) /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:80
+Method ReflectionMethod::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_are_empty_when_managed_database_tls_is_disabled
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:14
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_use_the_configured_ca_and_verify_the_server_certificate
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:22
+
+2) /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:38
+Constant PDO::MYSQL_ATTR_SSL_CA is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_CA instead
+
+3) /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:39
+Constant PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT instead
+
+4) /home/azureuser/community-forums/src/Core/Database.php:145
+Constant PDO::MYSQL_ATTR_SSL_CA is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_CA instead
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_use_the_configured_ca_and_verify_the_server_certificate
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:22
+
+5) /home/azureuser/community-forums/src/Core/Database.php:151
+Constant PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT is deprecated since 8.5, use Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT instead
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_tls_options_use_the_configured_ca_and_verify_the_server_certificate
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:22
+
+6) /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:71
+Method ReflectionMethod::setAccessible() is deprecated since 8.5, as it has no effect since PHP 8.1
+
+Triggered by:
+
+* Tests\Unit\Core\DatabaseTlsTest::test_dsn_prefers_a_configured_unix_socket_over_host_and_port
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:53
+
+* Tests\Unit\Core\DatabaseTlsTest::test_dsn_uses_host_and_port_without_a_socket
+  /home/azureuser/community-forums/tests/Unit/Core/DatabaseTlsTest.php:45
+
+7) /home/azureuser/community-forums/src/Mail/CloudflareSmtpMailer.php:110
+Function curl_close() is deprecated since 8.5, as it has no effect since PHP 8.0
+
+Triggered by:
+
+* Tests\Unit\Mail\CloudflareSmtpMailerTest::test_real_curl_connection_failure_throws_mail_exception_without_exposing_the_token
+  /home/azureuser/community-forums/tests/Unit/Mail/CloudflareSmtpMailerTest.php:62
+
+8) /home/azureuser/community-forums/src/Service/Packages/ThemeAssetScanner.php:68
+Function imagedestroy() is deprecated since 8.5, as it has no effect since PHP 8.0
+
+Triggered by:
+
+* Tests\Integration\Core\AppThemePackageTest::test_member_appearance_choices_picture_the_active_package
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:223
+
+* Tests\Integration\Core\AppThemePackageTest::test_preview_assets_are_private_to_the_admin_session_without_an_active_theme
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:396
+
+* Tests\Integration\Core\AppThemePackageTest::test_preview_assets_fail_dark_when_the_preview_becomes_ineligible
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:449
+
+* Tests\Integration\Core\AppThemePackageTest::test_previewing_a_shared_asset_does_not_break_the_active_theme_asset (2 times)
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:423
+
+* Tests\Integration\Core\AppThemePackageTest::test_session_package_preview_uses_private_brand_css_without_changing_public_branding
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:351
+
+* Tests\Integration\Core\AppThemePackageTest::test_theme_asset_route_serves_neutralized_bytes
+  /home/azureuser/community-forums/tests/Integration/Core/AppThemePackageTest.php:378
+
+* Tests\Integration\Service\ThemeBuildServiceTest::test_built_css_has_no_external_urls_and_assets_are_stored
+  /home/azureuser/community-forums/tests/Integration/Service/ThemeBuildServiceTest.php:41
+
+* Tests\Unit\Service\Packages\ThemeAssetScannerTest::test_polyglot_payload_is_destroyed_by_reencode
+  /home/azureuser/community-forums/tests/Unit/Service/Packages/ThemeAssetScannerTest.php:34
+
+* Tests\Unit\Service\Packages\ThemeAssetScannerTest::test_valid_png_is_reencoded_and_digest_pinned
+  /home/azureuser/community-forums/tests/Unit/Service/Packages/ThemeAssetScannerTest.php:23
+
+OK, but there were issues!
+Tests: 3675, Assertions: 36332, Deprecations: 8, Skipped: 1.

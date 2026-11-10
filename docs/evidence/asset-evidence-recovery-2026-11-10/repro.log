@@ -1,0 +1,5 @@
+repro.sh: 1a-unrecorded-app-css-edit: as expected (version a11b19271dee84b4, 1 of 0ab71f5ca65e7fa0's files missing)
+repro.sh: 1b-unrecorded-all-four: as expected (version d3ee56066cd40e83, 4 of 0ab71f5ca65e7fa0's files missing)
+repro.sh: 2-after-record: as expected (version 0ab71f5ca65e7fa0, 0 of 0ab71f5ca65e7fa0's files missing)
+repro.sh: 2-recorded-then-all-four: as expected (version d3ee56066cd40e83, 0 of 0ab71f5ca65e7fa0's files missing)
+done: /tmp/opencode/retroboards-recovery-2026-11-10/repro
