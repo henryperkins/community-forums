@@ -1,7 +1,10 @@
 # Recovered asset-evidence checks
 
 Verified 2026-11-10 against `main` at `ffa85a3a`. The two evidence scripts were
-recovered byte-for-byte from the uncommitted work in `rb-wt-pr1`.
+recovered byte-for-byte from the uncommitted work in `rb-wt-pr1` in commit
+`55e7f4dd`. Final review additionally made the live check's `immutable` and
+`no-store` directive comparisons case-insensitive; the synthetic fixture now
+uses mixed-case directives to verify that behavior.
 
 ## Executed checks
 
@@ -10,7 +13,8 @@ recovered byte-for-byte from the uncommitted work in `rb-wt-pr1`.
   retained files, case-insensitive and repeated headers, missing/mismatched assets,
   cache policy, wrong page/preload references, the unlisted control, unhealthy or
   malformed health responses, truncated responses, connection failures and CLI
-  usage errors. It makes no production requests.
+   usage errors. It makes no production requests. The final run after the
+   directive-casing correction is retained in `diagnostics-final.log`.
 - `bash -n docs/evidence/asset-retention-check-2026-11-08/repro.sh`: passed;
   missing arguments return 2.
 - The recovered `repro.sh` completed at its default historical revision

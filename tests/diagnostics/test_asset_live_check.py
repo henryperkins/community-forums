@@ -36,8 +36,8 @@ class AssetLiveCheckTest(unittest.TestCase):
             '/': (200, [('Link', f'<{CURRENT}>; rel=preload')],
                   f'<script src="{CURRENT}"></script>'.encode()),
             '/healthz/': (200, [], b'{"status":"ok","database":"ok"}'),
-            CONTROL: (404, [('cache-control', 'no-store')], b'not found'),
-            **{url: (200, [('cAcHe-CoNtRoL', 'public, max-age=31536000, immutable'),
+            CONTROL: (404, [('cache-control', 'No-Store')], b'not found'),
+            **{url: (200, [('cAcHe-CoNtRoL', 'Public, max-age=31536000, ImMuTaBlE'),
                           ('x-retroboards-cache', 'STATIC')], body)
                for url, body in self.assets.items()},
         }

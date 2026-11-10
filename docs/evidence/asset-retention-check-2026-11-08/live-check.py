@@ -118,7 +118,7 @@ def check(url):
             failures.append(f'{url}: SHA-256 {digest} differs from the manifest ({expected})')
         if row['x_retroboards_cache'] != 'STATIC':
             failures.append(f'{url}: X-RetroBoards-Cache is {row["x_retroboards_cache"]!r}, expected STATIC')
-        if 'immutable' not in (row['cache_control'] or ''):
+        if 'immutable' not in (row['cache_control'] or '').lower():
             failures.append(f'{url}: Cache-Control {row["cache_control"]!r} is not immutable')
     return row
 
@@ -132,7 +132,7 @@ control_status, control_headers, _, control_error = get(CONTROL)
 control_cache = control_headers.get('Cache-Control')
 if control_error:
     failures.append(f'{CONTROL}: {control_error}')
-elif control_status != 404 or 'no-store' not in (control_cache or ''):
+elif control_status != 404 or 'no-store' not in (control_cache or '').lower():
     failures.append(f'{CONTROL}: status {control_status} with Cache-Control {control_cache!r}, '
                     'expected 404 no-store for an unlisted path')
 
