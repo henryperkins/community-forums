@@ -2,6 +2,17 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-10] - Consistent directory viewing controls
+
+- Recover the mobile directory's bordered 44px order and topic-preview controls,
+  filled selected states, label styling, settings-link underline and forced-color
+  boundaries. Use the current Forum text tokens for the heading and settings link.
+- Recover four file-scoped design-check exceptions for the existing intermediate
+  font sizes and danger-hover color mix.
+- Record verified live asset release `276fd01648589411` before rebuilding;
+  retain its files and retire the oldest release's one exclusive stylesheet.
+- Verification: [directory recovery evidence](docs/evidence/directory-viewbar-recovery-2026-11-10/README.md).
+
 ## [2026-11-10] - Asset-evidence failure reporting
 
 - Recover the asset live check's explicit pass/fail status, network-error handling,

@@ -1,0 +1,11 @@
+
+Running 6 tests using 1 worker
+
+  ✓  1 [desktop] › board-index-hardening.spec.ts:224:7 › guest desktop view controls retain readable Forum states (670ms)
+  ✓  2 [desktop] › board-index-hardening.spec.ts:245:7 › guest viewing sheet contains focus, dismisses and hands focus across widths (1.4s)
+  ✓  3 [desktop] › board-index-hardening.spec.ts:312:7 › guest view remains an inline disclosure and submits with no JavaScript (532ms)
+  ✓  4 [desktop] › board-index-hardening.spec.ts:224:7 › member desktop view controls retain readable Forum states (793ms)
+  ✓  5 [desktop] › board-index-hardening.spec.ts:245:7 › member viewing sheet contains focus, dismisses and hands focus across widths (1.7s)
+  ✓  6 [desktop] › board-index-hardening.spec.ts:312:7 › member view remains an inline disclosure and submits with no JavaScript (873ms)
+
+  6 passed (6.8s)

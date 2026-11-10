@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [mobile] › board-index-hardening.spec.ts:245:7 › guest viewing sheet contains focus, dismisses and hands focus across widths (1.5s)
+  ✓  2 [mobile] › board-index-hardening.spec.ts:245:7 › member viewing sheet contains focus, dismisses and hands focus across widths (1.8s)
+
+  2 passed (3.9s)

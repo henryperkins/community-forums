@@ -76,6 +76,74 @@ function expectGeometry(metrics: Awaited<ReturnType<typeof geometry>>) {
   }
 }
 
+function contrastRatio(foreground: string, background: string): number {
+  const luminance = (color: string) => {
+    const [r, g, b] = color.match(/[\d.]+/g)!.slice(0, 3).map(value => {
+      const channel = Number(value) / 255;
+      return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+    });
+    return .2126 * r + .7152 * g + .0722 * b;
+  };
+  const a = luminance(foreground), b = luminance(background);
+  return (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
+}
+
+/** The actual rendered controls must remain legible, bounded and distinguishable. */
+async function expectForumViewbar(page: Page, selector: string) {
+  const controls = await page.locator(selector).evaluate(root => {
+    const background = (element: Element | null): string => {
+      for (let parent = element; parent; parent = parent.parentElement) {
+        const color = getComputedStyle(parent).backgroundColor;
+        if (color !== 'transparent' && color !== 'rgba(0, 0, 0, 0)') return color;
+      }
+      return getComputedStyle(document.body).backgroundColor;
+    };
+    return [...root.querySelectorAll('[data-directory-sort-option], [data-directory-peek-option]')].map(element => {
+      const style = getComputedStyle(element), box = element.getBoundingClientRect();
+      return {
+        text: element.textContent?.trim(),
+        selected: element.matches('[aria-current="true"], [aria-pressed="true"]'),
+        width: box.width, height: box.height,
+        foreground: style.color, background: background(element), adjacent: background(element.parentElement),
+        border: style.borderTopColor, borderWidth: parseFloat(style.borderTopWidth),
+        fontSize: parseFloat(style.fontSize), weight: Number(style.fontWeight),
+      };
+    });
+  });
+  expect(controls).toHaveLength(9);
+  const selected = controls.filter(control => control.selected);
+  expect(selected).toHaveLength(2);
+  for (const control of controls) {
+    expect(control.width, control.text).toBeGreaterThanOrEqual(43.5);
+    expect(control.height, control.text).toBeGreaterThanOrEqual(43.5);
+    expect(control.fontSize, control.text).toBeGreaterThanOrEqual(14);
+    expect(control.borderWidth, control.text).toBeGreaterThan(0);
+    expect(contrastRatio(control.foreground, control.background), `${control.text} text`).toBeGreaterThanOrEqual(4.5);
+    expect(Math.max(contrastRatio(control.border, control.adjacent), contrastRatio(control.background, control.adjacent)), `${control.text} boundary`).toBeGreaterThanOrEqual(3);
+  }
+  for (const control of selected) {
+    expect(control.weight, `${control.text} non-color selection cue`).toBeGreaterThan(controls.find(item => !item.selected)!.weight);
+    expect(control.background, `${control.text} selected fill`).not.toBe(controls.find(item => !item.selected)!.background);
+  }
+  return controls;
+}
+
+async function expectForcedColorViewbar(page: Page, selector: string) {
+  await page.emulateMedia({ forcedColors: 'active' });
+  const controls = page.locator(selector).locator('[data-directory-sort-option], [data-directory-peek-option]');
+  for (const control of await controls.all()) {
+    await expect(control).toHaveCSS('border-top-style', 'solid');
+    expect(await control.evaluate(element => parseFloat(getComputedStyle(element).borderTopWidth))).toBeGreaterThan(0);
+  }
+  await controls.first().focus();
+  // Enter keyboard modality after the pointer opened the native disclosure.
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(controls.first()).toBeFocused();
+  await expect(controls.first()).toHaveCSS('outline-style', 'solid');
+  expect(await controls.first().evaluate(element => parseFloat(getComputedStyle(element).outlineWidth))).toBeGreaterThanOrEqual(2);
+}
+
 test('valid long board names and touch targets fit every directory breakpoint', async ({ page }) => {
   test.setTimeout(90_000);
   const original = fixture("echo $db->fetchValue('SELECT name FROM boards WHERE slug=?',['general']);");
@@ -153,6 +221,27 @@ test('the viewing header does not cover choices in landscape or with enlarged te
 
 for (const member of [false, true]) {
   const audience = member ? 'member' : 'guest';
+  test(`${audience} desktop view controls retain readable Forum states`, async ({ page }) => {
+    if (member) await signIn(page);
+    await page.setViewportSize({ width: 1280, height: 844 });
+    await page.goto('/?sort=category&peek=3');
+    for (const theme of ['light', 'dark']) {
+      await appearance(page, theme);
+      writeJson(`desktop-${audience}-${theme}-controls.json`, await expectForumViewbar(page, '.directory-viewbar'));
+      expectGeometry(await geometry(page));
+      await capture(page, `desktop-${audience}-${theme}`);
+    }
+    await expectForcedColorViewbar(page, '.directory-viewbar');
+    await capture(page, `desktop-${audience}-forced-colors`);
+    await page.emulateMedia({ forcedColors: 'none' });
+    await page.locator('.directory-viewbar [data-directory-sort-option=active]').click();
+    await page.waitForURL(url => url.searchParams.get('sort') === 'active');
+    await page.locator('.directory-viewbar [data-directory-peek-option="0"]').click();
+    await page.waitForURL(url => url.searchParams.get('peek') === '0');
+    await expect(page.locator('[data-directory-sort]')).toHaveAttribute('data-directory-sort', 'active');
+    await expect(page.locator('[data-directory-peek]')).toHaveAttribute('data-directory-peek', '0');
+  });
+
   test(`${audience} viewing sheet contains focus, dismisses and hands focus across widths`, async ({ page }) => {
     if (member) await signIn(page);
     await page.setViewportSize({ width: 390, height: 844 });
@@ -178,11 +267,20 @@ for (const member of [false, true]) {
 
     for (const theme of ['light', 'dark']) {
       await appearance(page, theme);
+      writeJson(`sheet-${audience}-${theme}-controls.json`, await expectForumViewbar(page, '.directory-viewbar-mobile-panel'));
+      await expect(last).toHaveCSS('text-decoration-line', 'underline');
+      for (const label of await sheet.locator('.directory-viewbar__label').all()) {
+        await expect(label).toHaveCSS('font-weight', '600');
+        await expect(label).toHaveCSS('text-transform', 'none');
+      }
       const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
       writeJson(`sheet-axe-${audience}-${theme}.json`, results.violations);
       expect(results.violations).toEqual([]);
+      await capture(page, `sheet-${audience}-${theme}`);
     }
-    await capture(page, `sheet-${audience}-dark`);
+    await expectForcedColorViewbar(page, '.directory-viewbar-mobile-panel');
+    await capture(page, `sheet-${audience}-forced-colors`);
+    await page.emulateMedia({ forcedColors: 'none' });
     await page.keyboard.press('Escape');
     await expect(sheet).not.toHaveAttribute('open', '');
     await expect(summary).toBeFocused();
@@ -227,7 +325,14 @@ for (const member of [false, true]) {
       await expect(sheet).toHaveAttribute('open', '');
       await expect(sheet.locator('.directory-viewbar-mobile-panel')).toHaveCSS('position', 'static');
       expectGeometry(await geometry(native));
-      await capture(native, `native-${audience}-view`);
+      for (const theme of ['light', 'dark']) {
+        await appearance(native, theme);
+        writeJson(`native-${audience}-${theme}-controls.json`, await expectForumViewbar(native, '.directory-viewbar-mobile-panel'));
+        await capture(native, `native-${audience}-${theme}-view`);
+      }
+      await expectForcedColorViewbar(native, '.directory-viewbar-mobile-panel');
+      await capture(native, `native-${audience}-forced-colors`);
+      await native.emulateMedia({ forcedColors: 'none' });
       await summary.click();
       await expect(sheet).not.toHaveAttribute('open', '');
       await summary.click();
