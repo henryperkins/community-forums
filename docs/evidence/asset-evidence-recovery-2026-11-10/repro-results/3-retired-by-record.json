@@ -1,0 +1,18 @@
+{
+  "deployedReleases_before": [
+    "5dc1b40f3b23d46d",
+    "c66e3b55dba6da68",
+    "3630440af0d45598"
+  ],
+  "deployedReleases_after": [
+    "0ab71f5ca65e7fa0",
+    "5dc1b40f3b23d46d",
+    "c66e3b55dba6da68"
+  ],
+  "files_removed_from_allowlist": [
+    "/assets/dist/app-e5669eff1f842115.js",
+    "/assets/dist/app-style-D7aglA01.css",
+    "/assets/dist/composer-c1ff478070e3a1d8.js",
+    "/assets/dist/tour-f068bdb2d74e6d21.js"
+  ]
+}

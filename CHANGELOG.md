@@ -2,6 +2,15 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [2026-11-10] - Asset-evidence failure reporting
+
+- Recover the asset live check's explicit pass/fail status, network-error handling,
+  complete preload-header inspection and assertions for live and retained files,
+  cache headers, the unlisted control and public health.
+- Make the historical retention reproduction select its reviewed revision and
+  propagate build failures and unexpected scenario outcomes to its exit status.
+- Verification: [diagnostic recovery evidence](docs/evidence/asset-evidence-recovery-2026-11-10/README.md).
+
 ## [2026-11-09] - Every icon from the Fluent set
 
 - Draw the remaining hand-made icons with Fluent System Icons (ADR 0060's
